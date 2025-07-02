@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Upload } from 'lucide-react';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setActiveTab }) => {
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('veispinoza@kl.gscl.com');
@@ -25,11 +27,11 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
   const [customerNames, setCustomerNames] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch('/api/planning-units').then(res => res.json()).then(setPlanningUnits);
+    fetch(`${BASE_URL}/api/planning-units`).then(res => res.json()).then(setPlanningUnits);
   }, []);
 
   useEffect(() => {
-    fetch('/api/customer-names')
+    fetch(`${BASE_URL}/api/customer-names`)
       .then(res => res.json())
       .then(data => {
         const names = Array.isArray(data)
@@ -42,32 +44,32 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
 
   useEffect(() => {
     if (planningUnit) {
-      fetch(`/api/business-units?planningUnit=${planningUnit}`).then(res => res.json()).then(setBusinessUnits);
+      fetch(`${BASE_URL}/api/business-units?planningUnit=${planningUnit}`).then(res => res.json()).then(setBusinessUnits);
     }
   }, [planningUnit]);
 
   useEffect(() => {
     if (businessUnit) {
-      fetch(`/api/families?businessUnit=${businessUnit}`).then(res => res.json()).then(setFamilies);
-      fetch(`/api/demand-classes?businessUnit=${businessUnit}`).then(res => res.json()).then(setDemandClasses);
+      fetch(`${BASE_URL}/api/families?businessUnit=${businessUnit}`).then(res => res.json()).then(setFamilies);
+      fetch(`${BASE_URL}/api/demand-classes?businessUnit=${businessUnit}`).then(res => res.json()).then(setDemandClasses);
     }
   }, [businessUnit]);
 
   useEffect(() => {
     if (family) {
-      fetch(`/api/subfamilies?family=${family}`).then(res => res.json()).then(setSubfamilies);
+      fetch(`${BASE_URL}/api/subfamilies?family=${family}`).then(res => res.json()).then(setSubfamilies);
     }
   }, [family]);
 
   useEffect(() => {
     if (subfamily) {
-      fetch(`/api/colors?subfamily=${subfamily}`).then(res => res.json()).then(setColors);
+      fetch(`${BASE_URL}/api/colors?subfamily=${subfamily}`).then(res => res.json()).then(setColors);
     }
   }, [subfamily]);
 
   useEffect(() => {
     if (color) {
-      fetch(`/api/products?color=${encodeURIComponent(color)}`)
+      fetch(`${BASE_URL}/api/products?color=${encodeURIComponent(color)}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -104,7 +106,7 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
 
   
       // Call the API to fetch forecast data
-      const response = await fetch('/api/forecast-export', {
+      const response = await fetch(`${BASE_URL}/api/forecast-export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filters)
@@ -126,7 +128,7 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
       const originalFile = new File([blob], `${name}.csv`, { type: 'text/csv' });
   
       // Upload the original file first
-      const uploadResponse = await fetch('/api/upload', {
+      const uploadResponse = await fetch(`${BASE_URL}/api/upload`, {
         method: 'POST',
         body: (() => {
           const formData = new FormData();

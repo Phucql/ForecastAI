@@ -15,7 +15,8 @@ const DemandClasses: React.FC = () => {
   useEffect(() => {
     const fetchDemandClasses = async () => {
       try {
-        const response = await fetch('/api/demand-classes');
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+        const response = await fetch(`${BASE_URL}/api/demand-classes`);
         if (!response.ok) {
           throw new Error('Failed to fetch demand classes');
         }

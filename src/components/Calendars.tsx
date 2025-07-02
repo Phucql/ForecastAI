@@ -17,7 +17,8 @@ const Calendars: React.FC = () => {
   useEffect(() => {
     const fetchCalendarData = async () => {
       try {
-        const response = await fetch('/api/calendar-data');
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+        const response = await fetch(`${BASE_URL}/api/calendar-data`);
         if (!response.ok) {
           throw new Error('Failed to fetch calendar data');
         }

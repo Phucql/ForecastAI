@@ -51,6 +51,8 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 type DemandPlan = {
   id: number;
   name: string;
@@ -190,7 +192,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/forecast-files')
+    fetch(`${BASE_URL}/api/forecast-files`)
       .then(res => res.json())
       .then(setForecastFiles)
       .catch(err => console.error('Failed to load S3 forecast files:', err));
@@ -225,7 +227,7 @@ function App() {
 
   const fetchSavedForecasts = async () => {
     try {
-      const res = await fetch('/api/list-forecasts');
+      const res = await fetch(`${BASE_URL}/api/list-forecasts`);
       const data = await res.json();
       setForecastFiles(data);
     } catch (err) {
@@ -275,7 +277,7 @@ function App() {
     if (!selectedForecastFile) return;
     try {
       const filenameOnly = selectedForecastFile.replace(/^forecasts\//, '');
-      const response = await fetch(`/api/duplicate-forecast?file=${encodeURIComponent(filenameOnly)}`, {
+      const response = await fetch(`${BASE_URL}/api/duplicate-forecast?file=${encodeURIComponent(filenameOnly)}`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Failed to duplicate file');
@@ -291,7 +293,7 @@ function App() {
     if (!confirmed) return;
   
     try {
-      const res = await fetch(`/api/delete-file?key=forecasts/${encodeURIComponent(fileName)}`, {
+      const res = await fetch(`${BASE_URL}/api/delete-file?key=forecasts/${encodeURIComponent(fileName)}`, {
         method: 'DELETE',
       });
   
@@ -307,7 +309,7 @@ function App() {
   
   const handlePreviewFile = async (fileName: string) => {
   try {
-    const res = await fetch(`/api/read-forecast-csv?key=forecasts/${encodeURIComponent(fileName)}`);
+    const res = await fetch(`${BASE_URL}/api/read-forecast-csv?key=forecasts/${encodeURIComponent(fileName)}`);
     const text = await res.text();
 
     const rows = text
@@ -697,7 +699,7 @@ function App() {
     try {
       console.log("📤 Run Forecast:", selectedForecastFile, startDate, endDate);
   
-      const response = await fetch(`/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
+      const response = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
       if (!response.ok) throw new Error("Failed to load forecast file");
   
       const csvText = await response.text();
@@ -771,7 +773,7 @@ function App() {
       const payload = { time, target, PRD_LVL_MEMBER_NAME, horizon };
       console.log("📦 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
   
-      const res = await fetch("/api/run-forecast-py", {
+      const res = await fetch(`${BASE_URL}/api/run-forecast-py`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -861,7 +863,7 @@ const uploadCsvFromS3ToPostgres = async () => {
 // Fetch forecast report data for dropdown
 useEffect(() => {
   if (activeTab === 'reports-analytics') {
-    fetch('/api/final-forecast-report')
+    fetch(`${BASE_URL}/api/final-forecast-report`)
       .then(res => res.json())
       .then(setForecastReportData)
       .catch(() => setForecastReportData([]));
@@ -872,8 +874,8 @@ useEffect(() => {
 useEffect(() => {
   if (showGraphModal && selectedGraphItem) {
     Promise.all([
-      fetch(`/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2025`).then(res => res.json()),
-      fetch(`/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2026`).then(res => res.json()),
+      fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2025`).then(res => res.json()),
+      fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2026`).then(res => res.json()),
     ]).then(([monthly2025, monthly2026]) => {
       setGraphMonthlyData([...monthly2025, ...monthly2026]);
     });

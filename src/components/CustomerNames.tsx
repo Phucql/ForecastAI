@@ -14,7 +14,8 @@ const CustomerNames: React.FC = () => {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const response = await fetch('/api/customer-names');
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+        const response = await fetch(`${BASE_URL}/api/customer-names`);
         if (!response.ok) throw new Error('Failed to fetch customer names');
         const data = await response.json();
         setCustomers(data);

@@ -14,7 +14,8 @@ const CollectedMeasure: React.FC = () => {
   useEffect(() => {
     const fetchFamilies = async () => {
       try {
-        const response = await fetch('/api/collected-families');
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+        const response = await fetch(`${BASE_URL}/api/collected-families`);
         if (!response.ok) throw new Error('Failed to fetch families');
         const data = await response.json();
         setFamilies(data);

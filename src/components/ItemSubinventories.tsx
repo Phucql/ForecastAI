@@ -14,7 +14,8 @@ const ItemSubinventories: React.FC = () => {
   useEffect(() => {
     const fetchSubfamilies = async () => {
       try {
-        const response = await fetch('/api/item-subfamilies');
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+        const response = await fetch(`${BASE_URL}/api/item-subfamilies`);
         if (!response.ok) throw new Error('Failed to fetch subfamilies');
         const data = await response.json();
         setSubfamilies(data);
