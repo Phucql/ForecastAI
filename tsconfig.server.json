@@ -1,0 +1,17 @@
+// tsconfig.server.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/server.ts", "src/forecast_runner.ts"],
+  "ts-node": {
+    "esm": true
+  }
+}
