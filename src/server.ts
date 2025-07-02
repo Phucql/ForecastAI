@@ -707,10 +707,14 @@ app.post('/api/run-forecast-py', async (req, res) => {
     api_key: process.env.TIMEGPT_API_KEY
   };
 
+  // Use a configurable Python path for deployment friendliness
+  const pythonPath = process.env.PYTHON_PATH || 'python3';
+  console.log(`[Forecast] Using Python executable: ${pythonPath}`);
   const py = spawn(
-    'C:\\ProgramData\\anaconda3\\python.exe',
+    pythonPath,
     ['src/forecast_runner.py', JSON.stringify(payload)]
   );
+  console.log('[Forecast] Spawned Python process for forecast_runner.py');
 
   let result = '';
   let error = '';
