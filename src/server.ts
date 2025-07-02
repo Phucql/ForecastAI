@@ -741,7 +741,8 @@ app.post('/api/run-forecast-py', async (req, res) => {
       const originalFileName = originalKey.split('/').pop()?.replace('.csv', '') || 'forecast_file';
       const today = new Date().toISOString().slice(0, 10);
 
-      const forecastFileName = `forecasts/${originalFileName}_forecast_${today}.csv`;
+      // New format: Forecast_<OriginalFileName>_<date>.csv
+      const forecastFileName = `forecasts/Forecast_${originalFileName}_${today}.csv`;
       const mergedKey = `forecasts/${originalFileName}_merged_${today}.csv`;
 
       await s3.upload({
