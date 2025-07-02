@@ -7,6 +7,7 @@ from nixtla import NixtlaClient
 from utilsforecast.preprocessing import fill_gaps
 import logging
 import signal
+import chardet  # For encoding detection
 
 # Optional: clean logs
 logging.getLogger("nixtla.nixtla_client").setLevel(logging.CRITICAL)
@@ -80,3 +81,14 @@ try:
     
 except Exception as e:
     print(json.dumps({"error": str(e)}))
+
+# Example for robust file reading with encoding detection (for future use):
+# def read_csv_with_encoding_detection(filepath):
+#     with open(filepath, 'rb') as f:
+#         raw = f.read()
+#         result = chardet.detect(raw)
+#         encoding = result['encoding']
+#     try:
+#         return pd.read_csv(filepath, encoding=encoding)
+#     except UnicodeDecodeError as e:
+#         raise Exception(f"File encoding error: {e}. Detected encoding: {encoding}. Please upload UTF-8 CSV files.")

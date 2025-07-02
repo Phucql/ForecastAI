@@ -681,7 +681,7 @@ const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<AWS
 };
 
 app.post('/api/run-forecast-py', async (req, res) => {
-  const { id, time, target, PRD_LVL_MEMBER_NAME } = req.body;
+  const { id, time, target, PRD_LVL_MEMBER_NAME, originalFileName } = req.body;
 
   if (!time || !target || !Array.isArray(time) || !Array.isArray(target)) {
     return res.status(400).json({ error: 'Missing or invalid `time` or `target` arrays in request body.' });
@@ -741,13 +741,14 @@ app.post('/api/run-forecast-py', async (req, res) => {
       const parsed = JSON.parse(result);
       const forecastCsv = Papa.unparse(parsed);
 
-      const originalKey = `forecasts/${id}.csv`;
-      const originalFileName = originalKey.split('/').pop()?.replace('.csv', '') || 'forecast_file';
+      // Use originalFileName from request, fallback to id or 'forecast_file'
+      const baseFileName = originalFileName || id || 'forecast_file';
+      const originalKey = `forecasts/${baseFileName}.csv`;
       const today = new Date().toISOString().slice(0, 10);
 
       // New format: Forecast_<OriginalFileName>_<date>.csv
-      const forecastFileName = `forecasts/Forecast_${originalFileName}_${today}.csv`;
-      const mergedKey = `forecasts/${originalFileName}_merged_${today}.csv`;
+      const forecastFileName = `forecasts/Forecast_${baseFileName}_${today}.csv`;
+      const mergedKey = `forecasts/${baseFileName}_merged_${today}.csv`;
 
       await s3.upload({
         Bucket: process.env.VITE_S3_BUCKET_NAME!,
@@ -757,7 +758,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
         Metadata: {
           owner: 'ForecastAI',
           status: 'Active',
-          description: `Forecast generated for ${originalFileName}.csv on ${today}`
+          description: `Forecast generated for ${baseFileName}.csv on ${today}`
         }
       }).promise();
 
@@ -779,7 +780,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
         Metadata: {
           owner: 'ForecastAI',
           status: 'Final',
-          description: `Merged file for ${originalFileName}.csv with forecast ${forecastFileName}`
+          description: `Merged file for ${baseFileName}.csv with forecast ${forecastFileName}`
         }
       }).promise();
 

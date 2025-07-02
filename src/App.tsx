@@ -786,8 +786,8 @@ function App() {
       const end = new Date(endDate);
       const horizon = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
   
-      const payload = { time, target, PRD_LVL_MEMBER_NAME, horizon };
-      console.log("📦 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
+      const payload = { time, target, PRD_LVL_MEMBER_NAME, horizon, originalFileName: fileBase };
+      console.log("\uD83D\uDCE6 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
   
       const res = await fetch(`${BASE_URL}/api/run-forecast-py`, {
         method: "POST",
