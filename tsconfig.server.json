@@ -9,9 +9,14 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/server.ts", "src/forecast_runner.ts"],
+  "include": ["src/server.ts", "src/forecast_runner.ts", "src/utils/**/*"],
+  "exclude": ["node_modules", "dist"],
   "ts-node": {
     "esm": true
   }
