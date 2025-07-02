@@ -1,6 +1,7 @@
 // mergeForecastFiles.ts
 import Papa from 'papaparse';
 import AWS from 'aws-sdk';
+import chardet from 'chardet';
 
 const s3 = new AWS.S3({
   region: 'us-east-2',
@@ -18,8 +19,15 @@ export const mergeForecastFiles = async (originalKey: string, forecastKey: strin
     s3.getObject({ Bucket: bucket, Key: forecastKey }).promise(),
   ]);
 
-  const originalCsv = originalData.Body!.toString('utf-8');
-  const forecastCsv = forecastData.Body!.toString('utf-8');
+  // Detect encoding for original CSV
+  const originalBuffer = originalData.Body as Buffer;
+  const originalEncoding = chardet.detect(originalBuffer) || 'utf-8';
+  const originalCsv = originalBuffer.toString(originalEncoding as BufferEncoding);
+
+  // Detect encoding for forecast CSV
+  const forecastBuffer = forecastData.Body as Buffer;
+  const forecastEncoding = chardet.detect(forecastBuffer) || 'utf-8';
+  const forecastCsv = forecastBuffer.toString(forecastEncoding as BufferEncoding);
 
   const original = Papa.parse(originalCsv, { header: true }).data as any[];
   const forecast = Papa.parse(forecastCsv, { header: true }).data as any[];
