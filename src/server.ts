@@ -770,12 +770,12 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
       // Use chardet to detect encoding for original and forecast CSVs
       const originalBuffer = originalCsv.Body as Buffer;
-      const originalEncoding = chardet.detect(originalBuffer) || 'utf-8';
-      const originalCsvString = originalBuffer.toString(originalEncoding as BufferEncoding);
+      const originalEncoding = mapChardetToNodeEncoding(chardet.detect(originalBuffer));
+      const originalCsvString = originalBuffer.toString(originalEncoding);
 
       const forecastBuffer = forecastCsvFromS3.Body as Buffer;
-      const forecastEncoding = chardet.detect(forecastBuffer) || 'utf-8';
-      const forecastCsvString = forecastBuffer.toString(forecastEncoding as BufferEncoding);
+      const forecastEncoding = mapChardetToNodeEncoding(chardet.detect(forecastBuffer));
+      const forecastCsvString = forecastBuffer.toString(forecastEncoding);
 
       const mergedCsv = mergeForecastFiles(
         originalCsvString,
@@ -1443,7 +1443,16 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
   }
 });
 
-
+function mapChardetToNodeEncoding(enc: string | null | undefined): BufferEncoding {
+  if (!enc) return 'utf8';
+  const lower = enc.toLowerCase();
+  if (lower === 'utf-8' || lower === 'utf8') return 'utf8';
+  if (lower === 'utf-16le' || lower === 'utf16le') return 'utf16le';
+  if (lower === 'ascii') return 'ascii';
+  if (lower === 'latin1' || lower === 'iso-8859-1') return 'latin1';
+  // fallback
+  return 'utf8';
+}
 
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
