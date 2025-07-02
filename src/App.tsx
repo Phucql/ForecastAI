@@ -711,9 +711,14 @@ function App() {
       alert("Please select a forecast file first.");
       return;
     }
-  
+
+    // Define fileBase before using it in the payload
+    const fileBase = selectedForecastFile
+      ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
+      : "forecast";
+
     try {
-      console.log("📤 Run Forecast:", selectedForecastFile, startDate, endDate);
+      console.log("\uD83D\uDCE6 Run Forecast:", selectedForecastFile, startDate, endDate, fileBase);
   
       const response = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
       if (!response.ok) throw new Error("Failed to load forecast file");
@@ -827,13 +832,6 @@ function App() {
         },
       });
   
-      // Use the original file name (without .csv) as the base for the forecast result file
-      const fileBase = selectedForecastFile
-        ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
-        : "forecast";
-      if (!selectedForecastFile) {
-        console.warn("selectedForecastFile is not set, using 'forecast' as base name.");
-      }
       const fileKey = `forecast_result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
   
       try {
