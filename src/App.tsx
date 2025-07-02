@@ -229,9 +229,25 @@ function App() {
     try {
       const res = await fetch(`${BASE_URL}/api/list-forecasts`);
       const data = await res.json();
+      
+      if (!res.ok) {
+        // Handle specific error cases
+        if (data.code === 'S3_ACCESS_DENIED') {
+          setToast('⚠️ AWS S3 Access Denied: Please check IAM permissions for the S3 bucket.');
+        } else if (data.code === 'S3_BUCKET_NOT_FOUND') {
+          setToast('❌ S3 Bucket Not Found: Please verify the bucket name in environment variables.');
+        } else {
+          setToast(`❌ Error: ${data.error || 'Failed to load forecast files'}`);
+        }
+        setForecastFiles([]);
+        return;
+      }
+      
       setForecastFiles(data);
     } catch (err) {
       console.error('[Fetch Forecast Files]', err);
+      setToast('❌ Network Error: Unable to connect to the server.');
+      setForecastFiles([]);
     }
   };
  

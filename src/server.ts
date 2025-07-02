@@ -193,9 +193,31 @@ app.get('/api/list-forecasts', async (_req, res) => {
       };
     });
     res.json(files);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[List Forecasts Error]', err);
-    res.status(500).json({ error: 'Failed to list forecast files' });
+    
+    // Provide more specific error messages based on the error type
+    if (err.code === 'AccessDenied') {
+      res.status(403).json({ 
+        error: 'AWS S3 Access Denied', 
+        details: 'Your IAM user does not have permission to list files in the S3 bucket. Please check AWS IAM permissions.',
+        code: 'S3_ACCESS_DENIED',
+        bucket: bucket
+      });
+    } else if (err.code === 'NoSuchBucket') {
+      res.status(404).json({ 
+        error: 'S3 Bucket Not Found', 
+        details: 'The specified S3 bucket does not exist.',
+        code: 'S3_BUCKET_NOT_FOUND',
+        bucket: bucket
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to list forecast files',
+        details: err.message || 'Unknown S3 error',
+        code: 'S3_ERROR'
+      });
+    }
   }
 });
 
