@@ -13,6 +13,8 @@ import Chart from 'chart.js/auto';
 import { Card } from './utils/card';
 import { LineChart } from 'lucide-react';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 interface ForecastRow {
   item: string;
   history2023: number;
@@ -104,7 +106,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
   useEffect(() => {
     const fetchForecastTable = async () => {
       try {
-        const res = await fetch('/api/final-forecast-report');
+        const res = await fetch(`${BASE_URL}/api/final-forecast-report`);
         const json = await res.json();
         setData(json);
       } catch (err) {
@@ -113,7 +115,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
     };
     fetchForecastTable();
 
-    fetch('/api/demand-classes')
+    fetch(`${BASE_URL}/api/demand-classes`)
       .then(res => res.json())
       .then(setCustomerClassCodes)
       .catch(() => setCustomerClassCodes([]));
@@ -124,8 +126,8 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
     const fetchBusinessLevelTable = async () => {
       try {
         const url = selectedCustomerClassCode
-          ? `/api/business-level-forecast-report?customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}`
-          : '/api/business-level-forecast-report';
+          ? `${BASE_URL}/api/business-level-forecast-report?customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}`
+          : `${BASE_URL}/api/business-level-forecast-report`;
         const res = await fetch(url);
         const json = await res.json();
         setBusinessLevelData(Array.isArray(json) ? json : []);
@@ -190,8 +192,8 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
 
     if (!monthlyData[`${item}_merged`]) {
       const [res25, res26] = await Promise.all([
-        fetch(`/api/final-forecast-report/monthly?item=${item}&year=2025`),
-        fetch(`/api/final-forecast-report/monthly?item=${item}&year=2026`)
+        fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${item}&year=2025`),
+        fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${item}&year=2026`)
       ]);
 
       const [monthly2025, monthly2026] = await Promise.all([
@@ -237,8 +239,8 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
 
     if (!businessMonthlyData[`${item}_merged`]) {
       const [res25, res26] = await Promise.all([
-        fetch(`/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2025${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`),
-        fetch(`/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2026${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`)
+        fetch(`${BASE_URL}/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2025${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`),
+        fetch(`${BASE_URL}/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2026${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`)
       ]);
       const [monthly2025, monthly2026] = await Promise.all([
         res25.json(),
@@ -276,8 +278,8 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
     // Fetch monthly data if not already loaded
     if (!businessMonthlyData[`${item}_merged`]) {
       Promise.all([
-        fetch(`/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2025${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`),
-        fetch(`/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2026${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`)
+        fetch(`${BASE_URL}/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2025${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`),
+        fetch(`${BASE_URL}/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item)}&year=2026${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`)
       ]).then(async ([res25, res26]) => {
         const [monthly2025, monthly2026] = await Promise.all([
           res25.json(),
@@ -753,8 +755,8 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                             setExpandedGroupItems(prev => ({ ...prev, [item.item]: !prev[item.item] }));
                                             if (!businessMonthlyData[`${item.item}_merged`]) {
                                               Promise.all([
-                                                fetch(`/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item.item)}&year=2025${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`),
-                                                fetch(`/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item.item)}&year=2026${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`)
+                                                fetch(`${BASE_URL}/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item.item)}&year=2025${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`),
+                                                fetch(`${BASE_URL}/api/business-level-forecast-report/monthly?item=${encodeURIComponent(item.item)}&year=2026${selectedCustomerClassCode ? `&customerClassCode=${encodeURIComponent(selectedCustomerClassCode)}` : ''}`)
                                               ]).then(async ([res25, res26]) => {
                                                 const [monthly2025, monthly2026] = await Promise.all([
                                                   res25.json(),
@@ -985,7 +987,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
       const updates: Record<string, Record<string, [MonthlyRow?, MonthlyRow?]>> = {};
       await Promise.all(
         data.map(async (row) => {
-          const res = await fetch(`/api/final-forecast-report/monthly?item=${encodeURIComponent(row.item)}&year=${year}`);
+          const res = await fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${encodeURIComponent(row.item)}&year=${year}`);
           const monthly = await res.json();
           const merged: Record<string, [MonthlyRow?, MonthlyRow?]> = { ...(monthlyData[`${row.item}_merged`] || {}) };
           for (let i = 0; i < 12; i++) {
