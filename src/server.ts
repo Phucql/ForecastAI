@@ -314,18 +314,16 @@ app.get('/api/demand-classes', async (req, res) => {
   try {
     let query = 'SELECT DISTINCT "Customer Class Code" FROM "inital_db" WHERE "Customer Class Code" IS NOT NULL';
     let params: any[] = [];
-    
     if (businessUnit) {
       query += ' AND "Business Unit" = $1';
       params.push(businessUnit);
     }
-    
     query += ' ORDER BY "Customer Class Code"';
-    
     const result = await pool.query(query, params);
-    res.json(result.rows.map(r => r['Customer Class Code']));
+    const arr = Array.isArray(result.rows) ? result.rows.map(r => r['Customer Class Code']) : [];
+    res.json(arr);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch demand classes' });
+    res.json([]);
   }
 });
 
