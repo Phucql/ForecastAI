@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pkg from 'pg';
+import chardet from 'chardet';
 
 dotenv.config();
 
@@ -767,9 +768,18 @@ app.post('/api/run-forecast-py', async (req, res) => {
       const originalCsv = await waitForObject(originalKey);
       const forecastCsvFromS3 = await waitForObject(forecastFileName);
 
+      // Use chardet to detect encoding for original and forecast CSVs
+      const originalBuffer = originalCsv.Body as Buffer;
+      const originalEncoding = chardet.detect(originalBuffer) || 'utf-8';
+      const originalCsvString = originalBuffer.toString(originalEncoding as BufferEncoding);
+
+      const forecastBuffer = forecastCsvFromS3.Body as Buffer;
+      const forecastEncoding = chardet.detect(forecastBuffer) || 'utf-8';
+      const forecastCsvString = forecastBuffer.toString(forecastEncoding as BufferEncoding);
+
       const mergedCsv = mergeForecastFiles(
-        originalCsv.Body!.toString('utf-8'),
-        forecastCsvFromS3.Body!.toString('utf-8')
+        originalCsvString,
+        forecastCsvString
       );
 
       await s3.upload({
