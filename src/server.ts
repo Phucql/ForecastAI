@@ -161,7 +161,12 @@ pool.connect((err, client, done) => {
 });
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:4173'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:4173',
+    'https://foodforecastai.netlify.app',
+    process.env.CORS_ORIGIN
+  ].filter((origin): origin is string => Boolean(origin)),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));

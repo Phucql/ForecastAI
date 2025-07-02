@@ -850,7 +850,8 @@ function App() {
 };
 
 const uploadCsvFromS3ToPostgres = async () => {
-  await fetch('http://localhost:3001/api/merge-and-upload-to-db', {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  await fetch(`${apiBaseUrl}/api/merge-and-upload-to-db`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key: selectedForecastFile }),
