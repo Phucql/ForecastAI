@@ -5,7 +5,7 @@
   "type": "module",
   "proxy": "http://localhost:3001",
   "scripts": {
-    "build:prod": "tsc",
+    "build:prod": "vite build && tsc -p tsconfig.server.json",
     "dev": "ts-node src/server.ts",
     "build": "vite build",
     "lint": "eslint .",
