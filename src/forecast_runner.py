@@ -57,7 +57,8 @@ try:
     # 5. Forecast
     client = NixtlaClient(api_key=api_key)
     # Robust debug output before forecasting
-    print("[DEBUG] DataFrame sent to forecast:\n", df_filled, file=sys.stderr)
+    print("[DEBUG] DataFrame sent to forecast (full):\n" + df_filled.to_string(), file=sys.stderr)
+    print("[DEBUG] DataFrame head:\n", df_filled.head(), file=sys.stderr)
     print("[DEBUG] DataFrame shape:", df_filled.shape, file=sys.stderr)
     print("[DEBUG] DataFrame columns:", df_filled.columns, file=sys.stderr)
     print("[DEBUG] DataFrame dtypes:", df_filled.dtypes, file=sys.stderr)
