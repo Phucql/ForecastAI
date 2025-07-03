@@ -915,7 +915,7 @@ function App() {
         },
       });
   
-      const fileKey = `forecast_result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
+      const fileKey = `Forecast_Result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
   
       try {
         const uploadRes = await s3.send(new PutObjectCommand({
@@ -1112,6 +1112,7 @@ function App() {
       endDate = `${endYear}-${String(endMonth + 1).padStart(2, '0')}`;
     }
     handleRunForecast(startDate, endDate);
+    setShowForecastDateModal(false);
   };
 
   return (
@@ -1267,10 +1268,6 @@ function App() {
                               return Math.max(acc1, acc2);
                             });
                             if (accArr.length > 0) accuracy = (accArr.reduce((a, b) => a + b, 0) / accArr.length) * 100;
-                          }
-                          if (accuracy !== null) {
-                            accuracy = Math.min(100, 85 + accuracy);
-                            mape = 100 - accuracy;
                           }
                           return (
                             <div className="flex flex-col items-center mt-6">
