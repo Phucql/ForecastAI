@@ -495,7 +495,7 @@ function App() {
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowGraphModal(true)}>
           <CardContent className="flex flex-col items-center justify-center space-y-2 p-6">
             <LineChart className="w-12 h-12 text-orange-500" />
-            <p className="text-sm font-medium">Manage Graphs</p>
+            <p className="text-sm font-bold">Manage Graphs</p>
           </CardContent>
         </Card>
       </div>
@@ -524,34 +524,6 @@ function App() {
             </button>
           </div>
             <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="flex-1">
-                <label className="block text-sm font-medium text-orange-900 mb-1">Name</label>
-              <div className="flex gap-2">
-                <select
-                  value={searchType}
-                  onChange={(e) => setSearchType(e.target.value)}
-                  className="p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <option value="starts-with">Starts with</option>
-                  <option value="contains">Contains</option>
-                  <option value="equals">Equals</option>
-                </select>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Search by name..."
-                />
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="bg-orange-50 text-orange-700 px-3 rounded-md hover:bg-orange-100 transition-colors"
-                    title="Clear search"
-                  >
-                    ×
-                  </button>
-              </div>
-            </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-orange-900 mb-1">Original File for Merge</label>
             <select
@@ -579,6 +551,36 @@ function App() {
         </div>
           <div className="p-8">
             <h3 className="text-lg font-bold mb-4 text-orange-900">Search Results</h3>
+            <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-orange-900 mb-1">Name</label>
+                <div className="flex gap-2">
+                  <select
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value)}
+                    className="p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    <option value="starts-with">Starts with</option>
+                    <option value="contains">Contains</option>
+                    <option value="equals">Equals</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Search by name..."
+                  />
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="bg-orange-50 text-orange-700 px-3 rounded-md hover:bg-orange-100 transition-colors"
+                    title="Clear search"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            </div>
           <div className="flex gap-2 mb-4">
             <button
                 className={`p-2 rounded ${selectedForecastFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
@@ -687,6 +689,67 @@ function App() {
                 }}
             />
             </div>
+          </div>
+        </div>
+        {/* Forecast Result Files Table - moved here */}
+        <div className="mt-12">
+          <h3 className="text-lg font-bold mb-4 text-orange-900">Forecast Result Files</h3>
+          <div className="relative">
+            {loadingResultFiles && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+              </div>
+            )}
+            <table className="w-full rounded-xl overflow-hidden shadow-sm">
+              <thead className="sticky top-0 z-10 bg-orange-50/90">
+                <tr className="border-b-2 border-orange-200">
+                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Name</th>
+                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Owner</th>
+                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Status</th>
+                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {forecastResultFiles.length === 0 ? (
+                  <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
+                ) : forecastResultFiles.map((file, idx) => (
+                  <tr
+                    key={file.key}
+                    className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                  >
+                    <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                    <td className="py-2 px-4">{file.owner}</td>
+                    <td className="py-2 px-4">
+                      <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                        ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                        file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                        'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                      >
+                        {file.status}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleDownloadResult(file.key)}
+                          className="text-orange-600 hover:underline text-sm font-semibold"
+                          title="Download file"
+                        >
+                          Download
+                        </button>
+                        <button
+                          onClick={() => handleDeleteResult(file.key)}
+                          className="text-red-500 hover:underline text-sm font-semibold"
+                          title="Delete file"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -918,6 +981,25 @@ const handleDeleteResult = async (key: string) => {
   fetchForecastResultFiles();
 };
 
+// Add the handleDownloadResult function (replace Preview logic)
+const handleDownloadResult = async (key: string) => {
+  try {
+    const res = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(key)}`);
+    if (!res.ok) throw new Error('Failed to download file');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = key.split('/').pop() || 'forecast_result.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('Download failed.');
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gray-800 text-white p-4">
@@ -1095,7 +1177,10 @@ const handleDeleteResult = async (key: string) => {
             </>
           )
         )}
-        {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} />}
+        {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} onComplete={() => {
+          fetchForecastFiles();
+          setActiveTab('manage-demand-plans');
+        }} />}
       </div>
 
       <Modal
@@ -1383,68 +1468,6 @@ const handleDeleteResult = async (key: string) => {
           <span className="spinner" style={{ marginRight: 8 }} /> Load (Run Report)
         </button>
       )}
-
-      {/* Forecast Result Files Table */}
-      <div className="mt-12">
-        <h3 className="text-lg font-bold mb-4 text-orange-900">Forecast Result Files</h3>
-        <div className="relative">
-          {loadingResultFiles && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
-            </div>
-          )}
-          <table className="w-full rounded-xl overflow-hidden shadow-sm">
-            <thead className="sticky top-0 z-10 bg-orange-50/90">
-              <tr className="border-b-2 border-orange-200">
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Name</th>
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Owner</th>
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Status</th>
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredResultFiles.length === 0 ? (
-                <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
-              ) : filteredResultFiles.map((file, idx) => (
-                <tr
-                  key={file.key}
-                  className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
-                >
-                  <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                  <td className="py-2 px-4">{file.owner}</td>
-                  <td className="py-2 px-4">
-                    <span className={`px-2 py-1 text-xs rounded-full font-semibold border
-                      ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
-                      file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                      'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
-                    >
-                      {file.status}
-                    </span>
-                  </td>
-                  <td className="py-2 px-4">
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => handlePreviewResult(file.key)}
-                        className="text-orange-600 hover:underline text-sm font-semibold"
-                        title="Preview file"
-                      >
-                        Preview
-                      </button>
-                      <button
-                        onClick={() => handleDeleteResult(file.key)}
-                        className="text-red-500 hover:underline text-sm font-semibold"
-                        title="Delete file"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
     </div>
   );
