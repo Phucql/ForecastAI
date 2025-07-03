@@ -102,6 +102,20 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
   // Add new state for business-level table
   const [businessExpandedYear2025, setBusinessExpandedYear2025] = useState(false);
   const [businessExpandedYear2026, setBusinessExpandedYear2026] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [forecastReportData, setForecastReportData] = useState([]); // or your actual data state
+
+  // Fetch function for forecast report data
+  const fetchForecastReportData = async () => {
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    const res = await fetch(`${BASE_URL}/api/final-forecast-report`);
+    const data = await res.json();
+    setForecastReportData(data);
+  };
+
+  useEffect(() => {
+    fetchForecastReportData();
+  }, []);
 
   useEffect(() => {
     const fetchForecastTable = async () => {
@@ -1025,6 +1039,21 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
     URL.revokeObjectURL(url);
   }
 
+  const handleClearTable = async () => {
+    if (!window.confirm('Are you sure you want to clear the forecast table? This cannot be undone.')) return;
+    setClearing(true);
+    try {
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const res = await fetch(`${BASE_URL}/api/clear-forecast-tables`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to clear forecast tables');
+      await fetchForecastReportData(); // Seamless refresh
+    } catch (err) {
+      alert('Failed to clear forecast tables.');
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -1032,14 +1061,19 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
           <h1 className="text-3xl font-extrabold mb-8 text-center text-orange-900 tracking-tight drop-shadow-sm">
             Forecast Report – Booking Forecast by Year
           </h1>
-          <div className="mb-6">
+          <div className="flex justify-between items-center mb-6">
             <button
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full text-lg flex items-center gap-2"
               onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-base font-semibold rounded-full shadow hover:bg-orange-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-orange-300"
-              aria-label="Back to Reports & Analytics"
-              title="Back to Reports & Analytics"
             >
-              <span className="text-lg mr-1">←</span> Back to Reports & Analytics
+              ← Back to Reports & Analytics
+            </button>
+            <button
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full text-lg flex items-center gap-2"
+              onClick={handleClearTable}
+              disabled={clearing}
+            >
+              {clearing ? 'Clearing...' : 'Clear Table'}
             </button>
           </div>
           <div
@@ -1330,15 +1364,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
             </h2>
           </div>
           <div
-            ref={tableRefs[1]}
-            className="overflow-x-auto w-full border border-orange-200 rounded-xl shadow-sm cursor-grab active:cursor-grabbing"
-            onMouseDown={e => handleMouseDown(1, e)}
-            onMouseMove={e => handleMouseMove(1, e)}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
+            style={{
+              height: 400,
+              overflow: 'auto',
+              position: 'relative',
+              background: 'white',
+              borderRadius: '12px',
+              border: '1px solid #fbbf24', // Tailwind orange-200
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+            }}
           >
-            <Table className="min-w-max text-sm">
-              <TableHeader className="sticky top-0 z-10 bg-white/90 backdrop-blur">
+            <table style={{ minWidth: 1200, width: '100%' }}>
+              <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur">
                 {/* Row 1: Item, Year headers */}
                 <TableRow className="bg-orange-100 text-center font-bold text-orange-900">
                   <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold">Business Unit</TableHead>
@@ -1428,11 +1465,26 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                     <TableHead key="2026_percent" className="bg-orange-100 text-orange-900 font-bold">Percent Change</TableHead>
                   ]}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
+              </thead>
+              <tbody>
                 {renderBusinessLevelTable()}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
+            {/* Always show horizontal scrollbar */}
+            <div
+              style={{
+                height: 16,
+                overflowX: 'scroll',
+                overflowY: 'hidden',
+                width: '100%',
+                position: 'absolute',
+                left: 0,
+                bottom: 0,
+                background: 'white'
+              }}
+            >
+              <div style={{ width: 1200 }} />
+            </div>
           </div>
         </div>
       </div>
