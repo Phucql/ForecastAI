@@ -173,6 +173,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [forecastResultFiles, setForecastResultFiles] = useState<any[]>([]);
   const [loadingResultFiles, setLoadingResultFiles] = useState(false);
+  const [resultSearchTerm, setResultSearchTerm] = useState('');
+  const [selectedResultFile, setSelectedResultFile] = useState<string | null>(null);
 
   // Sync Option 2 back to Option 1 when user selects custom date range
   useEffect(() => {
@@ -550,10 +552,10 @@ function App() {
           </div>
         </div>
           <div className="p-8">
-            <h3 className="text-lg font-bold mb-4 text-orange-900">Search Results</h3>
+            <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
             <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-orange-900 mb-1">Name</label>
+                <label className="block text-sm font-medium text-black mb-1">Name</label>
                 <div className="flex gap-2">
                   <select
                     value={searchType}
@@ -608,10 +610,10 @@ function App() {
               <table className="w-full rounded-xl overflow-hidden shadow-sm">
                 <thead className="sticky top-0 z-10 bg-orange-50/90">
               <tr className="border-b-2 border-orange-200">
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Name</th>
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Owner</th>
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Status</th>
-                <th className="text-left py-2 px-4 text-orange-900 font-bold">Actions</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -689,67 +691,114 @@ function App() {
                 }}
             />
             </div>
-          </div>
-        </div>
-        {/* Forecast Result Files Table - moved here */}
-        <div className="mt-12">
-          <h3 className="text-lg font-bold mb-4 text-orange-900">Forecast Result Files</h3>
-          <div className="relative">
-            {loadingResultFiles && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+            {/* Forecast Result Files Table - moved here */}
+            <div className="mt-12">
+              <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-black mb-1">Search Result Files</label>
+                  <input
+                    type="text"
+                    value={resultSearchTerm}
+                    onChange={(e) => setResultSearchTerm(e.target.value)}
+                    className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Search by name..."
+                  />
+                </div>
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDuplicateResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDeleteResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-            )}
-            <table className="w-full rounded-xl overflow-hidden shadow-sm">
-              <thead className="sticky top-0 z-10 bg-orange-50/90">
-                <tr className="border-b-2 border-orange-200">
-                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Name</th>
-                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Owner</th>
-                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Status</th>
-                  <th className="text-left py-2 px-4 text-orange-900 font-bold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {forecastResultFiles.length === 0 ? (
-                  <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
-                ) : forecastResultFiles.map((file, idx) => (
-                  <tr
-                    key={file.key}
-                    className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
-                  >
-                    <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                    <td className="py-2 px-4">{file.owner}</td>
-                    <td className="py-2 px-4">
-                      <span className={`px-2 py-1 text-xs rounded-full font-semibold border
-                        ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
-                        file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                        'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+              <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
+              <div className="relative">
+                {loadingResultFiles && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                  </div>
+                )}
+                <table className="w-full rounded-xl overflow-hidden shadow-sm">
+                  <thead className="sticky top-0 z-10 bg-orange-50/90">
+                    <tr className="border-b-2 border-orange-200">
+                      <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredResultFiles.length === 0 ? (
+                      <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
+                    ) : filteredResultFiles.map((file, idx) => (
+                      <tr
+                        key={file.key}
+                        className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                        onClick={() => setSelectedResultFile(file.key)}
+                        title={file.name}
                       >
-                        {file.status}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4">
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleDownloadResult(file.key)}
-                          className="text-orange-600 hover:underline text-sm font-semibold"
-                          title="Download file"
-                        >
-                          Download
-                        </button>
-                        <button
-                          onClick={() => handleDeleteResult(file.key)}
-                          className="text-red-500 hover:underline text-sm font-semibold"
-                          title="Delete file"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                        <td className="py-2 px-4">{file.owner}</td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                            ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                            file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                            'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                          >
+                            {file.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          <div className="flex gap-4">
+                            <button
+                              onClick={() => handlePreviewResult(file.key)}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Preview file"
+                            >
+                              Preview
+                            </button>
+                            <button
+                              onClick={() => handleDownloadResult(file.key)}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Download file"
+                            >
+                              Download
+                            </button>
+                            <button
+                              onClick={() => handleDeleteResult(file.key)}
+                              className="text-red-500 hover:underline text-sm font-semibold"
+                              title="Delete file"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
+                <button
+                  onClick={handleRunReport}
+                  className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
+                  title="Run report on selected result file"
+                >
+                  <Play className="w-4 h-4" />
+                  Run Report
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -997,6 +1046,27 @@ const handleDownloadResult = async (key: string) => {
     window.URL.revokeObjectURL(url);
   } catch (err) {
     alert('Download failed.');
+  }
+};
+
+const handleDuplicateResult = async (key: string | null) => {
+  if (!key) return;
+  const currentName = key.split('/').pop();
+  const newName = window.prompt('Enter a new name for the duplicated file:', currentName?.replace(/(\.csv)?$/, `_copy.csv`));
+  if (!newName || !newName.endsWith('.csv')) {
+    alert('Please provide a valid .csv file name.');
+    return;
+  }
+  try {
+    const res = await fetch(`${BASE_URL}/api/duplicate-forecast-result`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourceKey: key, newName }),
+    });
+    if (!res.ok) throw new Error('Failed to duplicate result file');
+    fetchForecastResultFiles();
+  } catch (err) {
+    alert('Error duplicating result file.');
   }
 };
 

@@ -1553,6 +1553,27 @@ app.delete('/api/delete-forecast-result', async (req, res) => {
   }
 });
 
+// Endpoint to duplicate a forecast result file with a new name
+app.post('/api/duplicate-forecast-result', async (req, res) => {
+  const { sourceKey, newName } = req.body;
+  if (!sourceKey || !newName) {
+    return res.status(400).json({ error: 'Missing sourceKey or newName' });
+  }
+  try {
+    const s3 = s3Result;
+    const targetKey = FORECAST_RESULT_PREFIX + newName;
+    await s3.copyObject({
+      Bucket: FORECAST_RESULT_BUCKET,
+      CopySource: `/${FORECAST_RESULT_BUCKET}/${sourceKey}`,
+      Key: targetKey,
+    }).promise();
+    res.json({ message: 'Forecast result file duplicated', newKey: targetKey });
+  } catch (err) {
+    console.error('[Duplicate Forecast Result Error]', err);
+    res.status(500).json({ error: 'Failed to duplicate forecast result file' });
+  }
+});
+
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
