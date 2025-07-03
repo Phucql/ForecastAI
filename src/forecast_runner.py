@@ -11,6 +11,8 @@ import signal
 # Optional: clean logs
 logging.getLogger("nixtla.nixtla_client").setLevel(logging.CRITICAL)
 
+print("[DEBUG] Python script started", file=sys.stderr)
+
 try:
     # 1. Load key from .env
     load_dotenv()
@@ -19,8 +21,15 @@ try:
         raise Exception("TIMEGPT_API_KEY is missing from .env")
 
     # 2. Parse POST body from stdin
-    data = json.loads(sys.argv[1])
-    print("[DEBUG] Received payload", file=sys.stderr)
+    payload = sys.stdin.read()
+    print(f"[DEBUG] Received payload from stdin, length: {len(payload)}", file=sys.stderr)
+    
+    if not payload:
+        raise Exception("No payload received from stdin")
+    
+    data = json.loads(payload)
+    print("[DEBUG] Payload received and parsed", file=sys.stderr)
+    print("[DEBUG] Successfully parsed JSON payload", file=sys.stderr)
 
     # 3. Convert to DataFrame
     df = pd.DataFrame(data["series"])
