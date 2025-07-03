@@ -176,6 +176,8 @@ function App() {
   const [resultSearchTerm, setResultSearchTerm] = useState('');
   const [selectedResultFile, setSelectedResultFile] = useState<string | null>(null);
   const [searchResultsTerm, setSearchResultsTerm] = useState('');
+  const [runReportLoading, setRunReportLoading] = useState(false);
+  const [runReportMessage, setRunReportMessage] = useState('');
 
   // Sync Option 2 back to Option 1 when user selects custom date range
   useEffect(() => {
@@ -663,15 +665,15 @@ function App() {
               {(isRunningForecast || loading) && <span className="spinner" style={{ marginRight: 8 }} />}
               {(isRunningForecast || loading) ? 'Running Forecast...' : 'Run Forecast'}
             </button>
-            <MergeAndUploadButton
-              selectedOriginal={selectedOriginalFile}
-              selectedForecast={selectedForecastFile}
-                onComplete={() => {
-                  setActiveTab('reports-analytics');
-                  setToast('Report generated and uploaded!');
-                }}
-            />
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2"
+              onClick={handleRunReport}
+              disabled={!selectedResultFile || runReportLoading}
+            >
+              {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
+            </button>
             </div>
+            {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
             {/* Forecast Result Files Table - moved here */}
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
@@ -934,22 +936,45 @@ function App() {
   
   
   const handleRunReport = async () => {
+    if (!selectedResultFile) {
+      setRunReportMessage('❌ Please select a forecast result file.');
+      return;
+    }
+    // Extract original name from forecast result file name
+    const forecastResultName = selectedResultFile.split('/').pop() || '';
+    // Expected format: Forecast_<OriginalName>_<Date>.csv
+    const match = forecastResultName.match(/^Forecast_(.+)_\d{4}-\d{2}-\d{2}\.csv$/);
+    if (!match) {
+      setRunReportMessage('❌ Could not determine original file from forecast result file name.');
+      return;
+    }
+    const originalName = match[1] + '.csv';
+    // Find the original file in forecastFiles
+    const originalFile = forecastFiles.find(f => f.name === originalName);
+    if (!originalFile) {
+      setRunReportMessage(`❌ Original file '${originalName}' not found.`);
+      return;
+    }
+    setRunReportLoading(true);
+    setRunReportMessage('');
     try {
-      await uploadForecastResultToPostgres();
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const res = await fetch(`${BASE_URL}/api/upload-to-forecast-tables`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalKey: originalFile.key,
+          forecastKey: selectedResultFile
+        })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Unknown error');
       setActiveTab('reports-analytics');
     } catch (err) {
-      console.error("❌ Run Report error:", err);
-      alert("Run Report failed. See console for details.");
+      setRunReportMessage(`❌ Error: ${err.message}`);
+    } finally {
+      setRunReportLoading(false);
     }
-  };
-
-  const uploadForecastResultToPostgres = async () => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-    await fetch(`${apiBaseUrl}/api/upload-to-forecast-tables`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ forecastKey: selectedResultFile }),
-    });
   };
 
   const handleClearForecastTable = async () => {
