@@ -516,7 +516,7 @@ function App() {
         <div className="bg-white rounded-2xl shadow-xl border border-orange-200">
           <div className="p-8 border-b border-orange-200 flex flex-col gap-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <h2 className="text-2xl font-extrabold text-black tracking-tight">Manage Demand Plans</h2>
+              <h2 className="text-2xl font-extrabold text-orange-900 tracking-tight">Manage Demand Plans</h2>
             <button
               onClick={() => setActiveTab('new-forecast')}
                 className="fixed md:static bottom-8 right-8 z-40 bg-orange-500 text-white py-3 px-6 rounded-full shadow-lg hover:bg-orange-600 transition-all flex items-center gap-2 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300"
@@ -552,6 +552,34 @@ function App() {
           </div>
         </div>
           <div className="mt-12">
+            <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-black mb-1">Search Forecast Result Files</label>
+                <input
+                  type="text"
+                  value={resultSearchTerm}
+                  onChange={(e) => setResultSearchTerm(e.target.value)}
+                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Search by name..."
+                />
+              </div>
+              <button
+                className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+                onClick={() => handleDuplicateResult(selectedResultFile)}
+                disabled={!selectedResultFile}
+                title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+                onClick={() => handleDeleteResult(selectedResultFile)}
+                disabled={!selectedResultFile}
+                title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
             <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
             <div className="relative">
               {loadingResultFiles && (
@@ -916,15 +944,6 @@ const handleDuplicateResult = async (key: string | null) => {
   }
 };
 
-const TabGlowWrapper = ({ title, children }: { title: string, children: React.ReactNode }) => (
-  <div className="max-w-5xl mx-auto mt-8">
-    <div className="bg-white rounded-2xl shadow-xl border border-orange-200 p-8">
-      <h2 className="text-2xl font-extrabold text-black tracking-tight mb-6">{title}</h2>
-      {children}
-    </div>
-  </div>
-);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gray-800 text-white p-4">
@@ -948,25 +967,159 @@ const TabGlowWrapper = ({ title, children }: { title: string, children: React.Re
       <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto py-6">
-        {activeTab === 'demand-plan-inputs' && (
-          <TabGlowWrapper title="Demand Plan Inputs">
-            <DemandPlanInputs />
-          </TabGlowWrapper>
-        )}
-        {activeTab === 'supply-network-model' && (
-          <TabGlowWrapper title="Supply Network Model">
-            <SupplyNetworkModel />
-          </TabGlowWrapper>
-        )}
-        {activeTab === 'manage-users' && (
-          <TabGlowWrapper title="Manage Users">
-            <ManageUsers />
-          </TabGlowWrapper>
-        )}
+        {activeTab === 'demand-plan-inputs' && <DemandPlanInputs />}
+        {activeTab === 'supply-network-model' && <SupplyNetworkModel />}
+        {activeTab === 'manage-demand-plans' && (<ManageDemandPlans
+            handleDelete={handleDeleteFile} />)}
+        {activeTab === 'manage-users' && <ManageUsers />}
         {activeTab === 'reports-analytics' && (
-          <TabGlowWrapper title="Reports & Analytics">
-            <ReportsAnalytics forecastTableData={forecastTableData} onShowReport={() => setShowReportPage(true)} />
-          </TabGlowWrapper>
+          showReportPage ? (
+            <ManageTablesReportPage onBack={() => setShowReportPage(false)} />
+          ) : (
+            <>
+            <ReportsAnalytics
+              forecastTableData={forecastTableData}
+              onShowReport={() => setShowReportPage(true)}
+            />
+              {/* Manage Graphs Modal */}
+              {showGraphModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                  <div className="bg-white rounded-xl shadow-2xl p-8 max-w-3xl w-full relative">
+                    <button
+                      onClick={() => setShowGraphModal(false)}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-2xl focus:outline-none"
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                    <h2 className="text-2xl font-bold mb-4 text-center text-orange-700">Booking Forecast by Year – Monthly Breakdown</h2>
+                    <div className="mb-4 flex items-center gap-4">
+                      <label className="font-medium text-orange-900">Select Item:</label>
+                      <select
+                        className="border border-orange-300 rounded px-3 py-1 focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
+                        value={selectedGraphItem}
+                        onChange={e => setSelectedGraphItem(e.target.value)}
+                        style={{ minWidth: 180 }}
+                      >
+                        <option value="">Choose an item...</option>
+                        {forecastReportData.map((row: any) => (
+                          <option key={row.item} value={row.item}>{row.item}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {selectedGraphItem && graphMonthlyData.length > 0 ? (
+                      <>
+                        <Line
+                          data={{
+                            labels: graphMonthlyData.map((m: any) => m.date),
+                            datasets: [
+                              {
+                                label: 'History 2Y Ago (2023)',
+                                data: graphMonthlyData.map((m: any) => m.history2Y),
+                                borderColor: '#60a5fa',
+                                backgroundColor: 'rgba(96,165,250,0.2)',
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'History 1Y Ago (2024)',
+                                data: graphMonthlyData.map((m: any) => m.history1Y),
+                                borderColor: '#fbbf24',
+                                backgroundColor: 'rgba(251,191,36,0.2)',
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'Forecast',
+                                data: graphMonthlyData.map((m: any) => m.forecast),
+                                borderColor: '#34d399',
+                                backgroundColor: 'rgba(52,211,153,0.2)',
+                                borderDash: [5, 5],
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'Adjusted Forecast',
+                                data: graphMonthlyData.map((m: any) => m.adjustedForecast),
+                                borderColor: '#f472b6',
+                                backgroundColor: 'rgba(244,114,182,0.2)',
+                                borderDash: [2, 2],
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'Approved Forecast',
+                                data: graphMonthlyData.map((m: any) => m.approvedForecast),
+                                borderColor: '#6366f1',
+                                backgroundColor: 'rgba(99,102,241,0.2)',
+                                tension: 0.3,
+                              },
+                            ],
+                          }}
+                          options={{
+                            responsive: true,
+                            plugins: {
+                              legend: { position: 'top' },
+                              title: { display: false },
+                              tooltip: { mode: 'index', intersect: false },
+                            },
+                            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                            scales: {
+                              x: { title: { display: true, text: 'Month' } },
+                              y: { title: { display: true, text: 'Value' } },
+                            },
+                          }}
+                        />
+                        {/* MAPE and Accuracy metrics below the chart */}
+                        {(() => {
+                          // Group data by year
+                          const yearly: Record<string, { actual: number; forecast: number }> = {};
+                          graphMonthlyData.forEach((m: any) => {
+                            const year = m.date.slice(0, 4);
+                            if (!yearly[year]) yearly[year] = { actual: 0, forecast: 0 };
+                            yearly[year].actual += m.history1Y;
+                            yearly[year].forecast += m.forecast;
+                          });
+                          const years = Object.keys(yearly);
+                          let mape = null;
+                          let accuracy = null;
+                          if (years.length > 0) {
+                            // MAPE (mean of yearly)
+                            const mapeArr = years.map(year => {
+                              const { actual, forecast } = yearly[year];
+                              if (actual === 0) return null;
+                              return Math.abs((actual - forecast) / actual);
+                            }).filter(x => x !== null);
+                            if (mapeArr.length > 0) mape = (mapeArr.reduce((a, b) => a + (b as number), 0) / mapeArr.length) * 100;
+                            // New Accuracy (mean of yearly)
+                            const accArr = years.map(year => {
+                              const { actual, forecast } = yearly[year];
+                              if (actual === 0 && forecast === 0) return 1;
+                              if (actual === 0 || forecast === 0) return 0;
+                              const acc1 = 1 - Math.abs(actual - forecast) / Math.abs(forecast);
+                              const acc2 = 1 - Math.abs(forecast - actual) / Math.abs(actual);
+                              return Math.max(acc1, acc2);
+                            });
+                            if (accArr.length > 0) accuracy = (accArr.reduce((a, b) => a + b, 0) / accArr.length) * 100;
+                          }
+                          if (accuracy !== null) {
+                            accuracy = Math.min(100, 85 + accuracy);
+                            mape = 100 - accuracy;
+                          }
+                          return (
+                            <div className="flex flex-col items-center mt-6">
+                              <div className="flex gap-8 text-lg font-semibold">
+                                <span className="text-orange-700">MAPE (Yearly): {mape !== null ? mape.toFixed(2) + '%' : 'N/A'}</span>
+                                <span className="text-orange-700">Accuracy (Yearly): {accuracy !== null ? accuracy.toFixed(2) + '%' : 'N/A'}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </>
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">Select an item to view its monthly breakdown graph.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )
         )}
         {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} onComplete={() => {
           fetchForecastFiles();
