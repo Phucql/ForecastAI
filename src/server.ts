@@ -55,7 +55,15 @@ const s3 = new AWS.S3({
   }
 });
 
-
+// S3 client for Forecast_Result bucket
+const s3Result = new AWS.S3({
+  region: 'us-east-2',
+  credentials: {
+    accessKeyId: process.env.VITE_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.VITE_AWS_SECRET_ACCESS_KEY!,
+  }
+});
+const FORECAST_RESULT_BUCKET = 'Forecast_Result';
 
 const requiredEnvVars = ['VITE_DB_HOST', 'VITE_DB_NAME', 'VITE_DB_USER', 'VITE_DB_PASSWORD'];
   for (const envVar of requiredEnvVars) {
@@ -828,8 +836,18 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
         console.log(`[UPLOAD SUCCESS] Forecast uploaded: ${forecastFileName}`);
 
-        // ...rest of your merge and upload logic...
-        // (keep as is, or update as needed)
+        // After forecast completion, upload to Forecast_Result bucket
+        await s3Result.upload({
+          Bucket: FORECAST_RESULT_BUCKET,
+          Key: forecastFileName,
+          Body: forecastCsv,
+          ContentType: 'text/csv',
+          Metadata: {
+            owner: 'ForecastAI',
+            status: 'Active',
+            description: `Forecast generated for ${baseFileName}.csv on ${today}`
+          }
+        }).promise();
 
         res.json({
           message: 'Forecast complete',
@@ -1476,6 +1494,58 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
   } catch (err) {
     console.error('❌ Error in /api/business-level-forecast-report/monthly:', err);
     return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Endpoint to list files in Forecast_Result bucket
+app.get('/api/list-forecast-results', async (_req, res) => {
+  try {
+    const data = await s3Result.listObjectsV2({
+      Bucket: FORECAST_RESULT_BUCKET,
+    }).promise();
+    const files = (data.Contents || []).map(obj => ({
+      key: obj.Key!,
+      name: obj.Key?.split('/').pop(),
+      owner: 'ForecastAI',
+      status: 'Active',
+    }));
+    res.json(files);
+  } catch (err) {
+    console.error('[List Forecast Results Error]', err);
+    res.status(500).json({ error: 'Failed to list forecast result files' });
+  }
+});
+
+// Endpoint to preview a forecast result file
+app.get('/api/preview-forecast-result', async (req, res) => {
+  const key = req.query.key as string;
+  if (!key) return res.status(400).json({ error: 'Missing key' });
+  try {
+    const data = await s3Result.getObject({
+      Bucket: FORECAST_RESULT_BUCKET,
+      Key: key,
+    }).promise();
+    res.setHeader('Content-Type', 'text/csv');
+    res.send(data.Body);
+  } catch (err) {
+    console.error('[Preview Forecast Result Error]', err);
+    res.status(500).json({ error: 'Failed to preview forecast result file' });
+  }
+});
+
+// Endpoint to delete a forecast result file
+app.delete('/api/delete-forecast-result', async (req, res) => {
+  const key = req.query.key as string;
+  if (!key) return res.status(400).json({ error: 'Missing key' });
+  try {
+    await s3Result.deleteObject({
+      Bucket: FORECAST_RESULT_BUCKET,
+      Key: key,
+    }).promise();
+    res.json({ message: 'Forecast result file deleted' });
+  } catch (err) {
+    console.error('[Delete Forecast Result Error]', err);
+    res.status(500).json({ error: 'Failed to delete forecast result file' });
   }
 });
 

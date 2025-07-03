@@ -170,12 +170,11 @@ function App() {
   const [forecastReportData, setForecastReportData] = useState<any[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [loadingFiles, setLoadingFiles] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+  const [forecastResultFiles, setForecastResultFiles] = useState<any[]>([]);
+  const [loadingResultFiles, setLoadingResultFiles] = useState(false);
 
-  
-
-  
-// Sync Option 2 back to Option 1 when user selects custom date range
+  // Sync Option 2 back to Option 1 when user selects custom date range
   useEffect(() => {
     const start = new Date(startYear, startMonth);
     const end = new Date(endYear, endMonth);
@@ -186,7 +185,6 @@ function App() {
     }
   }, [startYear, startMonth, endYear, endMonth, dateSelectionMode]);
 
-  
   useEffect(() => {
     fetchSavedForecasts();
   }, []);
@@ -224,7 +222,6 @@ function App() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-
   const fetchSavedForecasts = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/list-forecasts`);
@@ -251,7 +248,6 @@ function App() {
     }
   };
  
-
   const handleSave = async () => {
     if (!selectedValues.name) {
       alert('Please enter a name');
@@ -287,7 +283,6 @@ function App() {
       alert('Error saving plan');
     }
   };
-
 
   const handleDuplicate = async () => {
     if (!selectedForecastFile) return;
@@ -346,10 +341,6 @@ function App() {
     alert("Failed to load preview data");
   }
 };
-
-  // const handleRowClick = (plan: DemandPlan) => {
-  //   setSelectedPlan(selectedPlan?.id === plan.id ? null : plan);
-  // };
 
   const handleSearch = () => {
     let filtered = [...demandPlans];
@@ -510,10 +501,6 @@ function App() {
       </div>
     );
   };
-
-
-
-
 
   const ManageDemandPlans = ({ handleDelete }: { handleDelete: (fileName: string) => void }) => (
     <div className="p-6 min-h-screen bg-white relative">
@@ -705,19 +692,19 @@ function App() {
     </div>
   );
 
-
   const handleRunForecast = async (startDate: string, endDate: string) => {
-    if (!selectedForecastFile) {
-      alert("Please select a forecast file first.");
-      return;
-    }
-
-    // Define fileBase before using it in the payload
-    const fileBase = selectedForecastFile
-      ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
-      : "forecast";
-
+    setLoading(true);
     try {
+      if (!selectedForecastFile) {
+        alert("Please select a forecast file first.");
+        return;
+      }
+
+      // Define fileBase before using it in the payload
+      const fileBase = selectedForecastFile
+        ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
+        : "forecast";
+
       console.log("\uD83D\uDCE6 Run Forecast:", selectedForecastFile, startDate, endDate, fileBase);
   
       const response = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
@@ -851,6 +838,8 @@ function App() {
     } catch (err: any) {
       console.error("❌ Forecast error:", err);
       alert("Forecast failed: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -896,26 +885,38 @@ useEffect(() => {
   }
 }, [showGraphModal, selectedGraphItem]);
 
-  
-  
+// Fetch forecast result files
+const fetchForecastResultFiles = async () => {
+  setLoadingResultFiles(true);
+  try {
+    const res = await fetch(`${BASE_URL}/api/list-forecast-results`);
+    const data = await res.json();
+    setForecastResultFiles(data);
+  } catch (err) {
+    setForecastResultFiles([]);
+  } finally {
+    setLoadingResultFiles(false);
+  }
+};
 
-  
-  
-  
-  
-  
-  
-  
-  
+useEffect(() => {
+  fetchForecastResultFiles();
+}, []);
 
-  
-  
-  
-  
-  
+// Search filter for both tables
+const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
+const handlePreviewResult = async (key: string) => {
+  window.open(`${BASE_URL}/api/preview-forecast-result?key=${encodeURIComponent(key)}`, '_blank');
+};
 
-  
+const handleDeleteResult = async (key: string) => {
+  if (!window.confirm('Delete this forecast result file?')) return;
+  await fetch(`${BASE_URL}/api/delete-forecast-result?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+  fetchForecastResultFiles();
+};
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gray-800 text-white p-4">
@@ -1360,7 +1361,7 @@ useEffect(() => {
                   handleRunForecast(startDate, endDate);
                 }}
               >
-                Run
+                {loading ? "Loading..." : "Run Forecast"}
               </button>
             </div>
           </div>
@@ -1376,6 +1377,11 @@ useEffect(() => {
         </div>
       )}
 
+      {loading && (
+        <button className="load-btn" onClick={handleRunReport}>
+          <span className="spinner" style={{ marginRight: 8 }} /> Load (Run Report)
+        </button>
+      )}
 
     </div>
   );
