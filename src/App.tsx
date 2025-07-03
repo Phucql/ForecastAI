@@ -647,19 +647,22 @@ function App() {
             </div>
             <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
             <button
-              className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedForecastFile && !isRunningForecast && !loading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
               onClick={() => {
                 if (!selectedForecastFile) {
-                  setToast('Please select a file first.');
+                    setToast('Please select a file first.');
                   return;
                 }
-                setShowForecastDateModal(false);
-                handleRunForecast(/* pass the selected date range values here */);
+                setShowForecastDateModal(true);
               }}
               disabled={!selectedForecastFile || isRunningForecast || loading}
-              title={selectedForecastFile ? 'Run forecast on selected file' : 'Select a file to run forecast'}
+                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all
+                  ${selectedForecastFile && !isRunningForecast && !loading
+                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                title={selectedForecastFile ? 'Run forecast on selected file' : 'Select a file to run forecast'}
             >
               <Play className="w-4 h-4" />
+              {(isRunningForecast || loading) && <span className="spinner" style={{ marginRight: 8 }} />}
               {(isRunningForecast || loading) ? 'Running Forecast...' : 'Run Forecast'}
             </button>
             </div>
@@ -770,10 +773,10 @@ function App() {
                     className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                     onClick={handleRunReport}
                     disabled={!selectedResultFile || runReportLoading}
-                    title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
+                    title={selectedResultFile ? 'Run Forecast on selected result file' : 'Select a file to run Forecast'}
                   >
                     <Play className="w-4 h-4" />
-                    {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
+                    {runReportLoading ? 'Uploading to Tables...' : 'Run Forecast'}
                   </button>
                 </div>
                 {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
@@ -1528,20 +1531,13 @@ function App() {
 
             <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
               <button
-                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedForecastFile && !isRunningForecast && !loading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                onClick={() => {
-                  if (!selectedForecastFile) {
-                    setToast('Please select a file first.');
-                    return;
-                  }
-                  setShowForecastDateModal(false);
-                  handleRunForecast(/* pass the selected date range values here */);
-                }}
-                disabled={!selectedForecastFile || isRunningForecast || loading}
-                title={selectedForecastFile ? 'Run forecast on selected file' : 'Select a file to run forecast'}
+                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                onClick={handleRunReport}
+                disabled={!selectedResultFile || runReportLoading}
+                title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
               >
                 <Play className="w-4 h-4" />
-                {(isRunningForecast || loading) ? 'Running Forecast...' : 'Run Forecast'}
+                {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
               </button>
             </div>
             {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
