@@ -787,10 +787,11 @@ app.post('/api/run-forecast-py', async (req, res) => {
       const forecastEncoding = mapChardetToNodeEncoding(chardet.detect(forecastBuffer));
       const forecastCsvString = forecastBuffer.toString(forecastEncoding);
 
-      const mergedCsv = mergeForecastFiles(
+      const mergedCsv = await mergeForecastFiles(
         originalCsvString,
         forecastCsvString
       );
+      console.log('Type of mergedCsv after await:', typeof mergedCsv, mergedCsv instanceof Promise ? 'Promise' : '');
 
       // Defensive checks before S3 upload
       console.log('Uploading merged CSV to S3:', { mergedKey, typeofMergedCsv: typeof mergedCsv });
@@ -845,7 +846,7 @@ app.post('/api/merge-forecast-files', async (req, res) => {
     const forecastCsv = await waitForObject(forecastKey);
 
 
-    const mergedCsv = mergeForecastFiles(
+    const mergedCsv = await mergeForecastFiles(
       originalCsv.Body!.toString('utf-8'),
       forecastCsv.Body!.toString('utf-8')
     );
