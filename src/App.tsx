@@ -406,37 +406,31 @@ function App() {
 
   const DemandPlanInputs = () => (
     <div className="grid grid-cols-3 gap-6 p-6">
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-           onClick={() => setShowCalendarModal(true)}>
-        <Calendar className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Calendar Values</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowCalendarModal(true)}>
+        <Calendar className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Calendar Values</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowCollectedMeasureModal(true)}>
-        <Database className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Collected Measure Data</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowCollectedMeasureModal(true)}>
+        <Database className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Collected Measure Data</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-           onClick={() => setShowDemandClassesModal(true)}>
-        <Grid className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Demand Classes</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowDemandClassesModal(true)}>
+        <Grid className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Demand Classes</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowItemColorsModal(true)}>
-        <Package className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Items</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowItemColorsModal(true)}>
+        <Package className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Items</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowSubinventoriesModal(true)}>
-        <Warehouse className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Item Subinventories</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowSubinventoriesModal(true)}>
+        <Warehouse className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Item Subinventories</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowUnitsModal(true)}>
-        <Ruler className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Units of Measure</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowUnitsModal(true)}>
+        <Ruler className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Units of Measure</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center">
+      <div className="bg-white rounded-lg border-2 border-orange-200 shadow-sm p-8 flex flex-col items-center justify-center text-center">
         <FileUpload
           accept=".csv,.json"
           onUploadSuccess={handleFileUploadSuccess}
@@ -451,26 +445,22 @@ function App() {
 
   const SupplyNetworkModel = () => (
     <div className="grid grid-cols-3 gap-6 p-6">
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowOrganizationsModal(true)}>
-        <Building2 className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Organizations</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowOrganizationsModal(true)}>
+        <Building2 className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Organizations</span>
       </div>
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowCustomerNamesModal(true)}>
-        <Users className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Customers</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowCustomerNamesModal(true)}>
+        <Users className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Customers</span>
       </div>
-
     </div>
   );
 
   const ManageUsers = () => (
     <div className="grid grid-cols-3 gap-6 p-6">
-      <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col items-center cursor-pointer"
-          onClick={() => setShowUsersModal(true)}>
-        <Users className="w-12 h-12 text-orange-500 mb-2" />
-        <span className="text-sm font-medium">Users</span>
+      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowUsersModal(true)}>
+        <Users className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+        <span className="text-lg font-semibold text-black">Users</span>
       </div>
     </div>
   );
