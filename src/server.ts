@@ -792,6 +792,15 @@ app.post('/api/run-forecast-py', async (req, res) => {
         forecastCsvString
       );
 
+      // Defensive checks before S3 upload
+      console.log('Uploading merged CSV to S3:', { mergedKey, typeofMergedCsv: typeof mergedCsv });
+      if (!mergedKey || typeof mergedKey !== 'string' || !mergedKey.length) {
+        throw new Error('Invalid mergedKey for S3 upload');
+      }
+      if (!mergedCsv || typeof mergedCsv !== 'string') {
+        throw new Error('Invalid mergedCsv for S3 upload');
+      }
+
       await s3.upload({
         Bucket: process.env.VITE_S3_BUCKET_NAME!,
         Key: mergedKey,
