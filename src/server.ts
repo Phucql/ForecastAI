@@ -717,9 +717,12 @@ app.post('/api/run-forecast-py', async (req, res) => {
     // Build the series array for Python
     const series = rows.map(row => ({
       time: (row as any).TIM_LVL_MEMBER_VALUE,
-      target: (row as any).VALUE_NUMBER,
+      target: Number((row as any).VALUE_NUMBER),
       PRD_LVL_MEMBER_NAME: (row as any).PRD_LVL_MEMBER_NAME
     }));
+
+    // Log S3 key and file size
+    console.log('Reading original CSV from S3:', { originalKey, fileSize: originalBuffer.length });
 
     // Build the JSON payload for Python
     const payload = {
