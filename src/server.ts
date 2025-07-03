@@ -63,7 +63,8 @@ const s3Result = new AWS.S3({
     secretAccessKey: process.env.VITE_AWS_SECRET_ACCESS_KEY!,
   }
 });
-const FORECAST_RESULT_BUCKET = 'Forecast_Result';
+const FORECAST_RESULT_BUCKET = 'forecastai-file-upload';
+const FORECAST_RESULT_PREFIX = 'Forecast_Result/';
 
 const requiredEnvVars = ['VITE_DB_HOST', 'VITE_DB_NAME', 'VITE_DB_USER', 'VITE_DB_PASSWORD'];
   for (const envVar of requiredEnvVars) {
@@ -836,10 +837,10 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
         console.log(`[UPLOAD SUCCESS] Forecast uploaded: ${forecastFileName}`);
 
-        // After forecast completion, upload to Forecast_Result bucket
+        // After forecast completion, upload to Forecast_Result folder in the main bucket
         await s3Result.upload({
           Bucket: FORECAST_RESULT_BUCKET,
-          Key: forecastFileName,
+          Key: FORECAST_RESULT_PREFIX + forecastFileName,
           Body: forecastCsv,
           ContentType: 'text/csv',
           Metadata: {
@@ -1497,11 +1498,12 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
   }
 });
 
-// Endpoint to list files in Forecast_Result bucket
+// Endpoint to list files in Forecast_Result folder
 app.get('/api/list-forecast-results', async (_req, res) => {
   try {
     const data = await s3Result.listObjectsV2({
       Bucket: FORECAST_RESULT_BUCKET,
+      Prefix: FORECAST_RESULT_PREFIX,
     }).promise();
     const files = (data.Contents || []).map(obj => ({
       key: obj.Key!,
