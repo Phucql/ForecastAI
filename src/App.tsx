@@ -541,17 +541,20 @@ function App() {
         </div>
           <div className="p-8">
             <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
-            <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-black mb-1">Search Filter Files</label>
-                <input
-                  type="text"
-                  value={searchResultsTerm}
-                  onChange={e => setSearchResultsTerm(e.target.value)}
-                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Search by name..."
-                />
-              </div>
+            <div className="flex items-end gap-2 mb-4">
+              <input
+                type="text"
+                value={searchResultsTerm}
+                onChange={e => setSearchResultsTerm(e.target.value)}
+                className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Search by name..."
+              />
+              <button
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded"
+                onClick={() => {/* Optionally trigger a search, or just filter as you type */}}
+              >
+                <Search className="w-4 h-4 inline-block mr-1" /> Search
+              </button>
             </div>
           <div className="flex gap-2 mb-4">
             <button
@@ -587,9 +590,9 @@ function App() {
               </tr>
             </thead>
             <tbody>
-                  {forecastFiles.length === 0 ? (
+                  {filteredOriginalFiles.length === 0 ? (
                     <tr><td colSpan={4} className="text-center text-orange-400 py-8">No demand plans found.</td></tr>
-                  ) : forecastFiles.map((file, idx) => (
+                  ) : filteredOriginalFiles.map((file, idx) => (
                 <tr
                   key={file.key}
                       className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedForecastFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
@@ -672,14 +675,21 @@ function App() {
             {/* Forecast Result Files Table - moved here */}
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
-              <label className="block text-sm font-medium text-black mb-1">Search Result Files</label>
-              <input
-                type="text"
-                value={resultSearchTerm}
-                onChange={e => setResultSearchTerm(e.target.value)}
-                className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Search by name..."
-              />
+              <div className="flex items-end gap-2 mb-4 mt-2">
+                <input
+                  type="text"
+                  value={resultSearchTerm}
+                  onChange={e => setResultSearchTerm(e.target.value)}
+                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Search by name..."
+                />
+                <button
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => {/* Optionally trigger a search, or just filter as you type */}}
+                >
+                  <Search className="w-4 h-4 inline-block mr-1" /> Search
+                </button>
+              </div>
               <div className="flex gap-2 mb-4 mt-2">
                 <button
                   className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
@@ -763,17 +773,6 @@ function App() {
                     ))}
                   </tbody>
                 </table>
-              </div>
-              <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
-                <button
-                  className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !loadingResultFiles ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                  onClick={handleRunReport}
-                  disabled={!selectedResultFile || loadingResultFiles}
-                  title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
-                >
-                  <Play className="w-4 h-4" />
-                  {loadingResultFiles ? 'Uploading...' : 'Run Report'}
-                </button>
               </div>
             </div>
           </div>
@@ -1532,12 +1531,6 @@ function App() {
         >
           ✅ Forecast complete! View it in <strong>Reports & Analytics → Manage Tables</strong>.
         </div>
-      )}
-
-      {loading && (
-        <button className="load-btn" onClick={handleRunReport}>
-          <span className="spinner" style={{ marginRight: 8 }} /> Load (Run Report)
-        </button>
       )}
 
     </div>

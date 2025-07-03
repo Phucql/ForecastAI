@@ -38,6 +38,18 @@ const { Pool } = pkg;
 const app = express();
 const port = 3001;
 
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'https://foodforecastai.netlify.app',
+    'https://forecastai-ii8z.onrender.com',
+    process.env.CORS_ORIGIN
+  ].filter((origin): origin is string => Boolean(origin)),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 
@@ -184,17 +196,7 @@ pool.connect((err, client, done) => {
   }
 });
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'https://foodforecastai.netlify.app',
-    'https://forecastai-ii8z.onrender.com',
-    process.env.CORS_ORIGIN
-  ].filter((origin): origin is string => Boolean(origin)),
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true
-}));
+
 
 app.get('/api/list-forecasts', async (_req, res) => {
   const s3 = new AWS.S3();
