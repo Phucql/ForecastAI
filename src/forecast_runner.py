@@ -42,39 +42,50 @@ try:
     df = df.groupby(["unique_id", "ds"], as_index=False).agg({"y": "sum"})
     print("[DEBUG] DataFrame after aggregation:", df.head(), file=sys.stderr)
 
-    # 4. Fill monthly gaps
-    start_date = df["ds"].min()
-    end_date = df["ds"].max()
-    df_filled = fill_gaps(df, freq="MS", id_col="unique_id", time_col="ds", start=start_date, end=end_date)
-    df_filled["y"] = df_filled["y"].interpolate(limit_direction="both").fillna(0)
-    print("[DEBUG] DataFrame after filling gaps and filling missing months with 0:", df_filled.head(), file=sys.stderr)
+    # 4. Fill all monthly gaps for the series
+    min_date = df["ds"].min()
+    max_date = df["ds"].max()
+    all_months = pd.date_range(start=min_date, end=max_date, freq="MS")
+
+    # Use the unique_id from the earliest date
+    unique_id = df.loc[df["ds"] == min_date, "unique_id"].iloc[0]
+    # Aggregate by month in case of duplicates
+    df = df.groupby(["ds"], as_index=False).agg({"y": "sum"})
+    df["unique_id"] = unique_id
+
+    # Reindex to all months, fill missing with 0
+    df = df.set_index("ds").reindex(all_months).fillna(0).reset_index()
+    df = df.rename(columns={"index": "ds"})
+    df["unique_id"] = unique_id  # Ensure all rows have the same unique_id
+
+    print("[DEBUG] DataFrame after filling all months:", df, file=sys.stderr)
 
     # Check if there is any data left to forecast
-    if df_filled.empty:
+    if df.empty:
         print(json.dumps({"error": "No data left to forecast after filling missing months."}))
         sys.exit(0)
 
     # 5. Forecast
     client = NixtlaClient(api_key=api_key)
     # Robust debug output before forecasting
-    print("[DEBUG] DataFrame sent to forecast (full):\n" + df_filled.to_string(), file=sys.stderr)
-    print("[DEBUG] DataFrame head:\n", df_filled.head(), file=sys.stderr)
-    print("[DEBUG] DataFrame shape:", df_filled.shape, file=sys.stderr)
-    print("[DEBUG] DataFrame columns:", df_filled.columns, file=sys.stderr)
-    print("[DEBUG] DataFrame dtypes:", df_filled.dtypes, file=sys.stderr)
-    print("[DEBUG] unique_id values:", df_filled['unique_id'].unique(), file=sys.stderr)
-    print("[DEBUG] y values:", df_filled['y'].values, file=sys.stderr)
-    print("[DEBUG] ds values:", df_filled['ds'].values, file=sys.stderr)
-    if df_filled.empty:
+    print("[DEBUG] DataFrame sent to forecast (full):\n" + df.to_string(), file=sys.stderr)
+    print("[DEBUG] DataFrame head:\n", df.head(), file=sys.stderr)
+    print("[DEBUG] DataFrame shape:", df.shape, file=sys.stderr)
+    print("[DEBUG] DataFrame columns:", df.columns, file=sys.stderr)
+    print("[DEBUG] DataFrame dtypes:", df.dtypes, file=sys.stderr)
+    print("[DEBUG] unique_id values:", df['unique_id'].unique(), file=sys.stderr)
+    print("[DEBUG] y values:", df['y'].values, file=sys.stderr)
+    print("[DEBUG] ds values:", df['ds'].values, file=sys.stderr)
+    if df.empty:
         print("[DEBUG] DataFrame is empty before forecast!", file=sys.stderr)
         print(json.dumps({"error": "No data left to forecast after filling missing months."}))
         sys.exit(0)
-    if not all(col in df_filled.columns for col in ['unique_id', 'ds', 'y']):
+    if not all(col in df.columns for col in ['unique_id', 'ds', 'y']):
         print("[DEBUG] DataFrame missing required columns!", file=sys.stderr)
         print(json.dumps({"error": "DataFrame missing required columns before forecast."}))
         sys.exit(0)
     forecast_df = client.forecast(
-        df=df_filled,
+        df=df,
         h=data["horizon"],
         freq="MS",
         time_col="ds",
