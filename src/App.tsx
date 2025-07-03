@@ -773,10 +773,10 @@ function App() {
                     className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                     onClick={handleRunReport}
                     disabled={!selectedResultFile || runReportLoading}
-                    title={selectedResultFile ? 'Run Forecast on selected result file' : 'Select a file to run Forecast'}
+                    title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
                   >
                     <Play className="w-4 h-4" />
-                    {runReportLoading ? 'Uploading to Tables...' : 'Run Forecast'}
+                    {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
                   </button>
                 </div>
                 {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
@@ -1097,6 +1097,21 @@ function App() {
     } catch (err) {
       alert('Error duplicating result file.');
     }
+  };
+
+  const runForecastFromModal = () => {
+    let startDate, endDate;
+    if (dateSelectionMode === 'duration') {
+      const start = new Date();
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + forecastMonths - 1);
+      startDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+      endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}`;
+    } else {
+      startDate = `${startYear}-${String(startMonth + 1).padStart(2, '0')}`;
+      endDate = `${endYear}-${String(endMonth + 1).padStart(2, '0')}`;
+    }
+    handleRunForecast(startDate, endDate);
   };
 
   return (
@@ -1531,13 +1546,13 @@ function App() {
 
             <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
               <button
-                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                onClick={handleRunReport}
-                disabled={!selectedResultFile || runReportLoading}
-                title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
+                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedForecastFile && !loading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                onClick={runForecastFromModal}
+                disabled={!selectedForecastFile || loading}
+                title={selectedForecastFile ? 'Run forecast on selected file' : 'Select a file to run forecast'}
               >
                 <Play className="w-4 h-4" />
-                {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
+                {loading ? 'Running Forecast...' : 'Run Forecast'}
               </button>
             </div>
             {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
