@@ -13,11 +13,28 @@ import chardet  # For encoding detection
 logging.getLogger("nixtla.nixtla_client").setLevel(logging.CRITICAL)
 
 try:
-    # 1. Load key from .env
-    load_dotenv()
-    api_key = os.getenv("TIMEGPT_API_KEY")
+    # 1. Load key from environment variables (preferred for deployment)
+    api_key = os.environ.get("TIMEGPT_API_KEY")
+    
+    # If not found in environment, try .env file
     if not api_key:
-        raise Exception("TIMEGPT_API_KEY is missing from .env")
+        try:
+            load_dotenv()
+            api_key = os.getenv("TIMEGPT_API_KEY")
+        except UnicodeDecodeError:
+            # Try with different encodings if UTF-8 fails
+            try:
+                load_dotenv(encoding='latin1')
+                api_key = os.getenv("TIMEGPT_API_KEY")
+            except:
+                try:
+                    load_dotenv(encoding='cp1252')
+                    api_key = os.getenv("TIMEGPT_API_KEY")
+                except:
+                    pass  # Continue without .env file
+    
+    if not api_key:
+        raise Exception("TIMEGPT_API_KEY is missing from environment variables")
 
     # 2. Parse POST body from stdin
     import sys

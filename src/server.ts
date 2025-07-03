@@ -783,6 +783,16 @@ app.post('/api/run-forecast-py', async (req, res) => {
       console.log('[PYTHON RAW STDERR]', error);
       console.log('[PYTHON EXIT CODE]', code);
 
+      // Check if the result contains an error JSON
+      if (result.trim().startsWith('{"error":')) {
+        try {
+          const errorResult = JSON.parse(result);
+          return res.status(500).json({ error: errorResult.error, details: errorResult });
+        } catch (parseErr) {
+          console.error('[PYTHON ERROR PARSE FAILED]', parseErr);
+        }
+      }
+
       if (code !== 0) {
         return res.status(500).json({ error: `Python process failed with exit code ${code}`, stderr: error });
       }
@@ -792,6 +802,10 @@ app.post('/api/run-forecast-py', async (req, res) => {
       }
 
       try {
+        if (!result.trim()) {
+          return res.status(500).json({ error: "Python process returned empty result" });
+        }
+        
         const parsed = JSON.parse(result);
         const forecastCsv = Papa.unparse(parsed);
 
