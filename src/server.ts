@@ -791,7 +791,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
         originalCsvString,
         forecastCsvString
       );
-      console.log('Type of mergedCsv after await:', typeof mergedCsv, mergedCsv instanceof Promise ? 'Promise' : '');
+      console.log('Type of mergedCsv after await:', typeof mergedCsv);
 
       // Defensive checks before S3 upload
       console.log('Uploading merged CSV to S3:', { mergedKey, typeofMergedCsv: typeof mergedCsv });
