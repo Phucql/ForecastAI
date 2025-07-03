@@ -110,7 +110,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
                   ${activeTab === tab.id 
-                    ? (tab.id === 'reports-analytics' ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
+                    ? (['reports-analytics', 'demand-plan-inputs', 'supply-network-model', 'manage-users'].includes(tab.id) ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
                     : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
                   }`}
               >
@@ -557,7 +557,7 @@ function App() {
                 <input
                   type="text"
                   value={searchResultsTerm}
-                  onChange={e => setSearchResultsTerm(e.target.value.replace(/\s/g, ''))}
+                  onChange={e => setSearchResultsTerm(e.target.value)}
                   className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Search by name..."
                 />
@@ -680,112 +680,32 @@ function App() {
             />
             </div>
             {/* Forecast Result Files Table - moved here */}
-            <div className="mt-12">
-              <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-black mb-1">Search Result Files</label>
-                  <input
-                    type="text"
-                    value={resultSearchTerm}
-                    onChange={e => setResultSearchTerm(e.target.value.replace(/\s/g, ''))}
-                    className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Search by name..."
-                  />
-                </div>
-                <div className="flex gap-2 mb-4 mt-2">
-                  <button
-                    className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
-                    onClick={() => handleDuplicateResult(selectedResultFile)}
-                    disabled={!selectedResultFile}
-                    title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                  <button
-                    className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
-                    onClick={() => handleDeleteResult(selectedResultFile)}
-                    disabled={!selectedResultFile}
-                    title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+            <div className="mt-8">
               <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
-              <div className="relative">
-                {loadingResultFiles && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
-                  </div>
-                )}
-                <table className="w-full rounded-xl overflow-hidden shadow-sm">
-                  <thead className="sticky top-0 z-10 bg-orange-50/90">
-                    <tr className="border-b-2 border-orange-200">
-                      <th className="text-left py-2 px-4 text-black font-bold">Name</th>
-                      <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
-                      <th className="text-left py-2 px-4 text-black font-bold">Status</th>
-                      <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredResultFiles.length === 0 ? (
-                      <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
-                    ) : filteredResultFiles.map((file, idx) => (
-                      <tr
-                        key={file.key}
-                        className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
-                        onClick={() => setSelectedResultFile(file.key)}
-                        title={file.name}
-                      >
-                        <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                        <td className="py-2 px-4">{file.owner}</td>
-                        <td className="py-2 px-4">
-                          <span className={`px-2 py-1 text-xs rounded-full font-semibold border
-                            ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
-                            file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                            'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
-                          >
-                            {file.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-4">
-                          <div className="flex gap-4">
-                            <button
-                              onClick={() => handlePreviewResult(file.key)}
-                              className="text-orange-600 hover:underline text-sm font-semibold"
-                              title="Preview file"
-                            >
-                              Preview
-                            </button>
-                            <button
-                              onClick={() => handleDownloadResult(file.key)}
-                              className="text-orange-600 hover:underline text-sm font-semibold"
-                              title="Download file"
-                            >
-                              Download
-                            </button>
-                            <button
-                              onClick={() => handleDeleteResult(file.key)}
-                              className="text-red-500 hover:underline text-sm font-semibold"
-                              title="Delete file"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
+              <label className="block text-sm font-medium text-black mb-1">Search Result Files</label>
+              <input
+                type="text"
+                value={resultSearchTerm}
+                onChange={e => setResultSearchTerm(e.target.value)}
+                className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Search by name..."
+              />
+              <div className="flex gap-2 mb-4 mt-2">
                 <button
-                  onClick={handleRunReport}
-                  className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
-                  title="Run report on selected result file"
+                  className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDuplicateResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
                 >
-                  <Play className="w-4 h-4" />
-                  Run Report
+                  <Plus className="w-4 h-4" />
+                </button>
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDeleteResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
