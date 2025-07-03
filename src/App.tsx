@@ -110,7 +110,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
                   ${activeTab === tab.id 
-                    ? 'border-b-2 border-orange-500 text-orange-500' 
+                    ? (tab.id === 'reports-analytics' ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
                     : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
                   }`}
               >
@@ -175,6 +175,7 @@ function App() {
   const [loadingResultFiles, setLoadingResultFiles] = useState(false);
   const [resultSearchTerm, setResultSearchTerm] = useState('');
   const [selectedResultFile, setSelectedResultFile] = useState<string | null>(null);
+  const [searchResultsTerm, setSearchResultsTerm] = useState('');
 
   // Sync Option 2 back to Option 1 when user selects custom date range
   useEffect(() => {
@@ -516,7 +517,7 @@ function App() {
         <div className="bg-white rounded-2xl shadow-xl border border-orange-200">
           <div className="p-8 border-b border-orange-200 flex flex-col gap-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <h2 className="text-2xl font-extrabold text-orange-900 tracking-tight">Manage Demand Plans</h2>
+              <h2 className="text-2xl font-extrabold text-black tracking-tight">Manage Demand Plans</h2>
             <button
               onClick={() => setActiveTab('new-forecast')}
                 className="fixed md:static bottom-8 right-8 z-40 bg-orange-500 text-white py-3 px-6 rounded-full shadow-lg hover:bg-orange-600 transition-all flex items-center gap-2 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300"
@@ -555,32 +556,14 @@ function App() {
             <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
             <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-black mb-1">Name</label>
-                <div className="flex gap-2">
-                  <select
-                    value={searchType}
-                    onChange={(e) => setSearchType(e.target.value)}
-                    className="p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  >
-                    <option value="starts-with">Starts with</option>
-                    <option value="contains">Contains</option>
-                    <option value="equals">Equals</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Search by name..."
-                  />
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="bg-orange-50 text-orange-700 px-3 rounded-md hover:bg-orange-100 transition-colors"
-                    title="Clear search"
-                  >
-                    ×
-                  </button>
-                </div>
+                <label className="block text-sm font-medium text-black mb-1">Search Filter Files</label>
+                <input
+                  type="text"
+                  value={searchResultsTerm}
+                  onChange={(e) => setSearchResultsTerm(e.target.value)}
+                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Search by name..."
+                />
               </div>
             </div>
           <div className="flex gap-2 mb-4">
@@ -1025,8 +1008,8 @@ useEffect(() => {
 }, []);
 
 // Search filter for both tables
-const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
-const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchResultsTerm.toLowerCase()));
+const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(resultSearchTerm.toLowerCase()));
 
 const handlePreviewResult = async (key: string) => {
   try {
