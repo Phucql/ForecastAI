@@ -697,82 +697,82 @@ function App() {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <div className="relative mt-4">
-                  {loadingResultFiles && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
-                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
-                    </div>
-                  )}
-                  <table className="w-full rounded-xl overflow-hidden shadow-sm">
-                    <thead className="sticky top-0 z-10 bg-orange-50/90">
-                      <tr className="border-b-2 border-orange-200">
-                        <th className="text-left py-2 px-4 text-black font-bold">Name</th>
-                        <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
-                        <th className="text-left py-2 px-4 text-black font-bold">Status</th>
-                        <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredResultFiles.length === 0 ? (
-                        <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
-                      ) : filteredResultFiles.map((file, idx) => (
-                        <tr
-                          key={file.key}
-                          className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
-                          onClick={() => setSelectedResultFile(file.key)}
-                          title={file.name}
-                        >
-                          <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                          <td className="py-2 px-4">{file.owner}</td>
-                          <td className="py-2 px-4">
-                            <span className={`px-2 py-1 text-xs rounded-full font-semibold border
-                              ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
-                              file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                              'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+              </div>
+              <div className="relative mt-4">
+                {loadingResultFiles && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                  </div>
+                )}
+                <table className="w-full rounded-xl overflow-hidden shadow-sm">
+                  <thead className="sticky top-0 z-10 bg-orange-50/90">
+                    <tr className="border-b-2 border-orange-200">
+                      <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredResultFiles.length === 0 ? (
+                      <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
+                    ) : filteredResultFiles.map((file, idx) => (
+                      <tr
+                        key={file.key}
+                        className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                        onClick={() => setSelectedResultFile(file.key)}
+                        title={file.name}
+                      >
+                        <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                        <td className="py-2 px-4">{file.owner}</td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                            ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                            file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                            'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                          >
+                            {file.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          <div className="flex gap-4">
+                            <button
+                              onClick={() => handlePreviewResult(file.key)}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Preview file"
                             >
-                              {file.status}
-                            </span>
-                          </td>
-                          <td className="py-2 px-4">
-                            <div className="flex gap-4">
-                              <button
-                                onClick={() => handlePreviewResult(file.key)}
-                                className="text-orange-600 hover:underline text-sm font-semibold"
-                                title="Preview file"
-                              >
-                                Preview
-                              </button>
-                              <button
-                                onClick={() => handleDownloadResult(file.key)}
-                                className="text-orange-600 hover:underline text-sm font-semibold"
-                                title="Download file"
-                              >
-                                Download
-                              </button>
-                              <button
-                                onClick={() => handleDeleteResult(file.key)}
-                                className="text-red-500 hover:underline text-sm font-semibold"
-                                title="Delete file"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
-                  <button
-                    onClick={handleRunReport}
-                    className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
-                    title="Run report on selected result file"
-                  >
-                    <Play className="w-4 h-4" />
-                    Run Report
-                  </button>
-                </div>
+                              Preview
+                            </button>
+                            <button
+                              onClick={() => handleDownloadResult(file.key)}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Download file"
+                            >
+                              Download
+                            </button>
+                            <button
+                              onClick={() => handleDeleteResult(file.key)}
+                              className="text-red-500 hover:underline text-sm font-semibold"
+                              title="Delete file"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
+                <button
+                  onClick={handleRunReport}
+                  className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
+                  title="Run report on selected result file"
+                >
+                  <Play className="w-4 h-4" />
+                  Run Report
+                </button>
               </div>
             </div>
           </div>
