@@ -46,14 +46,13 @@ try:
     start_date = df["ds"].min()
     end_date = df["ds"].max()
     df_filled = fill_gaps(df, freq="MS", id_col="unique_id", time_col="ds", start=start_date, end=end_date)
-    df_filled["y"] = df_filled["y"].interpolate(limit_direction="both")
-    print("[DEBUG] DataFrame after filling gaps:", df_filled.head(), file=sys.stderr)
+    df_filled["y"] = df_filled["y"].interpolate(limit_direction="both").fillna(0)
+    print("[DEBUG] DataFrame after filling gaps and filling missing months with 0:", df_filled.head(), file=sys.stderr)
 
-    # Drop rows with missing target values after interpolation
-    before_drop = len(df_filled)
-    df_filled = df_filled.dropna(subset=["y"])
-    after_drop = len(df_filled)
-    print(f"[DEBUG] Dropped {before_drop - after_drop} rows with missing target values after interpolation.", file=sys.stderr)
+    # Check if there is any data left to forecast
+    if df_filled.empty:
+        print(json.dumps({"error": "No data left to forecast after filling missing months."}))
+        sys.exit(0)
 
     # 5. Forecast
     client = NixtlaClient(api_key=api_key)
