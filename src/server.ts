@@ -14,6 +14,16 @@ import { spawn } from 'child_process';
 
 import { mergeForecastFiles } from './utils/mergeForecastFiles.js';
 
+function mapChardetToNodeEncoding(enc: string | null | undefined): BufferEncoding {
+  if (!enc) return 'utf8';
+  const lower = enc.toLowerCase();
+  if (lower === 'utf-8' || lower === 'utf8') return 'utf8';
+  if (lower === 'utf-16le' || lower === 'utf16le') return 'utf16le';
+  if (lower === 'ascii') return 'ascii';
+  if (lower === 'latin1' || lower === 'iso-8859-1') return 'latin1';
+  // fallback
+  return 'utf8';
+}
 
 process.on('uncaughtException', (err) => {
   console.error('🔥 Uncaught Exception:', err);
@@ -873,7 +883,9 @@ app.get('/api/forecast-results', async (req, res) => {
           Key: file.Key!,
         }).promise();
 
-        const csvContent = obj.Body!.toString('utf-8');
+        const csvBuffer = obj.Body as Buffer;
+        const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
+        const csvContent = csvBuffer.toString(csvEncoding);
         const parsed = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
 
         return {
@@ -1411,6 +1423,7 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
       const approvedForecast = adjustedForecast;
       const percentChange = history2Y === 0 ? 0 : Number((((approvedForecast - history2Y) / history2Y) * 100).toFixed(1));
 
+
       return {
         date: month,
         history2Y,
@@ -1423,16 +1436,16 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     };
 
     const monthly2025 = months
-      .filter((m: string) => m.startsWith('2025'))
-      .map((m: string) => buildRow(m, 2025));
+      .filter(m => m.startsWith('2025'))
+      .map(m => buildRow(m, 2025));
 
     const monthly2026 = months
-      .filter((m: string) => m.startsWith('2026'))
-      .map((m: string) => buildRow(m, 2026));
+      .filter(m => m.startsWith('2026'))
+      .map(m => buildRow(m, 2026));
 
     // Support legacy single-year request
-    if (String(year) === '2025') return res.json(monthly2025);
-    if (String(year) === '2026') return res.json(monthly2026);
+    if (year === '2025') return res.json(monthly2025);
+    if (year === '2026') return res.json(monthly2026);
 
     // Default: return merged result for both
     return res.json({ monthly2025, monthly2026 });
@@ -1443,19 +1456,6 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
   }
 });
 
-function mapChardetToNodeEncoding(enc: string | null | undefined): BufferEncoding {
-  if (!enc) return 'utf8';
-  const lower = enc.toLowerCase();
-  if (lower === 'utf-8' || lower === 'utf8') return 'utf8';
-  if (lower === 'utf-16le' || lower === 'utf16le') return 'utf16le';
-  if (lower === 'ascii') return 'ascii';
-  if (lower === 'latin1' || lower === 'iso-8859-1') return 'latin1';
-  // fallback
-  return 'utf8';
-}
-
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
-
-
