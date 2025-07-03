@@ -541,24 +541,17 @@ function App() {
         </div>
           <div className="p-8">
             <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
-            <div className="flex-1 flex items-center gap-2 mb-4">
-              <select
-                className="p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full"
-                value={selectedForecastFile || ''}
-                onChange={e => setSelectedForecastFile(e.target.value)}
-              >
-                <option value="">Select file...</option>
-                {filteredOriginalFiles.map(file => (
-                  <option key={file.key} value={file.key}>{file.name}</option>
-                ))}
-              </select>
-              <button
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded flex items-center gap-2"
-                onClick={handleSearch}
-                disabled={!selectedForecastFile}
-              >
-                <Search className="w-4 h-4" /> Search
-              </button>
+            <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-black mb-1">Search Filter Files</label>
+                <input
+                  type="text"
+                  value={searchResultsTerm}
+                  onChange={e => setSearchResultsTerm(e.target.value)}
+                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Search by name..."
+                />
+              </div>
             </div>
           <div className="flex gap-2 mb-4">
             <button
@@ -615,7 +608,7 @@ function App() {
                         </span>
                   </td>
                   <td className="py-2 px-4">
-                    <div className="flex justify-center gap-4">
+                    <div className="flex gap-4">
                       <button
                         onClick={() => handlePreviewFile(file.name)}
                         className="text-orange-600 hover:underline text-sm font-semibold"
@@ -679,17 +672,31 @@ function App() {
             {/* Forecast Result Files Table - moved here */}
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
-              <div className="flex-1 flex items-center gap-2 mb-4">
-                <select
-                  className="p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full"
-                  value={selectedResultFile || ''}
-                  onChange={e => setSelectedResultFile(e.target.value)}
+              <label className="block text-sm font-medium text-black mb-1">Search Result Files</label>
+              <input
+                type="text"
+                value={resultSearchTerm}
+                onChange={e => setResultSearchTerm(e.target.value)}
+                className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Search by name..."
+              />
+              <div className="flex gap-2 mb-4 mt-2">
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDuplicateResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
                 >
-                  <option value="">Select result file...</option>
-                  {filteredResultFiles.map(file => (
-                    <option key={file.key} value={file.key}>{file.name}</option>
-                  ))}
-                </select>
+                  <Plus className="w-4 h-4" />
+                </button>
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDeleteResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
               <div className="relative mt-4">
                 {loadingResultFiles && (
@@ -728,7 +735,7 @@ function App() {
                           </span>
                         </td>
                         <td className="py-2 px-4">
-                          <div className="flex justify-center gap-4">
+                          <div className="flex gap-4">
                             <button
                               onClick={() => handlePreviewResult(file.key)}
                               className="text-orange-600 hover:underline text-sm font-semibold"
@@ -756,6 +763,17 @@ function App() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
+                <button
+                  className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !loadingResultFiles ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                  onClick={handleRunReport}
+                  disabled={!selectedResultFile || loadingResultFiles}
+                  title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
+                >
+                  <Play className="w-4 h-4" />
+                  {loadingResultFiles ? 'Uploading...' : 'Run Report'}
+                </button>
               </div>
             </div>
           </div>
