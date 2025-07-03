@@ -7,6 +7,7 @@ from nixtla import NixtlaClient
 from utilsforecast.preprocessing import fill_gaps
 import logging
 import signal
+import chardet  # For encoding detection
 
 # Optional: clean logs
 logging.getLogger("nixtla.nixtla_client").setLevel(logging.CRITICAL)
@@ -19,11 +20,25 @@ try:
         raise Exception("TIMEGPT_API_KEY is missing from .env")
 
     # 2. Parse POST body from stdin
-    data = json.loads(sys.argv[1])
-    print("[DEBUG] Received payload", file=sys.stderr)
+    import sys
+    payload = sys.stdin.read()
+    print(f"[DEBUG] Received payload from stdin, length: {len(payload)}", file=sys.stderr)
+    
+    if not payload:
+        raise Exception("No payload received from stdin")
+    
+    data = json.loads(payload)
+    print("[DEBUG] Successfully parsed JSON payload", file=sys.stderr)
+    print(f"[DEBUG] Payload keys: {list(data.keys())}", file=sys.stderr)
+    print(f"[DEBUG] Series length: {len(data.get('series', []))}", file=sys.stderr)
 
     # 3. Convert to DataFrame
-    df = pd.DataFrame(data["series"])
+    print("[DEBUG] About to create DataFrame from series data", file=sys.stderr)
+    series_data = data["series"]
+    print(f"[DEBUG] Series data type: {type(series_data)}", file=sys.stderr)
+    print(f"[DEBUG] First few series items: {series_data[:2] if series_data else 'Empty'}", file=sys.stderr)
+    
+    df = pd.DataFrame(series_data)
     print("[DEBUG] DataFrame after creation:", df.head(), file=sys.stderr)
     # Use PRD_LVL_MEMBER_NAME as the unique_id for each series
     # Ensure columns: PRD_LVL_MEMBER_NAME, time, target
@@ -79,4 +94,10 @@ try:
 
     
 except Exception as e:
-    print(json.dumps({"error": str(e)}))
+    import traceback
+    error_details = {
+        "error": str(e),
+        "type": type(e).__name__,
+        "traceback": traceback.format_exc()
+    }
+    print(json.dumps(error_details))

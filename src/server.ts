@@ -66,7 +66,11 @@ const requiredEnvVars = ['VITE_DB_HOST', 'VITE_DB_NAME', 'VITE_DB_USER', 'VITE_D
   }
 const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
   const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
-  const csvContent = data.Body?.toString('utf-8');
+  
+  // Use chardet to detect encoding instead of hardcoded utf-8
+  const csvBuffer = data.Body as Buffer;
+  const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
+  const csvContent = csvBuffer.toString(csvEncoding);
 
   if (!csvContent) throw new Error('S3 CSV content is empty');
 
@@ -640,7 +644,11 @@ app.get('/api/read-forecast-csv', async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/csv');
 
-    const csvContent = data.Body?.toString('utf-8');
+    // Use chardet to detect encoding instead of hardcoded utf-8
+    const csvBuffer = data.Body as Buffer;
+    const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
+    const csvContent = csvBuffer.toString(csvEncoding);
+    
     if (!csvContent) throw new Error('Empty CSV content');
 
     res.send(csvContent);
@@ -664,7 +672,12 @@ app.get('/api/download-csv', async (req, res) => {
 
   try {
     const data = await s3.getObject(params).promise();
-    const csvContent = data.Body?.toString('utf-8');
+    
+    // Use chardet to detect encoding instead of hardcoded utf-8
+    const csvBuffer = data.Body as Buffer;
+    const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
+    const csvContent = csvBuffer.toString(csvEncoding);
+    
     res.header('Content-Type', 'text/csv');
     res.send(csvContent);
   } catch (err) {
@@ -738,9 +751,19 @@ app.post('/api/run-forecast-py', async (req, res) => {
     console.log(`[Forecast] Using Python executable: ${pythonPath}`);
     const py = spawn(
       pythonPath,
-      ['src/forecast_runner.py', payloadString]
+      ['src/forecast_runner.py']
     );
     console.log('[Forecast] Spawned Python process for forecast_runner.py');
+    
+    // Send payload via stdin instead of command line argument
+    py.stdin.write(payloadString);
+    py.stdin.end();
+    
+    // Handle stdin errors
+    py.stdin.on('error', (err) => {
+      console.error('[PYTHON STDIN ERROR]', err);
+      res.status(500).json({ error: 'Failed to send data to Python process' });
+    });
 
     let result = '';
     let error = '';
@@ -758,6 +781,11 @@ app.post('/api/run-forecast-py', async (req, res) => {
     py.on('close', async code => {
       console.log('[PYTHON RAW STDOUT]', result);
       console.log('[PYTHON RAW STDERR]', error);
+      console.log('[PYTHON EXIT CODE]', code);
+
+      if (code !== 0) {
+        return res.status(500).json({ error: `Python process failed with exit code ${code}`, stderr: error });
+      }
 
       if (error) {
         return res.status(500).json({ error });
@@ -817,13 +845,9 @@ app.post('/api/merge-forecast-files', async (req, res) => {
   }
 
   try {
-    const originalCsv = await waitForObject(originalKey);
-    const forecastCsv = await waitForObject(forecastKey);
-
-
     const mergedCsv = await mergeForecastFiles(
-      originalCsv.Body!.toString('utf-8'),
-      forecastCsv.Body!.toString('utf-8')
+      originalKey,
+      forecastKey
     );
 
     const today = new Date().toISOString().slice(0, 10);

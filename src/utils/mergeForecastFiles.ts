@@ -3,6 +3,17 @@ import Papa from 'papaparse';
 import AWS from 'aws-sdk';
 import chardet from 'chardet';
 
+function mapChardetToNodeEncoding(enc: string | null | undefined): BufferEncoding {
+  if (!enc) return 'utf8';
+  const lower = enc.toLowerCase();
+  if (lower === 'utf-8' || lower === 'utf8') return 'utf8';
+  if (lower === 'utf-16le' || lower === 'utf16le') return 'utf16le';
+  if (lower === 'ascii') return 'ascii';
+  if (lower === 'latin1' || lower === 'iso-8859-1') return 'latin1';
+  // fallback
+  return 'utf8';
+}
+
 const s3 = new AWS.S3({
   region: 'us-east-2',
   credentials: {
@@ -21,13 +32,13 @@ export const mergeForecastFiles = async (originalKey: string, forecastKey: strin
 
   // Detect encoding for original CSV
   const originalBuffer = originalData.Body as Buffer;
-  const originalEncoding = chardet.detect(originalBuffer) || 'utf-8';
-  const originalCsv = originalBuffer.toString(originalEncoding as BufferEncoding);
+  const originalEncoding = mapChardetToNodeEncoding(chardet.detect(originalBuffer));
+  const originalCsv = originalBuffer.toString(originalEncoding);
 
   // Detect encoding for forecast CSV
   const forecastBuffer = forecastData.Body as Buffer;
-  const forecastEncoding = chardet.detect(forecastBuffer) || 'utf-8';
-  const forecastCsv = forecastBuffer.toString(forecastEncoding as BufferEncoding);
+  const forecastEncoding = mapChardetToNodeEncoding(chardet.detect(forecastBuffer));
+  const forecastCsv = forecastBuffer.toString(forecastEncoding);
 
   const original = Papa.parse(originalCsv, { header: true }).data as any[];
   const forecast = Papa.parse(forecastCsv, { header: true }).data as any[];
