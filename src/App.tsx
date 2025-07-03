@@ -483,24 +483,21 @@ function App() {
     onShowReport: () => void;
   }) => {
     return (
-      <div className="grid grid-cols-3 gap-6 p-6">
-       <Card
-            onClick={() => {
-              setShowReportPage(true);
-            }}
-            className="cursor-pointer hover:shadow-md transition-shadow"
-          >
-            <CardContent className="flex flex-col items-center justify-center space-y-2 p-6">
-              <TableIcon className="w-12 h-12 text-orange-500" />
-              <p className="text-sm font-medium">Manage Tables</p>
-            </CardContent>
-          </Card>
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowGraphModal(true)}>
-          <CardContent className="flex flex-col items-center justify-center space-y-2 p-6">
-            <LineChart className="w-12 h-12 text-orange-500" />
-            <p className="text-sm font-bold">Manage Graphs</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6">
+        <div
+          onClick={() => setShowReportPage(true)}
+          className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group"
+        >
+          <TableIcon className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+          <span className="text-lg font-semibold text-black">Manage Tables</span>
+        </div>
+        <div
+          onClick={() => setShowGraphModal(true)}
+          className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group"
+        >
+          <LineChart className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
+          <span className="text-lg font-semibold text-black">Manage Graphs</span>
+        </div>
       </div>
     );
   };
@@ -560,7 +557,7 @@ function App() {
                 <input
                   type="text"
                   value={searchResultsTerm}
-                  onChange={(e) => setSearchResultsTerm(e.target.value)}
+                  onChange={e => setSearchResultsTerm(e.target.value.replace(/\s/g, ''))}
                   className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Search by name..."
                 />
@@ -690,27 +687,29 @@ function App() {
                   <input
                     type="text"
                     value={resultSearchTerm}
-                    onChange={(e) => setResultSearchTerm(e.target.value)}
+                    onChange={e => setResultSearchTerm(e.target.value.replace(/\s/g, ''))}
                     className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Search by name..."
                   />
                 </div>
-                <button
-                  className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
-                  onClick={() => handleDuplicateResult(selectedResultFile)}
-                  disabled={!selectedResultFile}
-                  title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-                <button
-                  className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
-                  onClick={() => handleDeleteResult(selectedResultFile)}
-                  disabled={!selectedResultFile}
-                  title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex gap-2 mb-4 mt-2">
+                  <button
+                    className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+                    onClick={() => handleDuplicateResult(selectedResultFile)}
+                    disabled={!selectedResultFile}
+                    title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button
+                    className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+                    onClick={() => handleDeleteResult(selectedResultFile)}
+                    disabled={!selectedResultFile}
+                    title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
               <div className="relative">
