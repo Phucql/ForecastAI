@@ -768,6 +768,18 @@ function App() {
                     ))}
                   </tbody>
                 </table>
+                <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
+                  <button
+                    className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                    onClick={handleRunReport}
+                    disabled={!selectedResultFile || runReportLoading}
+                    title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
+                  >
+                    <Play className="w-4 h-4" />
+                    {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
+                  </button>
+                </div>
+                {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
               </div>
             </div>
           </div>
