@@ -1,11 +1,13 @@
 import * as React from "react";
 
+// Table is now mobile responsive with horizontal scroll and nowrap cells. All tables in the app use this component.
+
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className = "", ...props }, ref) => (
-    <div className="w-full overflow-auto">
+    <div className="w-full overflow-x-auto responsive-table">
       <table
         ref={ref}
-        className={`w-full text-sm border-collapse ${className}`}
+        className={`w-full text-sm border-collapse min-w-[600px] md:min-w-0 ${className}`}
         {...props}
       />
     </div>
@@ -50,7 +52,7 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
   ({ className = "", ...props }, ref) => (
     <th
       ref={ref}
-      className={`px-4 py-2 text-left font-medium text-gray-600 ${className}`}
+      className={`px-2 md:px-4 py-2 text-left font-medium text-gray-600 whitespace-nowrap ${className}`}
       {...props}
     />
   )
@@ -61,7 +63,7 @@ export const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttr
   ({ className = "", ...props }, ref) => (
     <td
       ref={ref}
-      className={`px-4 py-2 text-sm text-gray-700 ${className}`}
+      className={`px-2 md:px-4 py-2 text-sm text-gray-700 whitespace-nowrap ${className}`}
       {...props}
     />
   )

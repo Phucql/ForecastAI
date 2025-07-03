@@ -1179,6 +1179,7 @@ const handleDownloadResult = async (key: string) => {
         )}
         {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} onComplete={() => {
           fetchForecastFiles();
+          fetchForecastResultFiles();
           setActiveTab('manage-demand-plans');
         }} />}
       </div>
