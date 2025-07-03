@@ -515,7 +515,7 @@ function App() {
                 <Plus className="w-6 h-6" /> New Forecast
             </button>
           </div>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
+            {/* <div className="flex flex-col md:flex-row gap-4 items-end">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-orange-900 mb-1">Original File for Merge</label>
             <select
@@ -539,7 +539,7 @@ function App() {
               <Search className="w-4 h-4" />
               Search
             </button>
-          </div>
+          </div> */}
         </div>
           <div className="p-8">
             <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
@@ -664,13 +664,6 @@ function App() {
               <Play className="w-4 h-4" />
               {(isRunningForecast || loading) && <span className="spinner" style={{ marginRight: 8 }} />}
               {(isRunningForecast || loading) ? 'Running Forecast...' : 'Run Forecast'}
-            </button>
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2"
-              onClick={handleRunReport}
-              disabled={!selectedResultFile || runReportLoading}
-            >
-              {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
             </button>
             </div>
             {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
@@ -1524,27 +1517,18 @@ function App() {
               Total Duration: ~{Math.round(((endYear - startYear) * 12 + (endMonth - startMonth + 1)))} months
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
               <button
-                className="px-4 py-2 bg-gray-300 rounded"
-                onClick={() => setShowForecastDateModal(false)}
+                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                onClick={handleRunReport}
+                disabled={!selectedResultFile || runReportLoading}
+                title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
               >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-                onClick={() => {
-                  const startDate = `${startYear}-${String(startMonth + 1).padStart(2, '0')}-01`;
-                  const endDate = `${endYear}-${String(endMonth + 1).padStart(2, '0')}-28`;
-                
-                  console.log('Run Forecast:', selectedForecastFile, startDate, endDate);
-                  setShowForecastDateModal(false);
-                  handleRunForecast(startDate, endDate);
-                }}
-              >
-                {loading ? "Loading..." : "Run Forecast"}
+                <Play className="w-4 h-4" />
+                {runReportLoading ? 'Uploading to Tables...' : 'Run Report'}
               </button>
             </div>
+            {runReportMessage && <p className="text-sm">{runReportMessage}</p>}
           </div>
         </div>
       )}
