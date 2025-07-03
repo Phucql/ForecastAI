@@ -101,7 +101,6 @@ const insertRows = async (table: string, rows: any[]) => {
 
   const client = await pool.connect();
   try {
-    await client.query(`TRUNCATE "${table}"`);
     for (const row of rows) {
       const values = columns.map(c => row[c]);
       await client.query(`INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders})`, values);
@@ -1571,6 +1570,20 @@ app.post('/api/duplicate-forecast-result', async (req, res) => {
   } catch (err) {
     console.error('[Duplicate Forecast Result Error]', err);
     res.status(500).json({ error: 'Failed to duplicate forecast result file' });
+  }
+});
+
+// Add endpoint to clear forecast tables
+app.post('/api/clear-forecast-tables', async (_req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('TRUNCATE "forecast_original"');
+    await client.query('TRUNCATE "forecast_result"');
+    res.status(200).json({ message: 'Forecast tables cleared' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear forecast tables' });
+  } finally {
+    client.release();
   }
 });
 

@@ -766,12 +766,17 @@ function App() {
               </div>
               <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
                 <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
                   onClick={handleRunReport}
-                  className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
-                  title="Run report on selected result file"
+                  disabled={!selectedResultFile}
                 >
-                  <Play className="w-4 h-4" />
                   Run Report
+                </button>
+                <button
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded"
+                  onClick={handleClearForecastTable}
+                >
+                  Clear Forecast Table
                 </button>
               </div>
             </div>
@@ -934,133 +939,140 @@ function App() {
   
   
   const handleRunReport = async () => {
-  try {
-    await uploadCsvFromS3ToPostgres();
-    setActiveTab('reports-analytics');
-  } catch (err) {
-    console.error("❌ Run Report error:", err);
-    alert("Run Report failed. See console for details.");
-  }
-};
+    try {
+      await uploadForecastResultToPostgres();
+      setActiveTab('reports-analytics');
+    } catch (err) {
+      console.error("❌ Run Report error:", err);
+      alert("Run Report failed. See console for details.");
+    }
+  };
 
-const uploadCsvFromS3ToPostgres = async () => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-  await fetch(`${apiBaseUrl}/api/merge-and-upload-to-db`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key: selectedForecastFile }),
-  });
-};
-
-// Fetch forecast report data for dropdown
-useEffect(() => {
-  if (activeTab === 'reports-analytics') {
-    fetch(`${BASE_URL}/api/final-forecast-report`)
-      .then(res => res.json())
-      .then(setForecastReportData)
-      .catch(() => setForecastReportData([]));
-  }
-}, [activeTab]);
-
-// Fetch monthly data for selected item when modal is open
-useEffect(() => {
-  if (showGraphModal && selectedGraphItem) {
-    Promise.all([
-      fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2025`).then(res => res.json()),
-      fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2026`).then(res => res.json()),
-    ]).then(([monthly2025, monthly2026]) => {
-      setGraphMonthlyData([...monthly2025, ...monthly2026]);
-    });
-  }
-}, [showGraphModal, selectedGraphItem]);
-
-// Fetch forecast result files
-const fetchForecastResultFiles = async () => {
-  setLoadingResultFiles(true);
-  try {
-    const res = await fetch(`${BASE_URL}/api/list-forecast-results`);
-    const data = await res.json();
-    setForecastResultFiles(data);
-  } catch (err) {
-    setForecastResultFiles([]);
-  } finally {
-    setLoadingResultFiles(false);
-  }
-};
-
-useEffect(() => {
-  fetchForecastResultFiles();
-}, []);
-
-// Search filter for both tables
-const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchResultsTerm.toLowerCase()));
-const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(resultSearchTerm.toLowerCase()));
-
-const handlePreviewResult = async (key: string) => {
-  try {
-    const res = await fetch(`${BASE_URL}/api/preview-forecast-result?key=${encodeURIComponent(key)}`);
-    const text = await res.text();
-    const rows = text
-      .trim()
-      .split("\n")
-      .slice(0, 6) // header + 5 rows
-      .map(line => line.split(","));
-    const headers = rows[0];
-    const preview = rows.slice(1).map(row =>
-      Object.fromEntries(row.map((cell, i) => [headers[i], cell]))
-    );
-    setPreviewData(preview);
-    setShowPreviewModal(true);
-  } catch (err) {
-    alert('Failed to load preview data');
-  }
-};
-
-const handleDeleteResult = async (key: string) => {
-  if (!window.confirm('Delete this forecast result file?')) return;
-  await fetch(`${BASE_URL}/api/delete-forecast-result?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
-  fetchForecastResultFiles();
-};
-
-// Add the handleDownloadResult function (replace Preview logic)
-const handleDownloadResult = async (key: string) => {
-  try {
-    const res = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(key)}`);
-    if (!res.ok) throw new Error('Failed to download file');
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = key.split('/').pop() || 'forecast_result.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    alert('Download failed.');
-  }
-};
-
-const handleDuplicateResult = async (key: string | null) => {
-  if (!key) return;
-  const currentName = key.split('/').pop();
-  const newName = window.prompt('Enter a new name for the duplicated file:', currentName?.replace(/(\.csv)?$/, `_copy.csv`));
-  if (!newName || !newName.endsWith('.csv')) {
-    alert('Please provide a valid .csv file name.');
-    return;
-  }
-  try {
-    const res = await fetch(`${BASE_URL}/api/duplicate-forecast-result`, {
+  const uploadForecastResultToPostgres = async () => {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    await fetch(`${apiBaseUrl}/api/upload-to-forecast-tables`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sourceKey: key, newName }),
+      body: JSON.stringify({ forecastKey: selectedResultFile }),
     });
-    if (!res.ok) throw new Error('Failed to duplicate result file');
+  };
+
+  const handleClearForecastTable = async () => {
+    if (!window.confirm('Are you sure you want to clear the forecast table? This cannot be undone.')) return;
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    await fetch(`${apiBaseUrl}/api/clear-forecast-tables`, { method: 'POST' });
+    alert('Forecast table cleared.');
+  };
+
+  // Fetch forecast report data for dropdown
+  useEffect(() => {
+    if (activeTab === 'reports-analytics') {
+      fetch(`${BASE_URL}/api/final-forecast-report`)
+        .then(res => res.json())
+        .then(setForecastReportData)
+        .catch(() => setForecastReportData([]));
+    }
+  }, [activeTab]);
+
+  // Fetch monthly data for selected item when modal is open
+  useEffect(() => {
+    if (showGraphModal && selectedGraphItem) {
+      Promise.all([
+        fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2025`).then(res => res.json()),
+        fetch(`${BASE_URL}/api/final-forecast-report/monthly?item=${selectedGraphItem}&year=2026`).then(res => res.json()),
+      ]).then(([monthly2025, monthly2026]) => {
+        setGraphMonthlyData([...monthly2025, ...monthly2026]);
+      });
+    }
+  }, [showGraphModal, selectedGraphItem]);
+
+  // Fetch forecast result files
+  const fetchForecastResultFiles = async () => {
+    setLoadingResultFiles(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/list-forecast-results`);
+      const data = await res.json();
+      setForecastResultFiles(data);
+    } catch (err) {
+      setForecastResultFiles([]);
+    } finally {
+      setLoadingResultFiles(false);
+    }
+  };
+
+  useEffect(() => {
     fetchForecastResultFiles();
-  } catch (err) {
-    alert('Error duplicating result file.');
-  }
-};
+  }, []);
+
+  // Search filter for both tables
+  const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchResultsTerm.toLowerCase()));
+  const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(resultSearchTerm.toLowerCase()));
+
+  const handlePreviewResult = async (key: string) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/preview-forecast-result?key=${encodeURIComponent(key)}`);
+      const text = await res.text();
+      const rows = text
+        .trim()
+        .split("\n")
+        .slice(0, 6) // header + 5 rows
+        .map(line => line.split(","));
+      const headers = rows[0];
+      const preview = rows.slice(1).map(row =>
+        Object.fromEntries(row.map((cell, i) => [headers[i], cell]))
+      );
+      setPreviewData(preview);
+      setShowPreviewModal(true);
+    } catch (err) {
+      alert('Failed to load preview data');
+    }
+  };
+
+  const handleDeleteResult = async (key: string) => {
+    if (!window.confirm('Delete this forecast result file?')) return;
+    await fetch(`${BASE_URL}/api/delete-forecast-result?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+    fetchForecastResultFiles();
+  };
+
+  // Add the handleDownloadResult function (replace Preview logic)
+  const handleDownloadResult = async (key: string) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(key)}`);
+      if (!res.ok) throw new Error('Failed to download file');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = key.split('/').pop() || 'forecast_result.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Download failed.');
+    }
+  };
+
+  const handleDuplicateResult = async (key: string | null) => {
+    if (!key) return;
+    const currentName = key.split('/').pop();
+    const newName = window.prompt('Enter a new name for the duplicated file:', currentName?.replace(/(\.csv)?$/, `_copy.csv`));
+    if (!newName || !newName.endsWith('.csv')) {
+      alert('Please provide a valid .csv file name.');
+      return;
+    }
+    try {
+      const res = await fetch(`${BASE_URL}/api/duplicate-forecast-result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceKey: key, newName }),
+      });
+      if (!res.ok) throw new Error('Failed to duplicate result file');
+      fetchForecastResultFiles();
+    } catch (err) {
+      alert('Error duplicating result file.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
