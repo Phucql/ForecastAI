@@ -56,11 +56,22 @@ try:
 
     # 5. Forecast
     client = NixtlaClient(api_key=api_key)
-    # Debug prints before forecasting
-    print("[DEBUG] DataFrame sent to forecast:", df_filled, file=sys.stderr)
+    # Robust debug output before forecasting
+    print("[DEBUG] DataFrame sent to forecast:\n", df_filled, file=sys.stderr)
     print("[DEBUG] DataFrame shape:", df_filled.shape, file=sys.stderr)
     print("[DEBUG] DataFrame columns:", df_filled.columns, file=sys.stderr)
+    print("[DEBUG] DataFrame dtypes:", df_filled.dtypes, file=sys.stderr)
     print("[DEBUG] unique_id values:", df_filled['unique_id'].unique(), file=sys.stderr)
+    print("[DEBUG] y values:", df_filled['y'].values, file=sys.stderr)
+    print("[DEBUG] ds values:", df_filled['ds'].values, file=sys.stderr)
+    if df_filled.empty:
+        print("[DEBUG] DataFrame is empty before forecast!", file=sys.stderr)
+        print(json.dumps({"error": "No data left to forecast after filling missing months."}))
+        sys.exit(0)
+    if not all(col in df_filled.columns for col in ['unique_id', 'ds', 'y']):
+        print("[DEBUG] DataFrame missing required columns!", file=sys.stderr)
+        print(json.dumps({"error": "DataFrame missing required columns before forecast."}))
+        sys.exit(0)
     forecast_df = client.forecast(
         df=df_filled,
         h=data["horizon"],
