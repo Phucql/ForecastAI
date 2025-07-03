@@ -56,7 +56,11 @@ try:
 
     # 5. Forecast
     client = NixtlaClient(api_key=api_key)
-    print("[DEBUG] DataFrame before forecasting:", df_filled.head(), file=sys.stderr)
+    # Debug prints before forecasting
+    print("[DEBUG] DataFrame sent to forecast:", df_filled, file=sys.stderr)
+    print("[DEBUG] DataFrame shape:", df_filled.shape, file=sys.stderr)
+    print("[DEBUG] DataFrame columns:", df_filled.columns, file=sys.stderr)
+    print("[DEBUG] unique_id values:", df_filled['unique_id'].unique(), file=sys.stderr)
     forecast_df = client.forecast(
         df=df_filled,
         h=data["horizon"],
