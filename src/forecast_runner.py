@@ -7,55 +7,23 @@ from nixtla import NixtlaClient
 from utilsforecast.preprocessing import fill_gaps
 import logging
 import signal
-import chardet  # For encoding detection
 
 # Optional: clean logs
 logging.getLogger("nixtla.nixtla_client").setLevel(logging.CRITICAL)
 
 try:
-    # 1. Load key from environment variables (preferred for deployment)
-    api_key = os.environ.get("TIMEGPT_API_KEY")
-    
-    # If not found in environment, try .env file
+    # 1. Load key from .env
+    load_dotenv()
+    api_key = os.getenv("TIMEGPT_API_KEY")
     if not api_key:
-        try:
-            load_dotenv()
-            api_key = os.getenv("TIMEGPT_API_KEY")
-        except UnicodeDecodeError:
-            # Try with different encodings if UTF-8 fails
-            try:
-                load_dotenv(encoding='latin1')
-                api_key = os.getenv("TIMEGPT_API_KEY")
-            except:
-                try:
-                    load_dotenv(encoding='cp1252')
-                    api_key = os.getenv("TIMEGPT_API_KEY")
-                except:
-                    pass  # Continue without .env file
-    
-    if not api_key:
-        raise Exception("TIMEGPT_API_KEY is missing from environment variables")
+        raise Exception("TIMEGPT_API_KEY is missing from .env")
 
     # 2. Parse POST body from stdin
-    import sys
-    payload = sys.stdin.read()
-    print(f"[DEBUG] Received payload from stdin, length: {len(payload)}", file=sys.stderr)
-    
-    if not payload:
-        raise Exception("No payload received from stdin")
-    
-    data = json.loads(payload)
-    print("[DEBUG] Successfully parsed JSON payload", file=sys.stderr)
-    print(f"[DEBUG] Payload keys: {list(data.keys())}", file=sys.stderr)
-    print(f"[DEBUG] Series length: {len(data.get('series', []))}", file=sys.stderr)
+    data = json.loads(sys.argv[1])
+    print("[DEBUG] Received payload", file=sys.stderr)
 
     # 3. Convert to DataFrame
-    print("[DEBUG] About to create DataFrame from series data", file=sys.stderr)
-    series_data = data["series"]
-    print(f"[DEBUG] Series data type: {type(series_data)}", file=sys.stderr)
-    print(f"[DEBUG] First few series items: {series_data[:2] if series_data else 'Empty'}", file=sys.stderr)
-    
-    df = pd.DataFrame(series_data)
+    df = pd.DataFrame(data["series"])
     print("[DEBUG] DataFrame after creation:", df.head(), file=sys.stderr)
     # Use PRD_LVL_MEMBER_NAME as the unique_id for each series
     # Ensure columns: PRD_LVL_MEMBER_NAME, time, target
@@ -111,10 +79,4 @@ try:
 
     
 except Exception as e:
-    import traceback
-    error_details = {
-        "error": str(e),
-        "type": type(e).__name__,
-        "traceback": traceback.format_exc()
-    }
-    print(json.dumps(error_details))
+    print(json.dumps({"error": str(e)}))
