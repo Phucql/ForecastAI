@@ -115,12 +115,12 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
   const { originalKey, forecastKey } = req.body;
 
   console.log('📦 Upload originalKey:', originalKey);
-console.log('📦 Upload forecastKey:', forecastKey);
+  console.log('📦 Upload forecastKey:', forecastKey);
 
   const bucket = process.env.VITE_S3_BUCKET_NAME!;
 
-  if (!originalKey || !forecastKey) {
-    return res.status(400).json({ error: 'Missing originalKey or forecastKey' });
+  if (!forecastKey) {
+    return res.status(400).json({ error: 'Missing forecastKey' });
   }
 
   try {
@@ -136,14 +136,15 @@ console.log('📦 Upload forecastKey:', forecastKey);
       });
     };
 
-    const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+    if (originalKey) {
+      const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+      await insertRows('forecast_original', originalRows);
+    }
     const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
-
-    await insertRows('forecast_original', originalRows);
     await insertRows('forecast_result', forecastRows);
 
-    console.log('✅ Data uploaded to forecast_original and forecast_result');
-    res.status(200).json({ message: 'Data uploaded to forecast_original and forecast_result' });
+    console.log('✅ Data uploaded to forecast tables');
+    res.status(200).json({ message: 'Data uploaded to forecast tables' });
   } catch (err: any) {
     console.error('[Upload Tables Error]', err);
     res.status(500).json({ error: err.message || 'Upload failed' });
@@ -185,9 +186,10 @@ pool.connect((err, client, done) => {
 
 app.use(cors({
   origin: [
-    'http://localhost:5173', 
+    'http://localhost:5173',
     'http://localhost:4173',
     'https://foodforecastai.netlify.app',
+    'https://forecastai-ii8z.onrender.com',
     process.env.CORS_ORIGIN
   ].filter((origin): origin is string => Boolean(origin)),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

@@ -719,8 +719,8 @@ function App() {
                     ) : filteredResultFiles.map((file, idx) => (
                       <tr
                         key={file.key}
-                        className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
                         onClick={() => setSelectedResultFile(file.key)}
+                        className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedResultFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'}`}
                         title={file.name}
                       >
                         <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
@@ -766,17 +766,13 @@ function App() {
               </div>
               <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+                  className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !loadingResultFiles ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                   onClick={handleRunReport}
-                  disabled={!selectedResultFile}
+                  disabled={!selectedResultFile || loadingResultFiles}
+                  title={selectedResultFile ? 'Run report on selected result file' : 'Select a file to run report'}
                 >
-                  Run Report
-                </button>
-                <button
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded"
-                  onClick={handleClearForecastTable}
-                >
-                  Clear Forecast Table
+                  <Play className="w-4 h-4" />
+                  {loadingResultFiles ? 'Uploading...' : 'Run Report'}
                 </button>
               </div>
             </div>
