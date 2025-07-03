@@ -820,7 +820,9 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
         // Use originalFileName from request, fallback to id or 'forecast_file'
         const today = new Date().toISOString().slice(0, 10);
-        const forecastFileName = `forecasts/Forecast_${baseFileName}_${today}.csv`;
+        // Only add 'forecasts/' prefix for the main bucket, not for Forecast_Result
+        const forecastFileNameOnly = `Forecast_${baseFileName}_${today}.csv`;
+        const forecastFileName = `forecasts/${forecastFileNameOnly}`;
         const mergedKey = `forecasts/${baseFileName}_merged_${today}.csv`;
 
         await s3.upload({
@@ -840,7 +842,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
         // After forecast completion, upload to Forecast_Result folder in the main bucket
         await s3Result.upload({
           Bucket: FORECAST_RESULT_BUCKET,
-          Key: FORECAST_RESULT_PREFIX + forecastFileName,
+          Key: FORECAST_RESULT_PREFIX + forecastFileNameOnly,
           Body: forecastCsv,
           ContentType: 'text/csv',
           Metadata: {

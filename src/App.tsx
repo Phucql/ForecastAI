@@ -667,15 +667,16 @@ function App() {
                 }
                 setShowForecastDateModal(true);
               }}
-              disabled={!selectedForecastFile || isRunningForecast}
+              disabled={!selectedForecastFile || isRunningForecast || loading}
                 className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all
-                  ${selectedForecastFile && !isRunningForecast
+                  ${selectedForecastFile && !isRunningForecast && !loading
                   ? 'bg-orange-500 text-white hover:bg-orange-600'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
                 title={selectedForecastFile ? 'Run forecast on selected file' : 'Select a file to run forecast'}
             >
               <Play className="w-4 h-4" />
-              {isRunningForecast ? 'Running Forecast...' : 'Run Forecast'}
+              {(isRunningForecast || loading) && <span className="spinner" style={{ marginRight: 8 }} />}
+              {(isRunningForecast || loading) ? 'Running Forecast...' : 'Run Forecast'}
             </button>
             <MergeAndUploadButton
               selectedOriginal={selectedOriginalFile}
@@ -1382,6 +1383,68 @@ const handleDeleteResult = async (key: string) => {
           <span className="spinner" style={{ marginRight: 8 }} /> Load (Run Report)
         </button>
       )}
+
+      {/* Forecast Result Files Table */}
+      <div className="mt-12">
+        <h3 className="text-lg font-bold mb-4 text-orange-900">Forecast Result Files</h3>
+        <div className="relative">
+          {loadingResultFiles && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+            </div>
+          )}
+          <table className="w-full rounded-xl overflow-hidden shadow-sm">
+            <thead className="sticky top-0 z-10 bg-orange-50/90">
+              <tr className="border-b-2 border-orange-200">
+                <th className="text-left py-2 px-4 text-orange-900 font-bold">Name</th>
+                <th className="text-left py-2 px-4 text-orange-900 font-bold">Owner</th>
+                <th className="text-left py-2 px-4 text-orange-900 font-bold">Status</th>
+                <th className="text-left py-2 px-4 text-orange-900 font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredResultFiles.length === 0 ? (
+                <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
+              ) : filteredResultFiles.map((file, idx) => (
+                <tr
+                  key={file.key}
+                  className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                >
+                  <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                  <td className="py-2 px-4">{file.owner}</td>
+                  <td className="py-2 px-4">
+                    <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                      ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                      file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                      'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                    >
+                      {file.status}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4">
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => handlePreviewResult(file.key)}
+                        className="text-orange-600 hover:underline text-sm font-semibold"
+                        title="Preview file"
+                      >
+                        Preview
+                      </button>
+                      <button
+                        onClick={() => handleDeleteResult(file.key)}
+                        className="text-red-500 hover:underline text-sm font-semibold"
+                        title="Delete file"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
     </div>
   );

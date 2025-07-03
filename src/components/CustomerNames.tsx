@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, ChevronRight } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 interface CustomerData {
   customerName: string;
@@ -9,7 +9,6 @@ const CustomerNames: React.FC = () => {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -25,7 +24,6 @@ const CustomerNames: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchCustomers();
   }, []);
 
@@ -38,42 +36,24 @@ const CustomerNames: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-8">
-      <h2 className="text-2xl font-extrabold text-orange-900 mb-6 text-center tracking-tight drop-shadow-sm">Manage Demand Plans</h2>
-      <div className="space-y-4">
-        {customers.length === 0 && (
-          <div className="p-6 text-center text-orange-700 bg-orange-50 rounded-lg border border-orange-100 font-semibold">No customers found.</div>
-        )}
-        {customers.map((item) => (
-          <div key={item.customerName} className="group">
-            <button
-              onClick={() => setSelectedCustomer(selectedCustomer === item.customerName ? null : item.customerName)}
-              className={`w-full flex justify-between items-center p-4 rounded-xl transition-all shadow-sm border border-orange-100
-                ${selectedCustomer === item.customerName ? 'bg-orange-100 text-orange-900 ring-2 ring-orange-300' : 'bg-white hover:bg-orange-50 text-orange-900'}`}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 flex items-center justify-center bg-orange-50 rounded-full shadow border border-orange-200">
-                  <span className="text-base font-bold text-orange-600">
-                    {item.customerName.slice(0, 2)}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-semibold text-orange-900">{item.customerName}</p>
-                </div>
+    <div className="space-y-4">
+      {customers.length === 0 && (
+        <div className="p-6 text-center text-orange-700 bg-orange-50 rounded-lg border border-orange-100 font-semibold">No customers found.</div>
+      )}
+      {customers.map((item) => (
+        <div key={item.customerName} className="group">
+          <div className="w-full flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 flex items-center justify-center bg-white rounded shadow-sm">
+                <Users className="w-5 h-5 text-orange-500" />
               </div>
-              <ChevronRight className={`w-5 h-5 transition-transform ${selectedCustomer === item.customerName ? 'rotate-90 text-orange-600' : 'text-orange-300 group-hover:text-orange-500'}`} />
-            </button>
-
-            {selectedCustomer === item.customerName && (
-              <div className="mt-2 p-4 bg-orange-50 rounded-xl shadow border border-orange-200">
-                <p className="text-sm text-orange-800">
-                  Selected Customer: <strong>{item.customerName}</strong>
-                </p>
+              <div>
+                <p className="font-medium">{item.customerName}</p>
               </div>
-            )}
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
