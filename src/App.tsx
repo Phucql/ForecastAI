@@ -551,64 +551,84 @@ function App() {
             </button>
           </div>
         </div>
-          <div className="mt-12">
+          <div className="p-8">
+            <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
             <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-black mb-1">Search Forecast Result Files</label>
-                <input
-                  type="text"
-                  value={resultSearchTerm}
-                  onChange={(e) => setResultSearchTerm(e.target.value)}
-                  className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Search by name..."
-                />
+                <label className="block text-sm font-medium text-black mb-1">Name</label>
+                <div className="flex gap-2">
+                  <select
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value)}
+                    className="p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    <option value="starts-with">Starts with</option>
+                    <option value="contains">Contains</option>
+                    <option value="equals">Equals</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Search by name..."
+                  />
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="bg-orange-50 text-orange-700 px-3 rounded-md hover:bg-orange-100 transition-colors"
+                    title="Clear search"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
-              <button
-                className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
-                onClick={() => handleDuplicateResult(selectedResultFile)}
-                disabled={!selectedResultFile}
-                title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-              <button
-                className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
-                onClick={() => handleDeleteResult(selectedResultFile)}
-                disabled={!selectedResultFile}
-                title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
             </div>
-            <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
+          <div className="flex gap-2 mb-4">
+            <button
+                className={`p-2 rounded ${selectedForecastFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+              onClick={() => handleDuplicate(selectedForecastFile)}
+              disabled={!selectedForecastFile}
+                title={selectedForecastFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button
+                className={`p-2 rounded ${selectedForecastFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+              onClick={() => handleDelete(selectedForecastFile)}
+              disabled={!selectedForecastFile}
+                title={selectedForecastFile ? 'Delete selected file' : 'Select a file to delete'}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
             <div className="relative">
-              {loadingResultFiles && (
+              {loadingFiles && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                 </div>
               )}
               <table className="w-full rounded-xl overflow-hidden shadow-sm">
                 <thead className="sticky top-0 z-10 bg-orange-50/90">
-                  <tr className="border-b-2 border-orange-200">
-                    <th className="text-left py-2 px-4 text-black font-bold">Name</th>
-                    <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
-                    <th className="text-left py-2 px-4 text-black font-bold">Status</th>
-                    <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredResultFiles.length === 0 ? (
-                    <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
-                  ) : filteredResultFiles.map((file, idx) => (
-                    <tr
-                      key={file.key}
-                      className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
-                      onClick={() => setSelectedResultFile(file.key)}
+              <tr className="border-b-2 border-orange-200">
+                <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+                  {forecastFiles.length === 0 ? (
+                    <tr><td colSpan={4} className="text-center text-orange-400 py-8">No demand plans found.</td></tr>
+                  ) : forecastFiles.map((file, idx) => (
+                <tr
+                  key={file.key}
+                      className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedForecastFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                      onClick={() => setSelectedForecastFile(file.key)}
                       title={file.name}
-                    >
+                >
                       <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                      <td className="py-2 px-4">{file.owner}</td>
-                      <td className="py-2 px-4">
+                  <td className="py-2 px-4">{file.owner}</td>
+                  <td className="py-2 px-4">
                         <span className={`px-2 py-1 text-xs rounded-full font-semibold border
                           ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
                           file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
@@ -616,46 +636,176 @@ function App() {
                         >
                           {file.status}
                         </span>
-                      </td>
-                      <td className="py-2 px-4">
-                        <div className="flex gap-4">
-                          <button
-                            onClick={() => handlePreviewResult(file.key)}
-                            className="text-orange-600 hover:underline text-sm font-semibold"
-                            title="Preview file"
-                          >
-                            Preview
-                          </button>
-                          <button
-                            onClick={() => handleDownloadResult(file.key)}
-                            className="text-orange-600 hover:underline text-sm font-semibold"
-                            title="Download file"
-                          >
-                            Download
-                          </button>
-                          <button
-                            onClick={() => handleDeleteResult(file.key)}
-                            className="text-red-500 hover:underline text-sm font-semibold"
-                            title="Delete file"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </td>
+                  <td className="py-2 px-4">
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => handlePreviewFile(file.name)}
+                        className="text-orange-600 hover:underline text-sm font-semibold"
+                        title="Preview file"
+                        disabled={!selectedForecastFile || selectedForecastFile !== file.key}
+                      >
+                        Preview
+                      </button>
+                      <button
+                        onClick={() => handleDownloadResult(file.name)}
+                        className="text-orange-600 hover:underline text-sm font-semibold"
+                        title="Download file"
+                        disabled={!selectedForecastFile || selectedForecastFile !== file.key}
+                      >
+                        Download
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFile(file.name)}
+                        className="text-red-500 hover:underline text-sm font-semibold"
+                        title="Delete file"
+                        disabled={!selectedForecastFile || selectedForecastFile !== file.key}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
             </div>
             <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
-              <button
-                onClick={handleRunReport}
-                className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
-                title="Run report on selected result file"
-              >
-                <Play className="w-4 h-4" />
-                Run Report
-              </button>
+            <button
+              onClick={() => {
+                if (!selectedForecastFile) {
+                    setToast('Please select a file first.');
+                  return;
+                }
+                setShowForecastDateModal(true);
+              }}
+              disabled={!selectedForecastFile || isRunningForecast || loading}
+                className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all
+                  ${selectedForecastFile && !isRunningForecast && !loading
+                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                title={selectedForecastFile ? 'Run forecast on selected file' : 'Select a file to run forecast'}
+            >
+              <Play className="w-4 h-4" />
+              {(isRunningForecast || loading) && <span className="spinner" style={{ marginRight: 8 }} />}
+              {(isRunningForecast || loading) ? 'Running Forecast...' : 'Run Forecast'}
+            </button>
+            <MergeAndUploadButton
+              selectedOriginal={selectedOriginalFile}
+              selectedForecast={selectedForecastFile}
+                onComplete={() => {
+                  setActiveTab('reports-analytics');
+                  setToast('Report generated and uploaded!');
+                }}
+            />
+            </div>
+            {/* Forecast Result Files Table - moved here */}
+            <div className="mt-12">
+              <div className="flex flex-col md:flex-row gap-4 items-end mb-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-black mb-1">Search Result Files</label>
+                  <input
+                    type="text"
+                    value={resultSearchTerm}
+                    onChange={(e) => setResultSearchTerm(e.target.value)}
+                    className="flex-1 p-2 border border-orange-200 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Search by name..."
+                  />
+                </div>
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-orange-500 hover:bg-orange-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDuplicateResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Duplicate selected file' : 'Select a file to duplicate'}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                <button
+                  className={`p-2 rounded ${selectedResultFile ? 'text-red-500 hover:bg-red-50' : 'text-gray-400 cursor-not-allowed'}`}
+                  onClick={() => handleDeleteResult(selectedResultFile)}
+                  disabled={!selectedResultFile}
+                  title={selectedResultFile ? 'Delete selected file' : 'Select a file to delete'}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
+              <div className="relative">
+                {loadingResultFiles && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                  </div>
+                )}
+                <table className="w-full rounded-xl overflow-hidden shadow-sm">
+                  <thead className="sticky top-0 z-10 bg-orange-50/90">
+                    <tr className="border-b-2 border-orange-200">
+                      <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredResultFiles.length === 0 ? (
+                      <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
+                    ) : filteredResultFiles.map((file, idx) => (
+                      <tr
+                        key={file.key}
+                        className={`border-b border-orange-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                        onClick={() => setSelectedResultFile(file.key)}
+                        title={file.name}
+                      >
+                        <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                        <td className="py-2 px-4">{file.owner}</td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                            ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                            file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                            'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                          >
+                            {file.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          <div className="flex gap-4">
+                            <button
+                              onClick={() => handlePreviewResult(file.key)}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Preview file"
+                            >
+                              Preview
+                            </button>
+                            <button
+                              onClick={() => handleDownloadResult(file.key)}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Download file"
+                            >
+                              Download
+                            </button>
+                            <button
+                              onClick={() => handleDeleteResult(file.key)}
+                              className="text-red-500 hover:underline text-sm font-semibold"
+                              title="Delete file"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
+                <button
+                  onClick={handleRunReport}
+                  className="py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all bg-orange-500 text-white hover:bg-orange-600"
+                  title="Run report on selected result file"
+                >
+                  <Play className="w-4 h-4" />
+                  Run Report
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -876,7 +1026,7 @@ useEffect(() => {
 
 // Search filter for both tables
 const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
-const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(resultSearchTerm.toLowerCase()));
+const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
 const handlePreviewResult = async (key: string) => {
   try {
