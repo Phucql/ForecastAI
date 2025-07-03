@@ -58,7 +58,7 @@ try:
     df = df.rename(columns={"index": "ds"})
     df["unique_id"] = unique_id  # Ensure all rows have the same unique_id
 
-    print("[DEBUG] DataFrame after filling all months:", df, file=sys.stderr)
+    print("[DEBUG] DataFrame after filling all months (full):\n" + df.to_string(), file=sys.stderr)
 
     # Check if there is any data left to forecast
     if df.empty:
