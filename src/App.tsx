@@ -1140,7 +1140,7 @@ function App() {
       <div className="container mx-auto py-6">
         {activeTab === 'demand-plan-inputs' && <DemandPlanInputs />}
         {activeTab === 'supply-network-model' && <SupplyNetworkModel />}
-        {activeTab === 'manage-demand-plans' && (<ManageDemandPlans
+        {activeTab === 'manage-demand-plans' && (<MemoizedManageDemandPlans
             handleDelete={handleDeleteFile} />)}
         {activeTab === 'manage-users' && <ManageUsers />}
         {activeTab === 'reports-analytics' && (
