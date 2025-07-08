@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
   BarChart3, 
   Home, 
@@ -1030,8 +1030,8 @@ function App() {
   }, []);
 
   // Search filter for both tables
-  const filteredOriginalFiles = forecastFiles.filter(f => f.name.toLowerCase().includes(searchResultsTerm.toLowerCase()));
-  const filteredResultFiles = forecastResultFiles.filter(f => f.name.toLowerCase().includes(resultSearchTerm.toLowerCase()));
+  const filteredOriginalFiles = useMemo(() => forecastFiles.filter(f => f.name.toLowerCase().includes(searchResultsTerm.toLowerCase())), [forecastFiles, searchResultsTerm]);
+  const filteredResultFiles = useMemo(() => forecastResultFiles.filter(f => f.name.toLowerCase().includes(resultSearchTerm.toLowerCase())), [forecastResultFiles, resultSearchTerm]);
 
   const handlePreviewResult = async (key: string) => {
     try {
