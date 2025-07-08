@@ -821,28 +821,26 @@ app.post('/api/run-forecast-py', async (req, res) => {
         const parsed = JSON.parse(result);
         const forecastCsv = Papa.unparse(parsed);
 
-        // Use originalFileName from request, fallback to id or 'forecast_file'
+        // Only upload to Forecast_Result folder in the main bucket
         const today = new Date().toISOString().slice(0, 10);
-        // Only add 'forecasts/' prefix for the main bucket, not for Forecast_Result
         const forecastFileNameOnly = `Forecast_${baseFileName}_${today}.csv`;
-        const forecastFileName = `forecasts/${forecastFileNameOnly}`;
-        const mergedKey = `forecasts/${baseFileName}_merged_${today}.csv`;
+        // const forecastFileName = `forecasts/${forecastFileNameOnly}`;
+        // const mergedKey = `forecasts/${baseFileName}_merged_${today}.csv`;
 
-        await s3.upload({
-          Bucket: process.env.VITE_S3_BUCKET_NAME!,
-          Key: forecastFileName,
-          Body: forecastCsv,
-          ContentType: 'text/csv',
-          Metadata: {
-            owner: 'ForecastAI',
-            status: 'Active',
-            description: `Forecast generated for ${baseFileName}.csv on ${today}`
-          }
-        }).promise();
+        // Remove this block:
+        // await s3.upload({
+        //   Bucket: process.env.VITE_S3_BUCKET_NAME!,
+        //   Key: forecastFileName,
+        //   Body: forecastCsv,
+        //   ContentType: 'text/csv',
+        //   Metadata: {
+        //     owner: 'ForecastAI',
+        //     status: 'Active',
+        //     description: `Forecast generated for ${baseFileName}.csv on ${today}`
+        //   }
+        // }).promise();
 
-        console.log(`[UPLOAD SUCCESS] Forecast uploaded: ${forecastFileName}`);
-
-        // After forecast completion, upload to Forecast_Result folder in the main bucket
+        // Only upload to Forecast_Result
         await s3Result.upload({
           Bucket: FORECAST_RESULT_BUCKET,
           Key: FORECAST_RESULT_PREFIX + forecastFileNameOnly,
@@ -857,7 +855,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
         res.json({
           message: 'Forecast complete',
-          forecastFile: forecastFileName,
+          forecastFile: FORECAST_RESULT_PREFIX + forecastFileNameOnly,
           result: parsed
         });
       } catch (parseErr) {
