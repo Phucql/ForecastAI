@@ -1433,7 +1433,15 @@ function App() {
 
       {showForecastDateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg space-y-6">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg space-y-6 relative">
+            {/* Close button */}
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-orange-500 text-2xl font-bold focus:outline-none"
+              onClick={() => setShowForecastDateModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
             <h2 className="text-xl font-bold">Select Forecast Date Range</h2>
 
             {/* Option Toggle */}
