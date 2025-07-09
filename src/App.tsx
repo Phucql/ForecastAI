@@ -300,7 +300,8 @@ function App() {
       await fetchSavedForecasts(); // reload list
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.reload();
+      window.location.href = 'https://foodforecastai.netlify.app/';
+      setActiveTab('manage-demand-plans');
     } catch (err) {
       console.error('[Duplicate File] Error:', err);
     }
@@ -322,7 +323,8 @@ function App() {
       fetchSavedForecasts();
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.reload();
+      window.location.href = 'https://foodforecastai.netlify.app/';
+      setActiveTab('manage-demand-plans');
     } catch (err) {
       console.error('[Delete File]', err);
       alert('Error deleting file');
@@ -896,6 +898,7 @@ function App() {
   
       if (!result || !Array.isArray(result) || result.length === 0) {
         alert(" ✅ Forecast Completed.");
+        window.location.href = 'https://foodforecastai.netlify.app/';
         return;
       }
   
@@ -1104,7 +1107,8 @@ function App() {
       });
       if (!res.ok) throw new Error('Failed to duplicate result file');
       fetchForecastResultFiles();
-      window.location.reload();
+      window.location.href = 'https://foodforecastai.netlify.app/';
+      setActiveTab('manage-demand-plans');
     } catch (err) {
       alert('Error duplicating result file.');
     }
