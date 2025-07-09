@@ -300,7 +300,7 @@ function App() {
       await fetchSavedForecasts(); // reload list
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/';
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
       setActiveTab('manage-demand-plans');
     } catch (err) {
       console.error('[Duplicate File] Error:', err);
@@ -323,7 +323,7 @@ function App() {
       fetchSavedForecasts();
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/';
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
       setActiveTab('manage-demand-plans');
     } catch (err) {
       console.error('[Delete File]', err);
@@ -898,7 +898,7 @@ function App() {
   
       if (!result || !Array.isArray(result) || result.length === 0) {
         alert(" ✅ Forecast Completed.");
-        window.location.href = 'https://foodforecastai.netlify.app/';
+        window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         return;
       }
   
@@ -941,7 +941,7 @@ function App() {
       }
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/';
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
   
     } catch (err: any) {
       console.error("❌ Forecast error:", err);
@@ -1107,7 +1107,7 @@ function App() {
       });
       if (!res.ok) throw new Error('Failed to duplicate result file');
       fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/';
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
       setActiveTab('manage-demand-plans');
     } catch (err) {
       alert('Error duplicating result file.');
@@ -1129,6 +1129,12 @@ function App() {
     handleRunForecast(startDate, endDate);
     setShowForecastDateModal(false);
   };
+
+  useEffect(() => {
+    if (window.location.pathname === '/ManageDemandPlans') {
+      setActiveTab('manage-demand-plans');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1307,7 +1313,7 @@ function App() {
           fetchForecastFiles();
           fetchForecastResultFiles();
           setActiveTab('manage-demand-plans');
-          window.location.href = 'https://foodforecastai.netlify.app/';
+          window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         }} />}
       </div>
 
