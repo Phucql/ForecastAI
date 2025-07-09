@@ -995,13 +995,13 @@ function App() {
 
   // Fetch forecast report data for dropdown
   useEffect(() => {
-    if (activeTab === 'reports-analytics') {
+    if (location.pathname === '/ReportsAnalytics') {
       fetch(`${BASE_URL}/api/final-forecast-report`)
         .then(res => res.json())
         .then(setForecastReportData)
         .catch(() => setForecastReportData([]));
     }
-  }, [activeTab]);
+  }, [location.pathname]);
 
   // Fetch monthly data for selected item when modal is open
   useEffect(() => {
@@ -1123,7 +1123,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (window.location.pathname === '/ManageDemandPlans') {
+    if (location.pathname === '/ManageDemandPlans') {
       setActiveTab('manage-demand-plans');
     }
   }, []);
@@ -1386,7 +1386,7 @@ function App() {
       </Modal>
 
       <Modal
-        isOpen={activeTab === 'reports-analytics' && forecastTableData.length > 0}
+        isOpen={forecastTableData.length > 0}
         onClose={() => setForecastTableData([])}
         title="Forecast Result Table"
       >
