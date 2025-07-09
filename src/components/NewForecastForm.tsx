@@ -140,6 +140,9 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
       });
   
       if (!uploadResponse.ok) throw new Error('Failed to upload forecast file');
+
+      // After successful upload, refresh and redirect to ManageDemandPlans
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
   
       // // Parse CSV for condensed logic
       // const lines = csv.trim().split('\n');
