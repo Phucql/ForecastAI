@@ -1177,7 +1177,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
               <TableBody>
                 {data.map((row, i) => (
                   <TableRow key={i} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100/60`}>
-                    <TableCell className="font-semibold whitespace-nowrap text-orange-900">{row.item}</TableCell>
+                    <TableCell className="font-semibold whitespace-nowrap text-orange-900 sticky left-0 z-10" style={{ background: 'inherit' }}>{row.item}</TableCell>
                     {/* Measure column should be empty */}
                     <TableCell />
                     {/* Data starts here, immediately at Bookings History 2Y Ago (2023) */}
@@ -1378,7 +1378,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
               <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur">
                 {/* Row 1: Item, Year headers */}
                 <TableRow className="bg-orange-100 text-center font-bold text-orange-900">
-                  <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold">Business Unit</TableHead>
+                  <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold sticky left-0 z-20" style={{ background: 'inherit' }}>Business Unit</TableHead>
                   {/* Removed Family, Subfamily, Color, Item headers */}
                   <TableHead colSpan={businessExpandedYear2025 ? monthNames.length * 6 : 6} className="bg-orange-100 text-orange-900 font-bold">
                     <button
@@ -1470,21 +1470,6 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                 {renderBusinessLevelTable()}
               </tbody>
             </table>
-            {/* Always show horizontal scrollbar */}
-            <div
-              style={{
-                height: 16,
-                overflowX: 'scroll',
-                overflowY: 'hidden',
-                width: '100%',
-                position: 'absolute',
-                left: 0,
-                bottom: 0,
-                background: 'white'
-              }}
-            >
-              <div style={{ width: 1200 }} />
-            </div>
           </div>
         </div>
       </div>
