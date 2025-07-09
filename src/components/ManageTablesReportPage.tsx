@@ -1365,7 +1365,6 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
           </div>
           <div
             style={{
-              height: 800, // changed from 400 to 800
               overflow: 'auto',
               position: 'relative',
               background: 'white',
