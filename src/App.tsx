@@ -39,7 +39,6 @@ import TimeGPTForecastRunner from './components/TimeGPTForecastRunner';
 import ForecastReportTable from './components/ForecastReportTable';
 import ManageTables from './components/ManageTables';
 import { format } from 'date-fns';
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { unparse } from "papaparse";
 import MergeAndUploadButton from './components/MergeAndUploadButton';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
@@ -788,152 +787,86 @@ function App() {
   );
 
   const handleRunForecast = async (startDate: string, endDate: string) => {
+    if (!selectedForecastFile) {
+      alert('Please select a file first');
+      return;
+    }
+
     setLoading(true);
+    const fileBase = selectedForecastFile.split('/').pop()?.replace('.csv', '') || 'forecast';
+
     try {
-      if (!selectedForecastFile) {
-        alert("Please select a forecast file first.");
-        return;
-      }
-
-      // Define fileBase before using it in the payload
-      const fileBase = selectedForecastFile
-        ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
-        : "forecast";
-
-      console.log("\uD83D\uDCE6 Run Forecast:", selectedForecastFile, startDate, endDate, fileBase);
-  
-      const response = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
-      if (!response.ok) throw new Error("Failed to load forecast file");
-  
-      const csvText = await response.text();
-      const rows = csvText.trim().split("\n").map(r => r.split(","));
-      const headers = rows[0].map(h => h.replace(/"/g, "").trim());
-  
-      const dateIdx = headers.indexOf("TIM_LVL_MEMBER_VALUE");
-      const valueIdx = headers.indexOf("VALUE_NUMBER");
-      const nameIdx = headers.indexOf("PRD_LVL_MEMBER_NAME");
-  
-      if (dateIdx === -1 || valueIdx === -1 || nameIdx === -1) {
-        throw new Error("Missing required columns: TIM_LVL_MEMBER_VALUE, VALUE_NUMBER, PRD_LVL_MEMBER_NAME");
-      }
-  
-      const rawData = rows.slice(1).map(row => {
-        const rawDate = new Date(row[dateIdx]?.replace(/"/g, "").trim());
-        rawDate.setDate(1);
-        const isoDate = rawDate.toISOString().split("T")[0];
-        const targetStr = row[valueIdx]?.replace(/"/g, "").trim();
-        const targetValue = parseFloat(targetStr);
-        const validTarget = !isNaN(targetValue) && targetStr !== "";
-        return {
-          id: row[nameIdx]?.replace(/"/g, "").trim() || "Unknown",
-          time: isoDate,
-          target: validTarget ? targetValue : null
-        };
-      }).filter(row => row.time && row.target !== null);
-  
-      const groupedMap = new Map();
-      rawData.forEach(row => {
-        const key = `${row.id}|${row.time}`;
-        if (!groupedMap.has(key)) {
-          groupedMap.set(key, { ...row });
-        } else {
-          groupedMap.get(key).target += row.target;
-        }
-      });
-  
-      const groupedArray = Array.from(groupedMap.values());
-      const grouped = groupedArray.reduce((acc, row) => {
-        if (!acc[row.id]) acc[row.id] = { id: row.id, time: [], target: [], PRD_LVL_MEMBER_NAME: [] };
-        acc[row.id].time.push(row.time);
-        acc[row.id].target.push(row.target);
-        acc[row.id].PRD_LVL_MEMBER_NAME.push(row.id);
-        return acc;
-      }, {});
-  
-      // Process all series for multi-series forecasting
-      const allSeries = Object.values(grouped);
+      const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       
-      // Flatten all series into a single array for time, target, and PRD_LVL_MEMBER_NAME
-      const time: string[] = [];
-      const target: number[] = [];
-      const PRD_LVL_MEMBER_NAME: string[] = [];
-      allSeries.forEach(series => {
-        // Use the same training split logic for each series
-        const totalLength = series.time.length;
-      const splitIndex = Math.floor(totalLength * 0.7);
-        const trainingTime = series.time.slice(0, splitIndex);
-        const trainingTarget = series.target.slice(0, splitIndex);
-        const trainingName = series.PRD_LVL_MEMBER_NAME.slice(0, splitIndex);
-        time.push(...trainingTime);
-        target.push(...trainingTarget);
-        PRD_LVL_MEMBER_NAME.push(...trainingName);
-      });
-  
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const horizon = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-  
-      const payload = { time, target, PRD_LVL_MEMBER_NAME, horizon, originalFileName: fileBase };
-      console.log("\uD83D\uDCE6 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
-  
+      const payload = {
+        originalFileName: fileBase,
+        horizon: Math.round(((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24 * 30))),
+        id: fileBase
+      };
+
+      console.log('🚀 Starting forecast with payload:', payload);
+
       const res = await fetch(`${BASE_URL}/api/run-forecast-py`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-  
+
       if (!res.ok) throw new Error("Forecast failed");
-  
+
       const result = await res.json();
       console.log("🔍 TimeGPT Raw Result:", result);
-  
+
       if (!result || !Array.isArray(result) || result.length === 0) {
         alert(" ✅ Forecast Completed.");
-        window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+        navigate('/ManageDemandPlans');
         return;
       }
-  
+
       const convertedResult = result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.unique_id,
         TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
         ForecastAI: row.TimeGPT
       }));
-  
+
       setForecastTableData(convertedResult);
       setShowViewResultModal(true);
-  
+
+      // Upload the forecast result via backend API instead of direct S3
       const csvHeader = Object.keys(convertedResult[0]).join(",");
       const csvRows = convertedResult.map(r => Object.values(r).join(","));
       const csvData = [csvHeader, ...csvRows].join("\n");
-      const fileBuffer = new TextEncoder().encode(csvData);
-  
-      const s3 = new S3Client({
-        region: "us-east-2",
-        credentials: {
-          accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID!,
-          secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY!,
-        },
-      });
-  
-      const fileKey = `Forecast_Result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
-  
+      
+      const forecastFileName = `Forecast_${fileBase}_${new Date().toISOString().split("T")[0]}.csv`;
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const forecastFile = new File([blob], forecastFileName, { type: 'text/csv' });
+
+      const formData = new FormData();
+      formData.append('file', forecastFile);
+      formData.append('owner', 'ForecastAI');
+      formData.append('description', `Forecast generated for ${fileBase}.csv`);
+
       try {
-        const uploadRes = await s3.send(new PutObjectCommand({
-          Bucket: import.meta.env.VITE_S3_BUCKET_NAME!,
-          Key: fileKey,
-          Body: fileBuffer,
-          ContentType: "text/csv",
-        }));
-        console.log("✅ S3 Upload Successful:", uploadRes);
+        const uploadResponse = await fetch(`${BASE_URL}/api/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload forecast result');
+        }
+
+        console.log("✅ Forecast result uploaded successfully");
         alert("✅ Forecast uploaded to S3! View it in Reports & Analytics → Manage Tables.");
       } catch (uploadError) {
-        console.error("❌ S3 Upload Failed:", uploadError);
+        console.error("❌ Upload Failed:", uploadError);
         alert("Forecast complete but failed to upload to S3.");
       }
+      
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
-  
+      navigate('/ManageDemandPlans');
+
     } catch (err: any) {
       console.error("❌ Forecast error:", err);
       alert("Forecast failed: " + err.message);
