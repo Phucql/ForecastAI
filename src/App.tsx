@@ -938,7 +938,7 @@ function App() {
       }
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.reload();
+      window.location.href = 'https://foodforecastai.netlify.app/';
   
     } catch (err: any) {
       console.error("❌ Forecast error:", err);
@@ -1303,6 +1303,7 @@ function App() {
           fetchForecastFiles();
           fetchForecastResultFiles();
           setActiveTab('manage-demand-plans');
+          window.location.href = 'https://foodforecastai.netlify.app/';
         }} />}
       </div>
 
