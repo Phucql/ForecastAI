@@ -1088,7 +1088,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
               <TableHeader className="sticky top-0 z-10 bg-white/90 backdrop-blur">
                 {/* Row 1: Item (rowSpan=3), Year label, Year headers */}
                 <TableRow>
-                  <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold sticky left-0 z-20 border-r-2 border-orange-300 shadow-lg" style={{ background: 'inherit', boxShadow: '2px 0 8px -2px #fbbf24' }}>Item</TableHead>
+                  <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold sticky left-0 z-30 border-r-2 border-orange-300 shadow-lg" style={{ background: '#FEF3C7', boxShadow: '2px 0 8px -2px #fbbf24' }}>Item</TableHead>
                   <TableHead className="bg-orange-100 text-orange-900 font-bold">Year</TableHead>
                   <TableHead colSpan={expandedYear2025 ? monthNames.length * 6 : 6} className="bg-orange-100 text-orange-900 font-bold">
                     <button
@@ -1177,7 +1177,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
               <TableBody>
                 {data.map((row, i) => (
                   <TableRow key={i} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100/60`}>
-                    <TableCell className="font-semibold whitespace-nowrap text-orange-900 sticky left-0 z-10 border-r-2 border-orange-200" style={{ background: 'inherit', boxShadow: '2px 0 8px -2px #fbbf24' }}>{row.item}</TableCell>
+                    <TableCell className="font-semibold whitespace-nowrap text-orange-900 bg-orange-100 sticky left-0 z-20 border-r-2 border-orange-200" style={{ background: '#FEF3C7', boxShadow: '2px 0 8px -2px #fbbf24' }}>{row.item}</TableCell>
                     {/* Measure column should be empty */}
                     <TableCell />
                     {/* Data starts here, immediately at Bookings History 2Y Ago (2023) */}
