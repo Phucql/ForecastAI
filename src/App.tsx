@@ -1152,6 +1152,7 @@ function App() {
 
       <div className="container mx-auto py-6">
         <Routes>
+          <Route path="/" element={<Navigate to="/DemandPlanInputs" replace />} />
           <Route path="/DemandPlanInputs" element={<DemandPlanInputs />} />
           <Route path="/SupplyNetworkModel" element={<SupplyNetworkModel />} />
           <Route path="/ManageDemandPlans" element={<Navigate to="/DemandPlanInputs" replace />} />
