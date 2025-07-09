@@ -298,6 +298,9 @@ function App() {
       });
       if (!response.ok) throw new Error('Failed to duplicate file');
       await fetchSavedForecasts(); // reload list
+      await fetchForecastFiles();
+      await fetchForecastResultFiles();
+      window.location.reload();
     } catch (err) {
       console.error('[Duplicate File] Error:', err);
     }
@@ -317,6 +320,9 @@ function App() {
   
       alert(`${fileName} deleted`);
       fetchSavedForecasts();
+      await fetchForecastFiles();
+      await fetchForecastResultFiles();
+      window.location.reload();
     } catch (err) {
       console.error('[Delete File]', err);
       alert('Error deleting file');
@@ -930,6 +936,9 @@ function App() {
         console.error("❌ S3 Upload Failed:", uploadError);
         alert("Forecast complete but failed to upload to S3.");
       }
+      await fetchForecastFiles();
+      await fetchForecastResultFiles();
+      window.location.reload();
   
     } catch (err: any) {
       console.error("❌ Forecast error:", err);
@@ -1057,6 +1066,7 @@ function App() {
     if (!window.confirm('Delete this forecast result file?')) return;
     await fetch(`${BASE_URL}/api/delete-forecast-result?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
     fetchForecastResultFiles();
+    window.location.reload();
   };
 
   // Add the handleDownloadResult function (replace Preview logic)
@@ -1094,6 +1104,7 @@ function App() {
       });
       if (!res.ok) throw new Error('Failed to duplicate result file');
       fetchForecastResultFiles();
+      window.location.reload();
     } catch (err) {
       alert('Error duplicating result file.');
     }
