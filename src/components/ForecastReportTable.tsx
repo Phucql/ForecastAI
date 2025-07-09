@@ -29,7 +29,7 @@ const ForecastReportTable: React.FC<ForecastReportTableProps> = ({ data }) => {
       <table className="min-w-full table-auto">
         <thead>
           <tr>
-            <th>Item</th>
+            <th className="text-orange-500">Item</th>
             <th>Measure</th>
             <th>Bookings History 2Y Ago ({VISIBLE_YEAR - 2})</th>
             <th>Bookings History 1Y Ago ({VISIBLE_YEAR - 1})</th>
@@ -42,7 +42,7 @@ const ForecastReportTable: React.FC<ForecastReportTableProps> = ({ data }) => {
         <tbody>
           {data.map((row) => (
             <tr key={row.item}>
-              <td>{row.item}</td>
+              <td className="text-orange-500 font-semibold">{row.item}</td>
               <td>{row.measure}</td>
               <td>{row[VISIBLE_YEAR]?.history2YearsAgo ?? '-'}</td>
               <td>{row[VISIBLE_YEAR]?.history1YearAgo ?? '-'}</td>

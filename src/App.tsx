@@ -42,7 +42,7 @@ import { format } from 'date-fns';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { unparse } from "papaparse";
 import MergeAndUploadButton from './components/MergeAndUploadButton';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import ManageTablesReportPage from './components/ManageTablesReportPage';
 import { Card, CardContent } from '@/components/utils/card';
 import { Line } from 'react-chartjs-2';
@@ -89,36 +89,29 @@ const initialDemandPlans: DemandPlan[] = [
 
 type Tab = 'demand-plan-inputs' | 'supply-network-model' | 'manage-demand-plans' | 'manage-users' | 'reports-analytics' | 'new-forecast' | 'edit-forecast';
 
-function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActiveTab: (tab: Tab) => void }) {
+function NavigationTabs() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const tabs = [
-    { id: 'demand-plan-inputs', label: 'Demand Plan Inputs', icon: Database },
-    { id: 'supply-network-model', label: 'Supply Network Model', icon: Grid },
-    { id: 'manage-demand-plans', label: 'Manage Demand Plans', icon: BarChart3 },
-    { id: 'manage-users', label: 'Manage Users', icon: Users },
-    { id: 'reports-analytics', label: 'Reports & Analytics', icon: LineChart },
-  ] as const;
-
+    { path: '/DemandPlanInputs', label: 'Demand Plan Inputs' },
+    { path: '/SupplyNetworkModel', label: 'Supply Network Model' },
+    { path: '/ManageDemandPlans', label: 'Manage Demand Plans' },
+    { path: '/ManageUsers', label: 'Manage Users' },
+    { path: '/ReportsAnalytics', label: 'Reports & Analytics' },
+  ];
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="container mx-auto">
         <div className="flex space-x-4">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
-                  ${activeTab === tab.id 
-                    ? (['reports-analytics', 'demand-plan-inputs', 'supply-network-model', 'manage-users'].includes(tab.id) ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
-                  }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+          {tabs.map(tab => (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${location.pathname === tab.path ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'}`}
+            >
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </nav>
@@ -126,7 +119,6 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('demand-plan-inputs');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('starts-with');
   
@@ -1156,165 +1148,162 @@ function App() {
         </div>
       </header>
 
-      <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      <NavigationTabs />
 
       <div className="container mx-auto py-6">
-        {activeTab === 'demand-plan-inputs' && <DemandPlanInputs />}
-        {activeTab === 'supply-network-model' && <SupplyNetworkModel />}
-        {activeTab === 'manage-demand-plans' && (<ManageDemandPlans
-            handleDelete={handleDeleteFile} />)}
-        {activeTab === 'manage-users' && <ManageUsers />}
-        {activeTab === 'reports-analytics' && (
-          showReportPage ? (
-            <ManageTablesReportPage onBack={() => setShowReportPage(false)} />
-          ) : (
-            <>
-            <ReportsAnalytics
-              forecastTableData={forecastTableData}
-              onShowReport={() => setShowReportPage(true)}
-            />
-              {/* Manage Graphs Modal */}
-              {showGraphModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                  <div className="bg-white rounded-xl shadow-2xl p-8 max-w-3xl w-full relative">
-                    <button
-                      onClick={() => setShowGraphModal(false)}
-                      className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-2xl focus:outline-none"
-                      aria-label="Close"
-                    >
-                      ×
-                    </button>
-                    <h2 className="text-2xl font-bold mb-4 text-center text-orange-700">Booking Forecast by Year – Monthly Breakdown</h2>
-                    <div className="mb-4 flex items-center gap-4">
-                      <label className="font-medium text-orange-900">Select Item:</label>
-                      <select
-                        className="border border-orange-300 rounded px-3 py-1 focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
-                        value={selectedGraphItem}
-                        onChange={e => setSelectedGraphItem(e.target.value)}
-                        style={{ minWidth: 180 }}
+        <Routes>
+          <Route path="/DemandPlanInputs" element={<DemandPlanInputs />} />
+          <Route path="/SupplyNetworkModel" element={<SupplyNetworkModel />} />
+          <Route path="/ManageDemandPlans" element={<Navigate to="/DemandPlanInputs" replace />} />
+          <Route path="/ManageUsers" element={<ManageUsers />} />
+          <Route path="/ReportsAnalytics" element={
+            showReportPage ? (
+              <ManageTablesReportPage onBack={() => setShowReportPage(false)} />
+            ) : (
+              <>
+                <ReportsAnalytics
+                  forecastTableData={forecastTableData}
+                  onShowReport={() => setShowReportPage(true)}
+                />
+                {/* Manage Graphs Modal */}
+                {showGraphModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-3xl w-full relative">
+                      <button
+                        onClick={() => setShowGraphModal(false)}
+                        className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-2xl focus:outline-none"
+                        aria-label="Close"
                       >
-                        <option value="">Choose an item...</option>
-                        {forecastReportData.map((row: any) => (
-                          <option key={row.item} value={row.item}>{row.item}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {selectedGraphItem && graphMonthlyData.length > 0 ? (
-                      <>
-                        <Line
-                          data={{
-                            labels: graphMonthlyData.map((m: any) => m.date),
-                            datasets: [
-                              {
-                                label: 'History 2Y Ago (2023)',
-                                data: graphMonthlyData.map((m: any) => m.history2Y),
-                                borderColor: '#60a5fa',
-                                backgroundColor: 'rgba(96,165,250,0.2)',
-                                tension: 0.3,
+                        ×
+                      </button>
+                      <h2 className="text-2xl font-bold mb-4 text-center text-orange-700">Booking Forecast by Year – Monthly Breakdown</h2>
+                      <div className="mb-4 flex items-center gap-4">
+                        <label className="font-medium text-orange-900">Select Item:</label>
+                        <select
+                          className="border border-orange-300 rounded px-3 py-1 focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
+                          value={selectedGraphItem}
+                          onChange={e => setSelectedGraphItem(e.target.value)}
+                          style={{ minWidth: 180 }}
+                        >
+                          <option value="">Choose an item...</option>
+                          {forecastReportData.map((row: any) => (
+                            <option key={row.item} value={row.item}>{row.item}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {selectedGraphItem && graphMonthlyData.length > 0 ? (
+                        <>
+                          <Line
+                            data={{
+                              labels: graphMonthlyData.map((m: any) => m.date),
+                              datasets: [
+                                {
+                                  label: 'History 2Y Ago (2023)',
+                                  data: graphMonthlyData.map((m: any) => m.history2Y),
+                                  borderColor: '#60a5fa',
+                                  backgroundColor: 'rgba(96,165,250,0.2)',
+                                  tension: 0.3,
+                                },
+                                {
+                                  label: 'History 1Y Ago (2024)',
+                                  data: graphMonthlyData.map((m: any) => m.history1Y),
+                                  borderColor: '#fbbf24',
+                                  backgroundColor: 'rgba(251,191,36,0.2)',
+                                  tension: 0.3,
+                                },
+                                {
+                                  label: 'Forecast',
+                                  data: graphMonthlyData.map((m: any) => m.forecast),
+                                  borderColor: '#34d399',
+                                  backgroundColor: 'rgba(52,211,153,0.2)',
+                                  borderDash: [5, 5],
+                                  tension: 0.3,
+                                },
+                                {
+                                  label: 'Adjusted Forecast',
+                                  data: graphMonthlyData.map((m: any) => m.adjustedForecast),
+                                  borderColor: '#f472b6',
+                                  backgroundColor: 'rgba(244,114,182,0.2)',
+                                  borderDash: [2, 2],
+                                  tension: 0.3,
+                                },
+                                {
+                                  label: 'Approved Forecast',
+                                  data: graphMonthlyData.map((m: any) => m.approvedForecast),
+                                  borderColor: '#6366f1',
+                                  backgroundColor: 'rgba(99,102,241,0.2)',
+                                  tension: 0.3,
+                                },
+                              ],
+                            }}
+                            options={{
+                              responsive: true,
+                              plugins: {
+                                legend: { position: 'top' },
+                                title: { display: false },
+                                tooltip: { mode: 'index', intersect: false },
                               },
-                              {
-                                label: 'History 1Y Ago (2024)',
-                                data: graphMonthlyData.map((m: any) => m.history1Y),
-                                borderColor: '#fbbf24',
-                                backgroundColor: 'rgba(251,191,36,0.2)',
-                                tension: 0.3,
+                              interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                              scales: {
+                                x: { title: { display: true, text: 'Month' } },
+                                y: { title: { display: true, text: 'Value' } },
                               },
-                              {
-                                label: 'Forecast',
-                                data: graphMonthlyData.map((m: any) => m.forecast),
-                                borderColor: '#34d399',
-                                backgroundColor: 'rgba(52,211,153,0.2)',
-                                borderDash: [5, 5],
-                                tension: 0.3,
-                              },
-                              {
-                                label: 'Adjusted Forecast',
-                                data: graphMonthlyData.map((m: any) => m.adjustedForecast),
-                                borderColor: '#f472b6',
-                                backgroundColor: 'rgba(244,114,182,0.2)',
-                                borderDash: [2, 2],
-                                tension: 0.3,
-                              },
-                              {
-                                label: 'Approved Forecast',
-                                data: graphMonthlyData.map((m: any) => m.approvedForecast),
-                                borderColor: '#6366f1',
-                                backgroundColor: 'rgba(99,102,241,0.2)',
-                                tension: 0.3,
-                              },
-                            ],
-                          }}
-                          options={{
-                            responsive: true,
-                            plugins: {
-                              legend: { position: 'top' },
-                              title: { display: false },
-                              tooltip: { mode: 'index', intersect: false },
-                            },
-                            interaction: { mode: 'nearest', axis: 'x', intersect: false },
-                            scales: {
-                              x: { title: { display: true, text: 'Month' } },
-                              y: { title: { display: true, text: 'Value' } },
-                            },
-                          }}
-                        />
-                        {/* MAPE and Accuracy metrics below the chart */}
-                        {(() => {
-                          // Group data by year
-                          const yearly: Record<string, { actual: number; forecast: number }> = {};
-                          graphMonthlyData.forEach((m: any) => {
-                            const year = m.date.slice(0, 4);
-                            if (!yearly[year]) yearly[year] = { actual: 0, forecast: 0 };
-                            yearly[year].actual += m.history1Y;
-                            yearly[year].forecast += m.forecast;
-                          });
-                          const years = Object.keys(yearly);
-                          let mape = null;
-                          let accuracy = null;
-                          if (years.length > 0) {
-                            // MAPE (mean of yearly)
-                            const mapeArr = years.map(year => {
-                              const { actual, forecast } = yearly[year];
-                              if (actual === 0) return null;
-                              return Math.abs((actual - forecast) / actual);
-                            }).filter(x => x !== null);
-                            if (mapeArr.length > 0) mape = (mapeArr.reduce((a, b) => a + (b as number), 0) / mapeArr.length) * 100;
-                            // New Accuracy (mean of yearly)
-                            const accArr = years.map(year => {
-                              const { actual, forecast } = yearly[year];
-                              if (actual === 0 && forecast === 0) return 1;
-                              if (actual === 0 || forecast === 0) return 0;
-                              const acc1 = 1 - Math.abs(actual - forecast) / Math.abs(forecast);
-                              const acc2 = 1 - Math.abs(forecast - actual) / Math.abs(actual);
-                              return Math.max(acc1, acc2);
+                            }}
+                          />
+                          {/* MAPE and Accuracy metrics below the chart */}
+                          {(() => {
+                            // Group data by year
+                            const yearly: Record<string, { actual: number; forecast: number }> = {};
+                            graphMonthlyData.forEach((m: any) => {
+                              const year = m.date.slice(0, 4);
+                              if (!yearly[year]) yearly[year] = { actual: 0, forecast: 0 };
+                              yearly[year].actual += m.history1Y;
+                              yearly[year].forecast += m.forecast;
                             });
-                            if (accArr.length > 0) accuracy = (accArr.reduce((a, b) => a + b, 0) / accArr.length) * 100;
-                          }
-                          return (
-                            <div className="flex flex-col items-center mt-6">
-                              <div className="flex gap-8 text-lg font-semibold">
-                                <span className="text-orange-700">MAPE (Yearly): {mape !== null ? mape.toFixed(2) + '%' : 'N/A'}</span>
-                                <span className="text-orange-700">Accuracy (Yearly): {accuracy !== null ? accuracy.toFixed(2) + '%' : 'N/A'}</span>
+                            const years = Object.keys(yearly);
+                            let mape = null;
+                            let accuracy = null;
+                            if (years.length > 0) {
+                              // MAPE (mean of yearly)
+                              const mapeArr = years.map(year => {
+                                const { actual, forecast } = yearly[year];
+                                if (actual === 0) return null;
+                                return Math.abs((actual - forecast) / actual);
+                              }).filter(x => x !== null);
+                              if (mapeArr.length > 0) mape = (mapeArr.reduce((a, b) => a + (b as number), 0) / mapeArr.length) * 100;
+                              // New Accuracy (mean of yearly)
+                              const accArr = years.map(year => {
+                                const { actual, forecast } = yearly[year];
+                                if (actual === 0 && forecast === 0) return 1;
+                                if (actual === 0 || forecast === 0) return 0;
+                                const acc1 = 1 - Math.abs(actual - forecast) / Math.abs(forecast);
+                                const acc2 = 1 - Math.abs(forecast - actual) / Math.abs(actual);
+                                return Math.max(acc1, acc2);
+                              });
+                              if (accArr.length > 0) accuracy = (accArr.reduce((a, b) => a + b, 0) / accArr.length) * 100;
+                            }
+                            return (
+                              <div className="flex flex-col items-center mt-6">
+                                <div className="flex gap-8 text-lg font-semibold">
+                                  <span className="text-orange-700">MAPE (Yearly): {mape !== null ? mape.toFixed(2) + '%' : 'N/A'}</span>
+                                  <span className="text-orange-700">Accuracy (Yearly): {accuracy !== null ? accuracy.toFixed(2) + '%' : 'N/A'}</span>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })()}
-                      </>
-                    ) : (
-                      <div className="text-center text-gray-500 py-8">Select an item to view its monthly breakdown graph.</div>
-                    )}
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        <div className="text-center text-gray-500 py-8">Select an item to view its monthly breakdown graph.</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )
-        )}
-        {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} onComplete={() => {
-          fetchForecastFiles();
-          fetchForecastResultFiles();
-          setActiveTab('manage-demand-plans');
-          window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
-        }} />}
+                )}
+              </>
+            )
+          } />
+          <Route path="/NewForecast" element={<NewForecastForm />} />
+          <Route path="*" element={<Navigate to="/DemandPlanInputs" replace />} />
+        </Routes>
       </div>
 
       <Modal

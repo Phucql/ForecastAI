@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ setActiveTab }) => {
+const NewForecastForm: React.FC<{ onComplete?: () => void }> = ({ onComplete }) => {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('veispinoza@kl.gscl.com');
   const [description, setDescription] = useState('');
@@ -141,8 +143,10 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
   
       if (!uploadResponse.ok) throw new Error('Failed to upload forecast file');
 
-      // After successful upload, refresh and redirect to ManageDemandPlans
-      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+      // After successful upload, call onComplete if provided
+      alert('Forecast file saved and uploaded to S3!');
+      if (onComplete) onComplete();
+      navigate('/DemandPlanInputs');
   
       // // Parse CSV for condensed logic
       // const lines = csv.trim().split('\n');
@@ -207,8 +211,8 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void }> = ({ se
   
       // if (!condensedUpload.ok) throw new Error('Failed to upload condensed forecast file');
   
-      alert('Forecast file saved and uploaded to S3!');
-      setActiveTab('manage-demand-plans');
+      // alert('Forecast file saved and uploaded to S3!');
+      // setActiveTab('manage-demand-plans');
     } catch (error: any) {
       console.error('Save error:', error);
       alert('Error saving forecast: ' + error.message);
