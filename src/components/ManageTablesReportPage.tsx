@@ -356,7 +356,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
         <React.Fragment key={bu.business_unit}>
           {/* Business Unit row */}
           <TableRow className={`transition-colors bg-orange-100/90 hover:bg-orange-200/60`}>
-            <TableCell className="font-semibold whitespace-nowrap text-orange-900 pl-1">
+            <TableCell className="font-semibold whitespace-nowrap text-orange-900 pl-1 sticky left-0 z-10" style={{ background: 'inherit' }}>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => toggleBusinessUnit(bu.business_unit)}
@@ -455,7 +455,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
             .map((fam: any, j: number) => (
               <React.Fragment key={fam.family}>
                 <TableRow className={`transition-colors bg-orange-50/90 hover:bg-orange-100/60`}>
-                  <TableCell className="font-semibold whitespace-nowrap text-orange-900 pl-6">
+                  <TableCell className="font-semibold whitespace-nowrap text-orange-900 pl-6 sticky left-0 z-10" style={{ background: 'inherit' }}>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => toggleFamily(fam.family)}
@@ -554,7 +554,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                   .map((sub: any, k: number) => (
                     <React.Fragment key={sub.subfamily}>
                       <TableRow className={`transition-colors bg-orange-50/80 hover:bg-orange-100/60`}>
-                        <TableCell className="font-semibold whitespace-nowrap text-orange-900 pl-12">
+                        <TableCell className="font-semibold whitespace-nowrap text-orange-900 pl-12 sticky left-0 z-10" style={{ background: 'inherit' }}>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => toggleSubfamily(sub.subfamily)}
@@ -653,7 +653,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                         .map((color: any, m: number) => (
                           <React.Fragment key={color.color}>
                             <TableRow className={`transition-colors bg-orange-50/40 hover:bg-orange-100/40`}>
-                              <TableCell className="font-semibold whitespace-nowrap text-orange-800 pl-24">
+                              <TableCell className="font-semibold whitespace-nowrap text-orange-800 pl-24 sticky left-0 z-10" style={{ background: 'inherit' }}>
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => toggleColor(sub.subfamily + '||' + color.color)}
@@ -762,7 +762,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                               .map((item: any, n: number) => (
                                 <React.Fragment key={item.item}>
                                   <TableRow className={`bg-gray-50/70 text-sm`}>
-                                    <TableCell className="font-medium whitespace-nowrap text-gray-700 pl-32">
+                                    <TableCell className="font-medium whitespace-nowrap text-gray-700 pl-32 sticky left-0 z-10" style={{ background: 'inherit' }}>
                                       <div className="flex items-center gap-2">
                                         <button
                                           onClick={() => {
@@ -1088,7 +1088,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
               <TableHeader className="sticky top-0 z-10 bg-white/90 backdrop-blur">
                 {/* Row 1: Item (rowSpan=3), Year label, Year headers */}
                 <TableRow>
-                  <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold">Item</TableHead>
+                  <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold sticky left-0 z-20" style={{ background: 'inherit' }}>Item</TableHead>
                   <TableHead className="bg-orange-100 text-orange-900 font-bold">Year</TableHead>
                   <TableHead colSpan={expandedYear2025 ? monthNames.length * 6 : 6} className="bg-orange-100 text-orange-900 font-bold">
                     <button
