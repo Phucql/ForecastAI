@@ -119,6 +119,7 @@ function NavigationTabs() {
 }
 
 function App() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('starts-with');
   
@@ -270,7 +271,7 @@ function App() {
     if (saved) {
       setDemandPlans(prev => [...prev, newPlan]);
       setSearchResults(prev => [...prev, newPlan]);
-      setActiveTab('manage-demand-plans');
+      navigate('/ManageDemandPlans');
       setSelectedValues(prev => ({
         ...prev,
         name: '',
@@ -292,8 +293,7 @@ function App() {
       await fetchSavedForecasts(); // reload list
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
-      setActiveTab('manage-demand-plans');
+      navigate('/ManageDemandPlans');
     } catch (err) {
       console.error('[Duplicate File] Error:', err);
     }
@@ -315,8 +315,7 @@ function App() {
       fetchSavedForecasts();
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
-      setActiveTab('manage-demand-plans');
+      navigate('/ManageDemandPlans');
     } catch (err) {
       console.error('[Delete File]', err);
       alert('Error deleting file');
@@ -369,7 +368,7 @@ function App() {
   };
 
   const navigateHome = () => {
-    setActiveTab('demand-plan-inputs');
+    navigate('/DemandPlanInputs');
   };
 
   const handleFileUploadSuccess = (filename: string) => {
@@ -508,7 +507,7 @@ function App() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <h2 className="text-2xl font-extrabold text-black tracking-tight">Manage Demand Plans</h2>
             <button
-              onClick={() => setActiveTab('new-forecast')}
+              onClick={() => navigate('/NewForecast')}
                 className="fixed md:static bottom-8 right-8 z-40 bg-orange-500 text-white py-3 px-6 rounded-full shadow-lg hover:bg-orange-600 transition-all flex items-center gap-2 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300"
                 title="Create a new forecast file"
             >
@@ -978,7 +977,7 @@ function App() {
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Unknown error');
-      setActiveTab('reports-analytics');
+      navigate('/ReportsAnalytics');
     } catch (err) {
       setRunReportMessage(`❌ Error: ${err.message}`);
     } finally {
@@ -1099,8 +1098,7 @@ function App() {
       });
       if (!res.ok) throw new Error('Failed to duplicate result file');
       fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
-      setActiveTab('manage-demand-plans');
+      navigate('/ManageDemandPlans');
     } catch (err) {
       alert('Error duplicating result file.');
     }
@@ -1121,12 +1119,6 @@ function App() {
     handleRunForecast(startDate, endDate);
     setShowForecastDateModal(false);
   };
-
-  useEffect(() => {
-    if (location.pathname === '/ManageDemandPlans') {
-      setActiveTab('manage-demand-plans');
-    }
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
