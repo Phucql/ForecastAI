@@ -1155,7 +1155,7 @@ function App() {
           <Route path="/" element={<Navigate to="/DemandPlanInputs" replace />} />
           <Route path="/DemandPlanInputs" element={<DemandPlanInputs />} />
           <Route path="/SupplyNetworkModel" element={<SupplyNetworkModel />} />
-          <Route path="/ManageDemandPlans" element={<Navigate to="/DemandPlanInputs" replace />} />
+          <Route path="/ManageDemandPlans" element={<ManageDemandPlans handleDelete={handleDeleteFile} />} />
           <Route path="/ManageUsers" element={<ManageUsers />} />
           <Route path="/ReportsAnalytics" element={
             showReportPage ? (
