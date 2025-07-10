@@ -1058,6 +1058,7 @@ function App() {
     }
     handleRunForecast(startDate, endDate);
     setShowForecastDateModal(false);
+    fetchSavedForecasts(); // Auto-refresh after running forecast from modal
   };
 
   return (

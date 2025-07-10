@@ -60,16 +60,7 @@ const ForecastReportTable: React.FC<ForecastReportTableProps> = ({ data }) => {
                         : row[VISIBLE_YEAR]?.bookingsForecast || ''
                   }
                   onChange={e => handleApprovedForecastChange(row.item, parseFloat(e.target.value))}
-                  disabled={lockedRows[row.item]}
                 />
-                <button
-                  onClick={() => toggleLock(row.item)}
-                  className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
-                  aria-label={lockedRows[row.item] ? 'Unlock Approved Forecast' : 'Lock Approved Forecast'}
-                  title={lockedRows[row.item] ? 'Unlock Approved Forecast' : 'Lock Approved Forecast'}
-                >
-                  {lockedRows[row.item] ? '🔒' : '🔓'}
-                </button>
               </td>
               <td>
                 {row[VISIBLE_YEAR]?.bookingsPercentChange !== undefined
