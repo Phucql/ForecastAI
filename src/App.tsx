@@ -39,9 +39,10 @@ import TimeGPTForecastRunner from './components/TimeGPTForecastRunner';
 import ForecastReportTable from './components/ForecastReportTable';
 import ManageTables from './components/ManageTables';
 import { format } from 'date-fns';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { unparse } from "papaparse";
 import MergeAndUploadButton from './components/MergeAndUploadButton';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import ManageTablesReportPage from './components/ManageTablesReportPage';
 import { Card, CardContent } from '@/components/utils/card';
 import { Line } from 'react-chartjs-2';
@@ -88,29 +89,36 @@ const initialDemandPlans: DemandPlan[] = [
 
 type Tab = 'demand-plan-inputs' | 'supply-network-model' | 'manage-demand-plans' | 'manage-users' | 'reports-analytics' | 'new-forecast' | 'edit-forecast';
 
-function NavigationTabs() {
-  const navigate = useNavigate();
-  const location = useLocation();
+function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActiveTab: (tab: Tab) => void }) {
   const tabs = [
-    { path: '/DemandPlanInputs', label: 'Demand Plan Inputs' },
-    { path: '/SupplyNetworkModel', label: 'Supply Network Model' },
-    { path: '/ManageDemandPlans', label: 'Manage Demand Plans' },
-    { path: '/ManageUsers', label: 'Manage Users' },
-    { path: '/ReportsAnalytics', label: 'Reports & Analytics' },
-  ];
+    { id: 'demand-plan-inputs', label: 'Demand Plan Inputs', icon: Database },
+    { id: 'supply-network-model', label: 'Supply Network Model', icon: Grid },
+    { id: 'manage-demand-plans', label: 'Manage Demand Plans', icon: BarChart3 },
+    { id: 'manage-users', label: 'Manage Users', icon: Users },
+    { id: 'reports-analytics', label: 'Reports & Analytics', icon: LineChart },
+  ] as const;
+
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="container mx-auto">
         <div className="flex space-x-4">
-          {tabs.map(tab => (
-            <button
-              key={tab.path}
-              onClick={() => navigate(tab.path)}
-              className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${location.pathname === tab.path ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'}`}
-            >
-              <span>{tab.label}</span>
-            </button>
-          ))}
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as Tab)}
+                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
+                  ${activeTab === tab.id 
+                    ? (['reports-analytics', 'demand-plan-inputs', 'supply-network-model', 'manage-users'].includes(tab.id) ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                  }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </nav>
@@ -118,7 +126,7 @@ function NavigationTabs() {
 }
 
 function App() {
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<Tab>('demand-plan-inputs');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('starts-with');
   
@@ -270,7 +278,7 @@ function App() {
     if (saved) {
       setDemandPlans(prev => [...prev, newPlan]);
       setSearchResults(prev => [...prev, newPlan]);
-      navigate('/ManageDemandPlans');
+      setActiveTab('manage-demand-plans');
       setSelectedValues(prev => ({
         ...prev,
         name: '',
@@ -292,7 +300,8 @@ function App() {
       await fetchSavedForecasts(); // reload list
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      navigate('/ManageDemandPlans');
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+      setActiveTab('manage-demand-plans');
     } catch (err) {
       console.error('[Duplicate File] Error:', err);
     }
@@ -314,7 +323,8 @@ function App() {
       fetchSavedForecasts();
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      navigate('/ManageDemandPlans');
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+      setActiveTab('manage-demand-plans');
     } catch (err) {
       console.error('[Delete File]', err);
       alert('Error deleting file');
@@ -367,7 +377,7 @@ function App() {
   };
 
   const navigateHome = () => {
-    navigate('/DemandPlanInputs');
+    setActiveTab('demand-plan-inputs');
   };
 
   const handleFileUploadSuccess = (filename: string) => {
@@ -506,7 +516,7 @@ function App() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <h2 className="text-2xl font-extrabold text-black tracking-tight">Manage Demand Plans</h2>
             <button
-              onClick={() => navigate('/NewForecast')}
+              onClick={() => setActiveTab('new-forecast')}
                 className="fixed md:static bottom-8 right-8 z-40 bg-orange-500 text-white py-3 px-6 rounded-full shadow-lg hover:bg-orange-600 transition-all flex items-center gap-2 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300"
                 title="Create a new forecast file"
             >
@@ -787,86 +797,152 @@ function App() {
   );
 
   const handleRunForecast = async (startDate: string, endDate: string) => {
-    if (!selectedForecastFile) {
-      alert('Please select a file first');
-      return;
-    }
-
     setLoading(true);
-    const fileBase = selectedForecastFile.split('/').pop()?.replace('.csv', '') || 'forecast';
-
     try {
-      const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      if (!selectedForecastFile) {
+        alert("Please select a forecast file first.");
+        return;
+      }
+
+      // Define fileBase before using it in the payload
+      const fileBase = selectedForecastFile
+        ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
+        : "forecast";
+
+      console.log("\uD83D\uDCE6 Run Forecast:", selectedForecastFile, startDate, endDate, fileBase);
+  
+      const response = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
+      if (!response.ok) throw new Error("Failed to load forecast file");
+  
+      const csvText = await response.text();
+      const rows = csvText.trim().split("\n").map(r => r.split(","));
+      const headers = rows[0].map(h => h.replace(/"/g, "").trim());
+  
+      const dateIdx = headers.indexOf("TIM_LVL_MEMBER_VALUE");
+      const valueIdx = headers.indexOf("VALUE_NUMBER");
+      const nameIdx = headers.indexOf("PRD_LVL_MEMBER_NAME");
+  
+      if (dateIdx === -1 || valueIdx === -1 || nameIdx === -1) {
+        throw new Error("Missing required columns: TIM_LVL_MEMBER_VALUE, VALUE_NUMBER, PRD_LVL_MEMBER_NAME");
+      }
+  
+      const rawData = rows.slice(1).map(row => {
+        const rawDate = new Date(row[dateIdx]?.replace(/"/g, "").trim());
+        rawDate.setDate(1);
+        const isoDate = rawDate.toISOString().split("T")[0];
+        const targetStr = row[valueIdx]?.replace(/"/g, "").trim();
+        const targetValue = parseFloat(targetStr);
+        const validTarget = !isNaN(targetValue) && targetStr !== "";
+        return {
+          id: row[nameIdx]?.replace(/"/g, "").trim() || "Unknown",
+          time: isoDate,
+          target: validTarget ? targetValue : null
+        };
+      }).filter(row => row.time && row.target !== null);
+  
+      const groupedMap = new Map();
+      rawData.forEach(row => {
+        const key = `${row.id}|${row.time}`;
+        if (!groupedMap.has(key)) {
+          groupedMap.set(key, { ...row });
+        } else {
+          groupedMap.get(key).target += row.target;
+        }
+      });
+  
+      const groupedArray = Array.from(groupedMap.values());
+      const grouped = groupedArray.reduce((acc, row) => {
+        if (!acc[row.id]) acc[row.id] = { id: row.id, time: [], target: [], PRD_LVL_MEMBER_NAME: [] };
+        acc[row.id].time.push(row.time);
+        acc[row.id].target.push(row.target);
+        acc[row.id].PRD_LVL_MEMBER_NAME.push(row.id);
+        return acc;
+      }, {});
+  
+      // Process all series for multi-series forecasting
+      const allSeries = Object.values(grouped);
       
-      const payload = {
-        originalFileName: fileBase,
-        horizon: Math.round(((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24 * 30))),
-        id: fileBase
-      };
-
-      console.log('🚀 Starting forecast with payload:', payload);
-
+      // Flatten all series into a single array for time, target, and PRD_LVL_MEMBER_NAME
+      const time: string[] = [];
+      const target: number[] = [];
+      const PRD_LVL_MEMBER_NAME: string[] = [];
+      allSeries.forEach(series => {
+        // Use the same training split logic for each series
+        const totalLength = series.time.length;
+      const splitIndex = Math.floor(totalLength * 0.7);
+        const trainingTime = series.time.slice(0, splitIndex);
+        const trainingTarget = series.target.slice(0, splitIndex);
+        const trainingName = series.PRD_LVL_MEMBER_NAME.slice(0, splitIndex);
+        time.push(...trainingTime);
+        target.push(...trainingTarget);
+        PRD_LVL_MEMBER_NAME.push(...trainingName);
+      });
+  
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const horizon = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+  
+      const payload = { time, target, PRD_LVL_MEMBER_NAME, horizon, originalFileName: fileBase };
+      console.log("\uD83D\uDCE6 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
+  
       const res = await fetch(`${BASE_URL}/api/run-forecast-py`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
+  
       if (!res.ok) throw new Error("Forecast failed");
-
+  
       const result = await res.json();
       console.log("🔍 TimeGPT Raw Result:", result);
-
+  
       if (!result || !Array.isArray(result) || result.length === 0) {
         alert(" ✅ Forecast Completed.");
-        navigate('/ManageDemandPlans');
+        window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         return;
       }
-
+  
       const convertedResult = result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.unique_id,
         TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
         ForecastAI: row.TimeGPT
       }));
-
+  
       setForecastTableData(convertedResult);
       setShowViewResultModal(true);
-
-      // Upload the forecast result via backend API instead of direct S3
+  
       const csvHeader = Object.keys(convertedResult[0]).join(",");
       const csvRows = convertedResult.map(r => Object.values(r).join(","));
       const csvData = [csvHeader, ...csvRows].join("\n");
-      
-      const forecastFileName = `Forecast_${fileBase}_${new Date().toISOString().split("T")[0]}.csv`;
-      const blob = new Blob([csvData], { type: 'text/csv' });
-      const forecastFile = new File([blob], forecastFileName, { type: 'text/csv' });
-
-      const formData = new FormData();
-      formData.append('file', forecastFile);
-      formData.append('owner', 'ForecastAI');
-      formData.append('description', `Forecast generated for ${fileBase}.csv`);
-
+      const fileBuffer = new TextEncoder().encode(csvData);
+  
+      const s3 = new S3Client({
+        region: "us-east-2",
+        credentials: {
+          accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID!,
+          secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY!,
+        },
+      });
+  
+      const fileKey = `Forecast_Result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
+  
       try {
-        const uploadResponse = await fetch(`${BASE_URL}/api/upload`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload forecast result');
-        }
-
-        console.log("✅ Forecast result uploaded successfully");
+        const uploadRes = await s3.send(new PutObjectCommand({
+          Bucket: import.meta.env.VITE_S3_BUCKET_NAME!,
+          Key: fileKey,
+          Body: fileBuffer,
+          ContentType: "text/csv",
+        }));
+        console.log("✅ S3 Upload Successful:", uploadRes);
         alert("✅ Forecast uploaded to S3! View it in Reports & Analytics → Manage Tables.");
       } catch (uploadError) {
-        console.error("❌ Upload Failed:", uploadError);
+        console.error("❌ S3 Upload Failed:", uploadError);
         alert("Forecast complete but failed to upload to S3.");
       }
-      
       await fetchForecastFiles();
       await fetchForecastResultFiles();
-      navigate('/ManageDemandPlans');
-
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+  
     } catch (err: any) {
       console.error("❌ Forecast error:", err);
       alert("Forecast failed: " + err.message);
@@ -910,7 +986,7 @@ function App() {
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Unknown error');
-      navigate('/ReportsAnalytics');
+      setActiveTab('reports-analytics');
     } catch (err) {
       setRunReportMessage(`❌ Error: ${err.message}`);
     } finally {
@@ -927,13 +1003,13 @@ function App() {
 
   // Fetch forecast report data for dropdown
   useEffect(() => {
-    if (location.pathname === '/ReportsAnalytics') {
+    if (activeTab === 'reports-analytics') {
       fetch(`${BASE_URL}/api/final-forecast-report`)
         .then(res => res.json())
         .then(setForecastReportData)
         .catch(() => setForecastReportData([]));
     }
-  }, [location.pathname]);
+  }, [activeTab]);
 
   // Fetch monthly data for selected item when modal is open
   useEffect(() => {
@@ -1031,7 +1107,8 @@ function App() {
       });
       if (!res.ok) throw new Error('Failed to duplicate result file');
       fetchForecastResultFiles();
-      navigate('/ManageDemandPlans');
+      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+      setActiveTab('manage-demand-plans');
     } catch (err) {
       alert('Error duplicating result file.');
     }
@@ -1053,6 +1130,12 @@ function App() {
     setShowForecastDateModal(false);
   };
 
+  useEffect(() => {
+    if (window.location.pathname === '/ManageDemandPlans') {
+      setActiveTab('manage-demand-plans');
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gray-800 text-white p-4">
@@ -1073,163 +1156,165 @@ function App() {
         </div>
       </header>
 
-      <NavigationTabs />
+      <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto py-6">
-        <Routes>
-          <Route path="/" element={<Navigate to="/DemandPlanInputs" replace />} />
-          <Route path="/DemandPlanInputs" element={<DemandPlanInputs />} />
-          <Route path="/SupplyNetworkModel" element={<SupplyNetworkModel />} />
-          <Route path="/ManageDemandPlans" element={<ManageDemandPlans handleDelete={handleDeleteFile} />} />
-          <Route path="/ManageUsers" element={<ManageUsers />} />
-          <Route path="/ReportsAnalytics" element={
-            showReportPage ? (
-              <ManageTablesReportPage onBack={() => setShowReportPage(false)} />
-            ) : (
-              <>
-                <ReportsAnalytics
-                  forecastTableData={forecastTableData}
-                  onShowReport={() => setShowReportPage(true)}
-                />
-                {/* Manage Graphs Modal */}
-                {showGraphModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-3xl w-full relative">
-                      <button
-                        onClick={() => setShowGraphModal(false)}
-                        className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-2xl focus:outline-none"
-                        aria-label="Close"
+        {activeTab === 'demand-plan-inputs' && <DemandPlanInputs />}
+        {activeTab === 'supply-network-model' && <SupplyNetworkModel />}
+        {activeTab === 'manage-demand-plans' && (<ManageDemandPlans
+            handleDelete={handleDeleteFile} />)}
+        {activeTab === 'manage-users' && <ManageUsers />}
+        {activeTab === 'reports-analytics' && (
+          showReportPage ? (
+            <ManageTablesReportPage onBack={() => setShowReportPage(false)} />
+          ) : (
+            <>
+            <ReportsAnalytics
+              forecastTableData={forecastTableData}
+              onShowReport={() => setShowReportPage(true)}
+            />
+              {/* Manage Graphs Modal */}
+              {showGraphModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                  <div className="bg-white rounded-xl shadow-2xl p-8 max-w-3xl w-full relative">
+                    <button
+                      onClick={() => setShowGraphModal(false)}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-2xl focus:outline-none"
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                    <h2 className="text-2xl font-bold mb-4 text-center text-orange-700">Booking Forecast by Year – Monthly Breakdown</h2>
+                    <div className="mb-4 flex items-center gap-4">
+                      <label className="font-medium text-orange-900">Select Item:</label>
+                      <select
+                        className="border border-orange-300 rounded px-3 py-1 focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
+                        value={selectedGraphItem}
+                        onChange={e => setSelectedGraphItem(e.target.value)}
+                        style={{ minWidth: 180 }}
                       >
-                        ×
-                      </button>
-                      <h2 className="text-2xl font-bold mb-4 text-center text-orange-700">Booking Forecast by Year – Monthly Breakdown</h2>
-                      <div className="mb-4 flex items-center gap-4">
-                        <label className="font-medium text-orange-900">Select Item:</label>
-                        <select
-                          className="border border-orange-300 rounded px-3 py-1 focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
-                          value={selectedGraphItem}
-                          onChange={e => setSelectedGraphItem(e.target.value)}
-                          style={{ minWidth: 180 }}
-                        >
-                          <option value="">Choose an item...</option>
-                          {forecastReportData.map((row: any) => (
-                            <option key={row.item} value={row.item}>{row.item}</option>
-                          ))}
-                        </select>
-                      </div>
-                      {selectedGraphItem && graphMonthlyData.length > 0 ? (
-                        <>
-                          <Line
-                            data={{
-                              labels: graphMonthlyData.map((m: any) => m.date),
-                              datasets: [
-                                {
-                                  label: 'History 2Y Ago (2023)',
-                                  data: graphMonthlyData.map((m: any) => m.history2Y),
-                                  borderColor: '#60a5fa',
-                                  backgroundColor: 'rgba(96,165,250,0.2)',
-                                  tension: 0.3,
-                                },
-                                {
-                                  label: 'History 1Y Ago (2024)',
-                                  data: graphMonthlyData.map((m: any) => m.history1Y),
-                                  borderColor: '#fbbf24',
-                                  backgroundColor: 'rgba(251,191,36,0.2)',
-                                  tension: 0.3,
-                                },
-                                {
-                                  label: 'Forecast',
-                                  data: graphMonthlyData.map((m: any) => m.forecast),
-                                  borderColor: '#34d399',
-                                  backgroundColor: 'rgba(52,211,153,0.2)',
-                                  borderDash: [5, 5],
-                                  tension: 0.3,
-                                },
-                                {
-                                  label: 'Adjusted Forecast',
-                                  data: graphMonthlyData.map((m: any) => m.adjustedForecast),
-                                  borderColor: '#f472b6',
-                                  backgroundColor: 'rgba(244,114,182,0.2)',
-                                  borderDash: [2, 2],
-                                  tension: 0.3,
-                                },
-                                {
-                                  label: 'Approved Forecast',
-                                  data: graphMonthlyData.map((m: any) => m.approvedForecast),
-                                  borderColor: '#6366f1',
-                                  backgroundColor: 'rgba(99,102,241,0.2)',
-                                  tension: 0.3,
-                                },
-                              ],
-                            }}
-                            options={{
-                              responsive: true,
-                              plugins: {
-                                legend: { position: 'top' },
-                                title: { display: false },
-                                tooltip: { mode: 'index', intersect: false },
-                              },
-                              interaction: { mode: 'nearest', axis: 'x', intersect: false },
-                              scales: {
-                                x: { title: { display: true, text: 'Month' } },
-                                y: { title: { display: true, text: 'Value' } },
-                              },
-                            }}
-                          />
-                          {/* MAPE and Accuracy metrics below the chart */}
-                          {(() => {
-                            // Group data by year
-                            const yearly: Record<string, { actual: number; forecast: number }> = {};
-                            graphMonthlyData.forEach((m: any) => {
-                              const year = m.date.slice(0, 4);
-                              if (!yearly[year]) yearly[year] = { actual: 0, forecast: 0 };
-                              yearly[year].actual += m.history1Y;
-                              yearly[year].forecast += m.forecast;
-                            });
-                            const years = Object.keys(yearly);
-                            let mape = null;
-                            let accuracy = null;
-                            if (years.length > 0) {
-                              // MAPE (mean of yearly)
-                              const mapeArr = years.map(year => {
-                                const { actual, forecast } = yearly[year];
-                                if (actual === 0) return null;
-                                return Math.abs((actual - forecast) / actual);
-                              }).filter(x => x !== null);
-                              if (mapeArr.length > 0) mape = (mapeArr.reduce((a, b) => a + (b as number), 0) / mapeArr.length) * 100;
-                              // New Accuracy (mean of yearly)
-                              const accArr = years.map(year => {
-                                const { actual, forecast } = yearly[year];
-                                if (actual === 0 && forecast === 0) return 1;
-                                if (actual === 0 || forecast === 0) return 0;
-                                const acc1 = 1 - Math.abs(actual - forecast) / Math.abs(forecast);
-                                const acc2 = 1 - Math.abs(forecast - actual) / Math.abs(actual);
-                                return Math.max(acc1, acc2);
-                              });
-                              if (accArr.length > 0) accuracy = (accArr.reduce((a, b) => a + b, 0) / accArr.length) * 100;
-                            }
-                            return (
-                              <div className="flex flex-col items-center mt-6">
-                                <div className="flex gap-8 text-lg font-semibold">
-                                  <span className="text-orange-700">MAPE (Yearly): {mape !== null ? mape.toFixed(2) + '%' : 'N/A'}</span>
-                                  <span className="text-orange-700">Accuracy (Yearly): {accuracy !== null ? accuracy.toFixed(2) + '%' : 'N/A'}</span>
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </>
-                      ) : (
-                        <div className="text-center text-gray-500 py-8">Select an item to view its monthly breakdown graph.</div>
-                      )}
+                        <option value="">Choose an item...</option>
+                        {forecastReportData.map((row: any) => (
+                          <option key={row.item} value={row.item}>{row.item}</option>
+                        ))}
+                      </select>
                     </div>
+                    {selectedGraphItem && graphMonthlyData.length > 0 ? (
+                      <>
+                        <Line
+                          data={{
+                            labels: graphMonthlyData.map((m: any) => m.date),
+                            datasets: [
+                              {
+                                label: 'History 2Y Ago (2023)',
+                                data: graphMonthlyData.map((m: any) => m.history2Y),
+                                borderColor: '#60a5fa',
+                                backgroundColor: 'rgba(96,165,250,0.2)',
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'History 1Y Ago (2024)',
+                                data: graphMonthlyData.map((m: any) => m.history1Y),
+                                borderColor: '#fbbf24',
+                                backgroundColor: 'rgba(251,191,36,0.2)',
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'Forecast',
+                                data: graphMonthlyData.map((m: any) => m.forecast),
+                                borderColor: '#34d399',
+                                backgroundColor: 'rgba(52,211,153,0.2)',
+                                borderDash: [5, 5],
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'Adjusted Forecast',
+                                data: graphMonthlyData.map((m: any) => m.adjustedForecast),
+                                borderColor: '#f472b6',
+                                backgroundColor: 'rgba(244,114,182,0.2)',
+                                borderDash: [2, 2],
+                                tension: 0.3,
+                              },
+                              {
+                                label: 'Approved Forecast',
+                                data: graphMonthlyData.map((m: any) => m.approvedForecast),
+                                borderColor: '#6366f1',
+                                backgroundColor: 'rgba(99,102,241,0.2)',
+                                tension: 0.3,
+                              },
+                            ],
+                          }}
+                          options={{
+                            responsive: true,
+                            plugins: {
+                              legend: { position: 'top' },
+                              title: { display: false },
+                              tooltip: { mode: 'index', intersect: false },
+                            },
+                            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                            scales: {
+                              x: { title: { display: true, text: 'Month' } },
+                              y: { title: { display: true, text: 'Value' } },
+                            },
+                          }}
+                        />
+                        {/* MAPE and Accuracy metrics below the chart */}
+                        {(() => {
+                          // Group data by year
+                          const yearly: Record<string, { actual: number; forecast: number }> = {};
+                          graphMonthlyData.forEach((m: any) => {
+                            const year = m.date.slice(0, 4);
+                            if (!yearly[year]) yearly[year] = { actual: 0, forecast: 0 };
+                            yearly[year].actual += m.history1Y;
+                            yearly[year].forecast += m.forecast;
+                          });
+                          const years = Object.keys(yearly);
+                          let mape = null;
+                          let accuracy = null;
+                          if (years.length > 0) {
+                            // MAPE (mean of yearly)
+                            const mapeArr = years.map(year => {
+                              const { actual, forecast } = yearly[year];
+                              if (actual === 0) return null;
+                              return Math.abs((actual - forecast) / actual);
+                            }).filter(x => x !== null);
+                            if (mapeArr.length > 0) mape = (mapeArr.reduce((a, b) => a + (b as number), 0) / mapeArr.length) * 100;
+                            // New Accuracy (mean of yearly)
+                            const accArr = years.map(year => {
+                              const { actual, forecast } = yearly[year];
+                              if (actual === 0 && forecast === 0) return 1;
+                              if (actual === 0 || forecast === 0) return 0;
+                              const acc1 = 1 - Math.abs(actual - forecast) / Math.abs(forecast);
+                              const acc2 = 1 - Math.abs(forecast - actual) / Math.abs(actual);
+                              return Math.max(acc1, acc2);
+                            });
+                            if (accArr.length > 0) accuracy = (accArr.reduce((a, b) => a + b, 0) / accArr.length) * 100;
+                          }
+                          return (
+                            <div className="flex flex-col items-center mt-6">
+                              <div className="flex gap-8 text-lg font-semibold">
+                                <span className="text-orange-700">MAPE (Yearly): {mape !== null ? mape.toFixed(2) + '%' : 'N/A'}</span>
+                                <span className="text-orange-700">Accuracy (Yearly): {accuracy !== null ? accuracy.toFixed(2) + '%' : 'N/A'}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </>
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">Select an item to view its monthly breakdown graph.</div>
+                    )}
                   </div>
-                )}
-              </>
-            )
-          } />
-          <Route path="/NewForecast" element={<NewForecastForm />} />
-          <Route path="*" element={<Navigate to="/DemandPlanInputs" replace />} />
-        </Routes>
+                </div>
+              )}
+            </>
+          )
+        )}
+        {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} onComplete={() => {
+          fetchForecastFiles();
+          fetchForecastResultFiles();
+          setActiveTab('manage-demand-plans');
+          window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+        }} />}
       </div>
 
       <Modal
@@ -1311,7 +1396,7 @@ function App() {
       </Modal>
 
       <Modal
-        isOpen={forecastTableData.length > 0}
+        isOpen={activeTab === 'reports-analytics' && forecastTableData.length > 0}
         onClose={() => setForecastTableData([])}
         title="Forecast Result Table"
       >

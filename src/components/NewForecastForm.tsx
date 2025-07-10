@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Upload } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
-const NewForecastForm: React.FC<{ onComplete?: () => void }> = ({ onComplete }) => {
-  const navigate = useNavigate();
+const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplete?: () => void }> = ({ setActiveTab, onComplete }) => {
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('veispinoza@kl.gscl.com');
   const [description, setDescription] = useState('');
@@ -146,7 +144,8 @@ const NewForecastForm: React.FC<{ onComplete?: () => void }> = ({ onComplete }) 
       // After successful upload, call onComplete if provided
       alert('Forecast file saved and uploaded to S3!');
       if (onComplete) onComplete();
-      navigate('/DemandPlanInputs');
+      setActiveTab('manage-demand-plans');
+      // window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans'; // Remove this line
   
       // // Parse CSV for condensed logic
       // const lines = csv.trim().split('\n');

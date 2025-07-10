@@ -1,5 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Upload, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { S3Client } from '@aws-sdk/client-s3';
+import { Upload as S3Upload } from '@aws-sdk/lib-storage';
 
 interface FileUploadProps {
   accept: string;
@@ -13,34 +15,70 @@ export const FileUpload: React.FC<FileUploadProps> = ({ accept, onUploadSuccess,
   const [success, setSuccess] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+  // AWS credentials (via environment variables) and bucket name
+  const AWS_ACCESS_KEY = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+  const AWS_SECRET_KEY = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+  const S3_BUCKET = 'forecastai-file-upload-storage';  // Fixed bucket name
+
+  // Basic validation for required environment variables
+  if (!AWS_ACCESS_KEY || !AWS_SECRET_KEY) {
+    throw new Error("Missing required AWS credentials. Please check your .env file.");
+  }
+
+  // Initialize the S3 client
+  const s3Client = new S3Client({
+    region: 'us-east-2', // Adjust if your bucket is in another region
+    credentials: {
+      accessKeyId: AWS_ACCESS_KEY,
+      secretAccessKey: AWS_SECRET_KEY,
+    }
+  });
 
   /**
-   * Upload the file to S3 via backend API
+   * Upload the file to S3, placing it in a date-based folder:
+   * e.g., "uploads_032825/1680022800000-filename.png"
    */
   const uploadToS3 = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('owner', 'user'); // You can make this dynamic if needed
-    formData.append('description', 'Uploaded via FileUpload component');
+    // Build a date string for the folder name: uploads_MMDDYY
+    const date = new Date();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // e.g., '03'
+    const day = String(date.getDate()).padStart(2, '0');       // e.g., '28'
+    const year = String(date.getFullYear()).slice(-2);         // e.g., '25' for 2025
+    const folderName = `uploads_${month}${day}${year}`;        // e.g., 'uploads_032825'
 
-    console.log('Starting upload via API...');
-    console.log('File:', file.name);
-    console.log('Size:', file.size);
+    // Construct the S3 object key with the folder name
+    const key = `${folderName}/${Date.now()}-${file.name}`;
 
-    const response = await fetch(`${BASE_URL}/api/upload`, {
-      method: 'POST',
-      body: formData,
+    console.log('Starting upload to S3...');
+    console.log('Folder name:', folderName);
+    console.log('Full key:', key);
+    console.log('Bucket:', S3_BUCKET);
+
+    const upload = new S3Upload({
+      client: s3Client,
+      params: {
+        Bucket: S3_BUCKET,
+        Key: key,
+        Body: file,
+        ContentType: file.type,
+        ACL: 'public-read' // Adjust based on your needs
+      },
+      queueSize: 4,
+      partSize: 1024 * 1024 * 5,
+      leavePartsOnError: false
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-      throw new Error(errorData.error || `Upload failed with status: ${response.status}`);
+    try {
+      const result = await upload.done();
+      console.log('Upload completed successfully:', result);
+      return key;
+    } catch (err) {
+      console.error('Detailed S3 Upload Error:', err);
+      if (err instanceof Error) {
+        throw new Error(`S3 Upload failed: ${err.message}`);
+      }
+      throw new Error('Failed to upload to S3: Unknown error');
     }
-
-    const result = await response.json();
-    console.log('Upload completed successfully:', result);
-    return result;
   };
 
   /**
@@ -49,10 +87,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({ accept, onUploadSuccess,
   const handleFileChange = useCallback(async (file: File) => {
     if (!file) return;
 
-    // 500 MB size limit (increased from 100MB)
-    const maxSize = 500 * 1024 * 1024;
+    // 100 MB size limit (adjust as needed)
+    const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
-      const errorMsg = 'File size exceeds 500MB limit';
+      const errorMsg = 'File size exceeds 100MB limit';
       setError(errorMsg);
       onUploadError(errorMsg);
       return;
@@ -63,8 +101,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({ accept, onUploadSuccess,
     setSuccess(false);
 
     try {
-      const result = await uploadToS3(file);
-      console.log('File uploaded successfully:', result);
+      const s3Key = await uploadToS3(file);
+      console.log('File uploaded successfully to S3:', s3Key);
 
       // Mark success and notify parent
       setSuccess(true);
