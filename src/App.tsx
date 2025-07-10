@@ -187,6 +187,12 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (location.pathname === '/ManageDemandPlans') {
+      fetchSavedForecasts();
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
     fetch(`${BASE_URL}/api/forecast-files`)
       .then(res => res.json())
       .then(setForecastFiles)
@@ -858,6 +864,7 @@ function App() {
 
         console.log("✅ Forecast result uploaded successfully");
         alert("✅ Forecast uploaded to S3! View it in Reports & Analytics → Manage Tables.");
+        fetchSavedForecasts(); // Auto-refresh after run forecast
       } catch (uploadError) {
         console.error("❌ Upload Failed:", uploadError);
         alert("Forecast complete but failed to upload to S3.");
@@ -1227,7 +1234,7 @@ function App() {
               </>
             )
           } />
-          <Route path="/NewForecast" element={<NewForecastForm />} />
+          <Route path="/NewForecast" element={<NewForecastForm onComplete={() => { fetchSavedForecasts(); navigate('/ManageDemandPlans'); }} />} />
           <Route path="*" element={<Navigate to="/DemandPlanInputs" replace />} />
         </Routes>
       </div>
