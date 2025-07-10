@@ -385,8 +385,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                 className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                 value={typeof bu.approvedForecast2025 === 'number' ? bu.approvedForecast2025.toFixed(2) : bu.approvedForecast2025}
                 onChange={(e) => handleForecastChange(bu.business_unit, null, 'approvedForecast2025', parseFloat(e.target.value))}
+                disabled={lockedRows[bu.business_unit]}
                 aria-label="Approved Forecast 2025"
               />
+              {lockedRows[bu.business_unit] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+              <button
+                onClick={() => toggleLock(bu.business_unit)}
+                className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                aria-label={lockedRows[bu.business_unit] ? 'Unlock row' : 'Lock row'}
+                title={lockedRows[bu.business_unit] ? 'Unlock row' : 'Lock row'}
+              >
+                {lockedRows[bu.business_unit] ? '🔒' : '🔓'}
+              </button>
             </TableCell>
             <TableCell className={`text-center font-semibold`}>
               {formatPercent(bu.percentChange2025) && (
@@ -412,8 +422,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                 className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                 value={typeof bu.approvedForecast2026 === 'number' ? bu.approvedForecast2026.toFixed(2) : bu.approvedForecast2026}
                 onChange={(e) => handleForecastChange(bu.business_unit, null, 'approvedForecast2026', parseFloat(e.target.value))}
+                disabled={lockedRows[bu.business_unit]}
                 aria-label="Approved Forecast 2026"
               />
+              {lockedRows[bu.business_unit] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+              <button
+                onClick={() => toggleLock(bu.business_unit)}
+                className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                aria-label={lockedRows[bu.business_unit] ? 'Unlock row' : 'Lock row'}
+                title={lockedRows[bu.business_unit] ? 'Unlock row' : 'Lock row'}
+              >
+                {lockedRows[bu.business_unit] ? '🔒' : '🔓'}
+                </button>
             </TableCell>
             <TableCell className={`text-center font-semibold`}>
               {formatPercent(bu.percentChange2026) && (
@@ -464,8 +484,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                       className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                       value={typeof fam.approvedForecast2025 === 'number' ? fam.approvedForecast2025.toFixed(2) : fam.approvedForecast2025}
                       onChange={(e) => handleForecastChange(fam.family, null, 'approvedForecast2025', parseFloat(e.target.value))}
+                      disabled={lockedRows[fam.family]}
                       aria-label="Approved Forecast 2025"
                     />
+                    {lockedRows[fam.family] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                    <button
+                      onClick={() => toggleLock(fam.family)}
+                      className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                      aria-label={lockedRows[fam.family] ? 'Unlock row' : 'Lock row'}
+                      title={lockedRows[fam.family] ? 'Unlock row' : 'Lock row'}
+                    >
+                      {lockedRows[fam.family] ? '🔒' : '🔓'}
+                    </button>
                   </TableCell>
                   <TableCell className={`text-center font-semibold`}>
                     {formatPercent(fam.percentChange2025) && (
@@ -491,8 +521,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                       className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                       value={typeof fam.approvedForecast2026 === 'number' ? fam.approvedForecast2026.toFixed(2) : fam.approvedForecast2026}
                       onChange={(e) => handleForecastChange(fam.family, null, 'approvedForecast2026', parseFloat(e.target.value))}
+                      disabled={lockedRows[fam.family]}
                       aria-label="Approved Forecast 2026"
                     />
+                    {lockedRows[fam.family] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                    <button
+                      onClick={() => toggleLock(fam.family)}
+                      className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                      aria-label={lockedRows[fam.family] ? 'Unlock row' : 'Lock row'}
+                      title={lockedRows[fam.family] ? 'Unlock row' : 'Lock row'}
+                    >
+                      {lockedRows[fam.family] ? '🔒' : '🔓'}
+                    </button>
                   </TableCell>
                   <TableCell className={`text-center font-semibold`}>
                     {formatPercent(fam.percentChange2026) && (
@@ -543,8 +583,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                             className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                             value={typeof sub.approvedForecast2025 === 'number' ? sub.approvedForecast2025.toFixed(2) : sub.approvedForecast2025}
                             onChange={(e) => handleForecastChange(sub.subfamily, null, 'approvedForecast2025', parseFloat(e.target.value))}
+                            disabled={lockedRows[sub.subfamily]}
                             aria-label="Approved Forecast 2025"
                           />
+                          {lockedRows[sub.subfamily] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                          <button
+                            onClick={() => toggleLock(sub.subfamily)}
+                            className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                            aria-label={lockedRows[sub.subfamily] ? 'Unlock row' : 'Lock row'}
+                            title={lockedRows[sub.subfamily] ? 'Unlock row' : 'Lock row'}
+                          >
+                            {lockedRows[sub.subfamily] ? '🔒' : '🔓'}
+                          </button>
                         </TableCell>
                         <TableCell className={`text-center font-semibold`}>
                           {formatPercent(sub.percentChange2025) && (
@@ -570,8 +620,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                             className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                             value={typeof sub.approvedForecast2026 === 'number' ? sub.approvedForecast2026.toFixed(2) : sub.approvedForecast2026}
                             onChange={(e) => handleForecastChange(sub.subfamily, null, 'approvedForecast2026', parseFloat(e.target.value))}
+                            disabled={lockedRows[sub.subfamily]}
                             aria-label="Approved Forecast 2026"
                           />
+                          {lockedRows[sub.subfamily] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                          <button
+                            onClick={() => toggleLock(sub.subfamily)}
+                            className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                            aria-label={lockedRows[sub.subfamily] ? 'Unlock row' : 'Lock row'}
+                            title={lockedRows[sub.subfamily] ? 'Unlock row' : 'Lock row'}
+                          >
+                            {lockedRows[sub.subfamily] ? '🔒' : '🔓'}
+                          </button>
                         </TableCell>
                         <TableCell className={`text-center font-semibold`}>
                           {formatPercent(sub.percentChange2026) && (
@@ -622,8 +682,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                   className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                                   value={typeof color.approvedForecast2025 === 'number' ? color.approvedForecast2025.toFixed(2) : color.approvedForecast2025}
                                   onChange={(e) => handleForecastChange(color.color, null, 'approvedForecast2025', parseFloat(e.target.value))}
+                                  disabled={lockedRows[color.color]}
                                   aria-label="Approved Forecast 2025"
                                 />
+                                {lockedRows[color.color] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                                <button
+                                  onClick={() => toggleLock(color.color)}
+                                  className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                                  aria-label={lockedRows[color.color] ? 'Unlock row' : 'Lock row'}
+                                  title={lockedRows[color.color] ? 'Unlock row' : 'Lock row'}
+                                >
+                                  {lockedRows[color.color] ? '🔒' : '🔓'}
+                                </button>
                               </TableCell>
                               <TableCell className={`text-center font-semibold`}>
                                 {(() => {
@@ -654,8 +724,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                   className="border border-orange-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-orange-300 transition"
                                   value={typeof color.approvedForecast2026 === 'number' ? color.approvedForecast2026.toFixed(2) : color.approvedForecast2026}
                                   onChange={(e) => handleForecastChange(color.color, null, 'approvedForecast', parseFloat(e.target.value))}
+                                  disabled={lockedRows[color.color]}
                                   aria-label="Approved Forecast 2026"
                                 />
+                                {lockedRows[color.color] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                                <button
+                                  onClick={() => toggleLock(color.color)}
+                                  className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                                  aria-label={lockedRows[color.color] ? 'Unlock row' : 'Lock row'}
+                                  title={lockedRows[color.color] ? 'Unlock row' : 'Lock row'}
+                                >
+                                  {lockedRows[color.color] ? '🔒' : '🔓'}
+                                </button>
                               </TableCell>
                               <TableCell className={`text-center font-semibold`}>
                                 {(() => {
@@ -733,8 +813,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                         className="border border-gray-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
                                         value={typeof item.approvedForecast2025 === 'number' ? item.approvedForecast2025.toFixed(2) : item.approvedForecast2025}
                                         onChange={(e) => handleForecastChange(item.item, null, 'approvedForecast2025', parseFloat(e.target.value))}
+                                        disabled={lockedRows[item.item]}
                                         aria-label="Approved Forecast 2025"
                                       />
+                                      {lockedRows[item.item] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                                      <button
+                                        onClick={() => toggleLock(item.item)}
+                                        className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                                        aria-label={lockedRows[item.item] ? 'Unlock row' : 'Lock row'}
+                                        title={lockedRows[item.item] ? 'Unlock row' : 'Lock row'}
+                                      >
+                                        {lockedRows[item.item] ? '🔒' : '🔓'}
+                                      </button>
                                     </TableCell>
                                     <TableCell className={`text-center font-semibold`}>
                                       {formatPercent(item.percentChange2025) && (
@@ -760,8 +850,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                         className="border border-gray-200 px-2 py-1 rounded-lg w-24 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
                                         value={typeof item.approvedForecast2026 === 'number' ? item.approvedForecast2026.toFixed(2) : item.approvedForecast2026}
                                         onChange={(e) => handleForecastChange(item.item, null, 'approvedForecast2026', parseFloat(e.target.value))}
+                                        disabled={lockedRows[item.item]}
                                         aria-label="Approved Forecast 2026"
                                       />
+                                      {lockedRows[item.item] && <span className="ml-1 text-orange-600 text-xs" title="Planning Manager Approved">PM</span>}
+                                      <button
+                                        onClick={() => toggleLock(item.item)}
+                                        className="ml-2 text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 rounded"
+                                        aria-label={lockedRows[item.item] ? 'Unlock row' : 'Lock row'}
+                                        title={lockedRows[item.item] ? 'Unlock row' : 'Lock row'}
+                                      >
+                                        {lockedRows[item.item] ? '🔒' : '🔓'}
+                                      </button>
                                     </TableCell>
                                     <TableCell className={`text-center font-semibold`}>
                                       {formatPercent(item.percentChange2026) && (
@@ -798,7 +898,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                                   className="border border-orange-300 px-2 py-1 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
                                                   value={typeof m25.approvedForecast === 'number' ? m25.approvedForecast.toFixed(2) : ''}
                                                   onChange={e => handleForecastChange(item.item, m25.date ?? '', 'approvedForecast', parseFloat(e.target.value))}
-                                                  aria-label="Approved Forecast 2025"
+                                                  disabled={lockedRows[item.item]}
                                                 />
                                               ) : ''}
                                               <button
@@ -848,7 +948,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                                   className="border border-orange-400 px-2 py-1 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
                                                   value={typeof m26.approvedForecast === 'number' ? m26.approvedForecast.toFixed(2) : ''}
                                                   onChange={e => handleForecastChange(item.item, m26.date ?? '', 'approvedForecast', parseFloat(e.target.value))}
-                                                  aria-label="Approved Forecast 2026"
+                                                  disabled={lockedRows[item.item]}
                                                 />
                                               ) : ''}
                                               <button
@@ -1096,7 +1196,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                 className="border border-orange-300 px-2 py-1 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
                                 value={typeof m25.approvedForecast === 'number' ? m25.approvedForecast.toFixed(2) : ''}
                                 onChange={e => handleForecastChange(row.item, m25.date ?? '', 'approvedForecast', parseFloat(e.target.value))}
-                                aria-label="Approved Forecast 2025"
+                                disabled={lockedRows[row.item]}
                               />
                             ) : ''}
                             <button
@@ -1141,7 +1241,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                             className="border border-orange-300 px-2 py-1 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
                             value={typeof row.approvedForecast2025 === 'number' ? row.approvedForecast2025.toFixed(2) : row.approvedForecast2025}
                             onChange={e => handleForecastChange(row.item, null, 'approvedForecast2025', parseFloat(e.target.value))}
-                            aria-label="Approved Forecast 2025"
+                            disabled={lockedRows[row.item]}
                           />
                           <button
                             onClick={() => toggleLock(row.item)}
@@ -1171,7 +1271,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                 className="border border-orange-400 px-2 py-1 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
                                 value={typeof m26.approvedForecast === 'number' ? m26.approvedForecast.toFixed(2) : ''}
                                 onChange={e => handleForecastChange(row.item, m26.date ?? '', 'approvedForecast', parseFloat(e.target.value))}
-                                aria-label="Approved Forecast 2026"
+                                disabled={lockedRows[row.item]}
                               />
                             ) : ''}
                             <button
@@ -1216,7 +1316,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                             className="border border-orange-400 px-2 py-1 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
                             value={typeof row.approvedForecast2026 === 'number' ? row.approvedForecast2026.toFixed(2) : row.approvedForecast2026}
                             onChange={e => handleForecastChange(row.item, null, 'approvedForecast2026', parseFloat(e.target.value))}
-                            aria-label="Approved Forecast 2026"
+                            disabled={lockedRows[row.item]}
                           />
                           <button
                             onClick={() => toggleLock(row.item)}
