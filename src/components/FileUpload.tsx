@@ -22,7 +22,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ accept, onUploadSuccess,
 
   // Basic validation for required environment variables
   if (!AWS_ACCESS_KEY || !AWS_SECRET_KEY) {
-    throw new Error("Missing required AWS credentials. Please check your .env file.");
+    return <div className="p-4 bg-red-100 text-red-700 rounded">Missing AWS credentials. Please check your .env or Netlify environment variables.</div>;
   }
 
   // Initialize the S3 client
@@ -75,6 +75,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({ accept, onUploadSuccess,
     } catch (err) {
       console.error('Detailed S3 Upload Error:', err);
       if (err instanceof Error) {
+        if (err.message.includes('CORS')) {
+          throw new Error('Upload failed due to CORS. Please check your S3 bucket CORS policy.');
+        }
+        if (err.message.includes('AccessDenied')) {
+          throw new Error('Upload failed: Access Denied. Please check your S3 bucket permissions.');
+        }
         throw new Error(`S3 Upload failed: ${err.message}`);
       }
       throw new Error('Failed to upload to S3: Unknown error');
@@ -87,10 +93,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({ accept, onUploadSuccess,
   const handleFileChange = useCallback(async (file: File) => {
     if (!file) return;
 
-    // 100 MB size limit (adjust as needed)
-    const maxSize = 100 * 1024 * 1024;
+    // 200 MB size limit (adjust as needed)
+    const maxSize = 200 * 1024 * 1024;
     if (file.size > maxSize) {
-      const errorMsg = 'File size exceeds 100MB limit';
+      const errorMsg = 'File size exceeds 200MB limit';
       setError(errorMsg);
       onUploadError(errorMsg);
       return;

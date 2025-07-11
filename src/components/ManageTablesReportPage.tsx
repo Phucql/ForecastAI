@@ -1024,10 +1024,18 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
   }, [expandedYear2025, expandedYear2026, data]);
 
   function handleDownloadBusinessReport() {
-    if (!Array.isArray(businessLevelData) || businessLevelData.length === 0) return;
+    console.log('Download button clicked.');
+    if (!Array.isArray(businessLevelData) || businessLevelData.length === 0) {
+      alert('No data to download.');
+      return;
+    }
     const header = Object.keys(businessLevelData[0]);
     const rows = businessLevelData.map(row => header.map(h => JSON.stringify(row[h] ?? "")).join(","));
     const csv = [header.join(","), ...rows].join("\n");
+    if (!csv || csv.trim() === '') {
+      alert('CSV is empty. Nothing to download.');
+      return;
+    }
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

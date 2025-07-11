@@ -403,6 +403,45 @@ app.get('/api/demand-classes', async (req, res) => {
   }
 });
 
+app.get('/api/available-demand-classes', async (req, res) => {
+  const { planningUnit, businessUnit, family, subfamily, color, product } = req.query;
+  try {
+    let query = 'SELECT DISTINCT "Customer Class Code" FROM "inital_db" WHERE "Customer Class Code" IS NOT NULL';
+    const params = [];
+    let idx = 1;
+    if (planningUnit) {
+      query += ` AND "Planning Unit" ILIKE $${idx++}`;
+      params.push(`%${planningUnit}%`);
+    }
+    if (businessUnit) {
+      query += ` AND "Business Unit" ILIKE $${idx++}`;
+      params.push(`%${businessUnit}%`);
+    }
+    if (family) {
+      query += ` AND "Family" ILIKE $${idx++}`;
+      params.push(`%${family}%`);
+    }
+    if (subfamily) {
+      query += ` AND "Subfamily" ILIKE $${idx++}`;
+      params.push(`%${subfamily}%`);
+    }
+    if (color) {
+      query += ` AND "Color" ILIKE $${idx++}`;
+      params.push(`%${color}%`);
+    }
+    if (product) {
+      query += ` AND "PRD_LVL_MEMBER_NAME" ILIKE $${idx++}`;
+      params.push(`%${product}%`);
+    }
+    query += ' ORDER BY "Customer Class Code"';
+    const result = await pool.query(query, params);
+    const arr = Array.isArray(result.rows) ? result.rows.map(r => r['Customer Class Code']) : [];
+    res.json(arr);
+  } catch (err) {
+    res.json([]);
+  }
+});
+
 app.get('/api/calendar-data', async (_req, res) => {
   try {
     const query = `

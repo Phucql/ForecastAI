@@ -27,6 +27,9 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
   const [customerNames, setCustomerNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Filtered demand classes based on current filters
+  const [filteredDemandClasses, setFilteredDemandClasses] = useState<string[]>([]);
+
   useEffect(() => {
     fetch(`${BASE_URL}/api/planning-units`).then(res => res.json()).then(setPlanningUnits);
   }, []);
@@ -87,6 +90,26 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
     }
   }, [color]);
 
+  useEffect(() => {
+    // Fetch only demand classes with matching forecast data for the current filters
+    const fetchFilteredDemandClasses = async () => {
+      const params = new URLSearchParams();
+      if (planningUnit) params.append('planningUnit', planningUnit);
+      if (businessUnit) params.append('businessUnit', businessUnit);
+      if (family) params.append('family', family);
+      if (subfamily) params.append('subfamily', subfamily);
+      if (color) params.append('color', color);
+      if (product) params.append('product', product);
+      const res = await fetch(`${BASE_URL}/api/available-demand-classes?${params.toString()}`);
+      if (res.ok) {
+        setFilteredDemandClasses(await res.json());
+      } else {
+        setFilteredDemandClasses([]);
+      }
+    };
+    fetchFilteredDemandClasses();
+  }, [planningUnit, businessUnit, family, subfamily, color, product]);
+
   const handleSave = async () => {
     if (!name || !planningUnit || !businessUnit || !family || !subfamily || !color || !demandClass) {
         alert('Please fill in all required fields');
@@ -145,7 +168,6 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
         if (onComplete) onComplete();
         setActiveTab('manage-demand-plans');
       } else {
-        // Try to parse the response for more info
         let msg = 'Error uploading forecast file';
         try {
           const data = await uploadResponse.json();
@@ -266,7 +288,7 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
         {renderDropdown('Subfamily', subfamily, setSubfamily, subfamilies)}
         {renderDropdown('Color', color, setColor, colors)}
         {renderDropdown('Product (Optional)', product, setProduct, products)}
-        {renderDropdown('Demand Class', demandClass, setDemandClass, demandClasses)}
+        {renderDropdown('Demand Class', demandClass, setDemandClass, filteredDemandClasses)}
         {renderDropdown('Customer Name (Optional)', customerName, setCustomerName, customerNames)}
       </div>
 
