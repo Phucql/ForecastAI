@@ -317,10 +317,9 @@ function App() {
         method: 'DELETE',
       });
 
-      if (res.ok) {
+      if (res.ok || res.status === 404) {
         alert(`${fileName} deleted`);
         await fetchSavedForecasts();
-        await fetchForecastFiles();
         await fetchForecastResultFiles();
         window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         setActiveTab('manage-demand-plans');
