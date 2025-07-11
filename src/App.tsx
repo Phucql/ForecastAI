@@ -131,7 +131,11 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
 }
 
 function App() {
-  const { user, login } = useAuth();
+  const auth = useAuth();
+  if (!auth) {
+    return <div className="min-h-screen flex items-center justify-center text-orange-500 text-xl">Loading...</div>;
+  }
+  const { user, login } = auth;
   const [activeTab, setActiveTab] = useState<Tab>('demand-plan-inputs');
 
   // If not logged in, show login landing page
