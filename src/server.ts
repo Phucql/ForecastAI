@@ -16,6 +16,15 @@ import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 
 import { mergeForecastFiles } from './utils/mergeForecastFiles.js';
+import type { Request, Response, NextFunction } from 'express';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 function mapChardetToNodeEncoding(enc: string | null | undefined): BufferEncoding {
   if (!enc) return 'utf8';
@@ -36,7 +45,8 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('🔥 Unhandled Rejection:', reason);
 });
 
-const upload = multer({ dest: 'uploads/' });
+// Update multer config for large files
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 200 * 1024 * 1024 } }); // 200MB
 const { Pool } = pkg;
 const app = express();
 const port = 3001;
@@ -69,7 +79,7 @@ app.post('/api/login', async (req, res) => {
   res.json({ success: true });
 });
 
-function requireAuth(req, res, next) {
+function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies[COOKIE_NAME];
   if (!token) return res.status(401).json({ error: 'No token' });
   try {
