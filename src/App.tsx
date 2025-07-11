@@ -311,20 +311,28 @@ function App() {
   const handleDeleteFile = async (fileName: string) => {
     const confirmed = window.confirm(`Delete ${fileName}?`);
     if (!confirmed) return;
-  
+
     try {
       const res = await fetch(`${BASE_URL}/api/delete-file?key=forecasts/${encodeURIComponent(fileName)}`, {
         method: 'DELETE',
       });
-  
-      if (!res.ok) throw new Error('Failed to delete');
-  
-      alert(`${fileName} deleted`);
-      fetchSavedForecasts();
-      await fetchForecastFiles();
-      await fetchForecastResultFiles();
-      window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
-      setActiveTab('manage-demand-plans');
+
+      if (res.ok) {
+        alert(`${fileName} deleted`);
+        await fetchSavedForecasts();
+        await fetchForecastFiles();
+        await fetchForecastResultFiles();
+        window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
+        setActiveTab('manage-demand-plans');
+      } else {
+        // Try to parse the response for more info
+        let msg = 'Error deleting file';
+        try {
+          const data = await res.json();
+          if (data && data.message) msg = data.message;
+        } catch {}
+        alert(msg);
+      }
     } catch (err) {
       console.error('[Delete File]', err);
       alert('Error deleting file');

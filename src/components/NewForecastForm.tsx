@@ -25,6 +25,7 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
   const [products, setProducts] = useState<string[]>([]);
   const [demandClasses, setDemandClasses] = useState<string[]>([]);
   const [customerNames, setCustomerNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/planning-units`).then(res => res.json()).then(setPlanningUnits);
@@ -91,7 +92,7 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
         alert('Please fill in all required fields');
         return;
       }
-  
+    setLoading(true);
     try {
       const filters: Record<string, string> = {
         planningUnit,
@@ -120,14 +121,14 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
       // If no data is returned, alert the user and exit
       if (!csv.trim()) {
         alert('No matching forecast data found.');
+        setLoading(false);
         return;
       }
   
-      // Upload the original file
+      // Upload the original file (always named `${name}.csv`)
       const blob = new Blob([csv], { type: 'text/csv' });
       const originalFile = new File([blob], `${name}.csv`, { type: 'text/csv' });
   
-      // Upload the original file first
       const uploadResponse = await fetch(`${BASE_URL}/api/upload`, {
         method: 'POST',
         body: (() => {
@@ -141,7 +142,6 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
   
       if (!uploadResponse.ok) throw new Error('Failed to upload forecast file');
 
-      // After successful upload, call onComplete if provided
       alert('Forecast file saved and uploaded to S3!');
       if (onComplete) onComplete();
       setActiveTab('manage-demand-plans');
@@ -215,6 +215,8 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
     } catch (error: any) {
       console.error('Save error:', error);
       alert('Error saving forecast: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -264,9 +266,15 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
       <div>
         <button
           onClick={handleSave}
-          className="bg-orange-500 text-white px-6 py-2 rounded flex items-center gap-2"
+          className={`bg-orange-500 text-white px-6 py-2 rounded flex items-center gap-2 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+          disabled={loading}
         >
-          <Upload className="w-4 h-4" /> Save Forecast
+          {loading ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+          ) : (
+            <Upload className="w-4 h-4" />
+          )}
+          {loading ? 'Uploading...' : 'Save Forecast'}
         </button>
       </div>
     </div>
