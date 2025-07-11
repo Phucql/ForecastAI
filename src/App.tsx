@@ -1083,7 +1083,9 @@ function App() {
   // Add the handleDownloadResult function (replace Preview logic)
   const handleDownloadResult = async (key: string) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(key)}`);
+      // Ensure the key is prefixed with 'forecasts/' if not already
+      const s3Key = key.startsWith('forecasts/') ? key : `forecasts/${key}`;
+      const res = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(s3Key)}`);
       if (!res.ok) throw new Error('Failed to download file');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -1095,6 +1097,7 @@ function App() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
+      console.error('Download failed:', err);
       alert('Download failed.');
     }
   };
@@ -1318,7 +1321,7 @@ function App() {
           )
         )}
         {activeTab === 'new-forecast' && <NewForecastForm setActiveTab={setActiveTab} onComplete={() => {
-          fetchForecastFiles();
+          fetchSavedForecasts();
           fetchForecastResultFiles();
           setActiveTab('manage-demand-plans');
           window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';

@@ -46,8 +46,10 @@ const ForecastReportTable: React.FC<ForecastReportTableProps> = ({ data }) => {
               <td>{row.measure}</td>
               <td>{row[VISIBLE_YEAR]?.history2YearsAgo ?? '-'}</td>
               <td>
-                {row[VISIBLE_YEAR]?.history1YearAgo ??
-                  (row[VISIBLE_YEAR - 1]?.adjustedForecast2025 ?? '-')}
+                {/* For 2026, show 2025 Adjusted Forecast in Bookings History 1Y Ago */}
+                {row[2026]?.history1YearAgo !== undefined
+                  ? row[2025]?.adjustedBookingsForecast ?? row[2025]?.adjustedForecast2025 ?? '-'
+                  : row[VISIBLE_YEAR]?.history1YearAgo ?? '-'}
               </td>
               <td>{row[VISIBLE_YEAR]?.bookingsForecast ?? '-'}</td>
               <td>{row[VISIBLE_YEAR]?.adjustedBookingsForecast ?? '-'}</td>
