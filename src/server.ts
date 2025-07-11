@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import pkg from 'pg';
 import chardet from 'chardet';
+import { Request, Response, NextFunction } from 'express';
 
 dotenv.config();
 
@@ -16,6 +17,15 @@ import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 
 import { mergeForecastFiles } from './utils/mergeForecastFiles.js';
+
+// Extend Express Request type to include 'user'
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 function mapChardetToNodeEncoding(enc: string | null | undefined): BufferEncoding {
   if (!enc) return 'utf8';
@@ -51,15 +61,15 @@ app.use(cors({
 }));
 
 // Example user (replace with DB lookup in production)
-const USERS = [{ username: 'admin', passwordHash: bcrypt.hashSync('password123', 10) }];
+// const USERS = [{ username: 'admin', passwordHash: bcrypt.hashSync('password123', 10) }]; // Removed in-memory USERS
 
 // Signup endpoint (production, uses users table)
-app.post('/api/signup', async (req, res) => {
+app.post('/api/signup', async (req: Request, res: Response) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
   try {
     const existing = await pool.query('SELECT 1 FROM users WHERE username = $1', [username]);
-    if (existing.rowCount > 0) return res.status(409).json({ error: 'Username already exists' });
+    if ((existing?.rowCount ?? 0) > 0) return res.status(409).json({ error: 'Username already exists' });
     const passwordHash = bcrypt.hashSync(password, 10);
     await pool.query('INSERT INTO users (username, password_hash) VALUES ($1, $2)', [username, passwordHash]);
     // Auto-login after signup
@@ -78,7 +88,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // Login endpoint (production, uses users table)
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', async (req: Request, res: Response) => {
   const { username, password } = req.body;
   try {
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -100,7 +110,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-function requireAuth(req, res, next) {
+function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies[COOKIE_NAME];
   if (!token) return res.status(401).json({ error: 'No token' });
   try {
@@ -116,7 +126,7 @@ app.post('/api/logout', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/me', requireAuth, (req, res) => {
+app.get('/api/me', requireAuth, (req: Request, res: Response) => {
   res.json({ username: req.user.username });
 });
 
