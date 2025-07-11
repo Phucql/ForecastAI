@@ -11,6 +11,9 @@ import AWS from 'aws-sdk';
 import fs from 'fs';
 import Papa from 'papaparse';
 import { spawn } from 'child_process';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import cookieParser from 'cookie-parser';
 
 import { mergeForecastFiles } from './utils/mergeForecastFiles.js';
 
@@ -38,17 +41,84 @@ const { Pool } = pkg;
 const app = express();
 const port = 3001;
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const COOKIE_NAME = 'token';
+
+app.use(cookieParser());
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'https://foodforecastai.netlify.app',
-    'https://forecastai-ii8z.onrender.com',
-    process.env.CORS_ORIGIN
-  ].filter((origin): origin is string => Boolean(origin)),
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: ['https://foodforecastai.netlify.app', 'http://localhost:5173'],
   credentials: true
 }));
+
+// Example user (replace with DB lookup in production)
+const USERS = [{ username: 'admin', passwordHash: bcrypt.hashSync('password123', 10) }];
+
+// Signup endpoint (production, uses users table)
+app.post('/api/signup', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+  try {
+    const existing = await pool.query('SELECT 1 FROM users WHERE username = $1', [username]);
+    if (existing.rowCount > 0) return res.status(409).json({ error: 'Username already exists' });
+    const passwordHash = bcrypt.hashSync(password, 10);
+    await pool.query('INSERT INTO users (username, password_hash) VALUES ($1, $2)', [username, passwordHash]);
+    // Auto-login after signup
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Signup Error]', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Login endpoint (production, uses users table)
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    const user = result.rows[0];
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Login Error]', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+function requireAuth(req, res, next) {
+  const token = req.cookies[COOKIE_NAME];
+  if (!token) return res.status(401).json({ error: 'No token' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+app.post('/api/logout', (req, res) => {
+  res.clearCookie(COOKIE_NAME, { httpOnly: true, secure: true, sameSite: 'lax' });
+  res.json({ success: true });
+});
+
+app.get('/api/me', requireAuth, (req, res) => {
+  res.json({ username: req.user.username });
+});
 
 app.use(express.json());
 

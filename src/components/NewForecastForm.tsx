@@ -139,13 +139,20 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
           return formData;
         })()
       });
-  
-      if (!uploadResponse.ok) throw new Error('Failed to upload forecast file');
 
-      alert('Forecast file saved and uploaded to S3!');
-      if (onComplete) onComplete();
-      setActiveTab('manage-demand-plans');
-      // window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans'; // Remove this line
+      if (uploadResponse.ok) {
+        alert('Forecast file saved and uploaded to S3!');
+        if (onComplete) onComplete();
+        setActiveTab('manage-demand-plans');
+      } else {
+        // Try to parse the response for more info
+        let msg = 'Error uploading forecast file';
+        try {
+          const data = await uploadResponse.json();
+          if (data && data.error) msg = data.error;
+        } catch {}
+        alert(msg);
+      }
   
       // // Parse CSV for condensed logic
       // const lines = csv.trim().split('\n');
