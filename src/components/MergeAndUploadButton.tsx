@@ -50,7 +50,7 @@ const MergeAndUploadButton: React.FC<Props> = ({ selectedOriginal, selectedForec
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         disabled={loading}
       >
-        {loading ? 'Uploading to Tables...' : 'Run Report'}
+        {loading ? 'Uploading to Tables...' : 'Run Forecast'}
       </button>
       {message && <p className="text-sm">{message}</p>}
     </div>

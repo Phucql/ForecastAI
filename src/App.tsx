@@ -23,6 +23,7 @@ import {
   Upload,
   AlertCircle
 } from 'lucide-react';
+import KLUGLogo from './components/KLUGLogo';
 import Plot from 'react-plotly.js';
 import { FileUpload } from './components/FileUpload';
 import Calendars from './components/Calendars';
@@ -1151,11 +1152,10 @@ function App() {
       <header className="bg-gray-800 text-white p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div 
-            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
-            <BarChart3 className="h-8 w-8 text-orange-500" />
-            <h1 className="text-2xl font-bold text-orange-500">Forecast AI</h1>
+            <KLUGLogo size="lg" />
           </div>
           <button 
             className="p-2 hover:bg-gray-700 rounded-full"
