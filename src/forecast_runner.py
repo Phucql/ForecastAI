@@ -16,9 +16,9 @@ print("[DEBUG] Python script started", file=sys.stderr)
 try:
     # 1. Load key from .env
     load_dotenv()
-    api_key = os.getenv("TIMEGPT_API_KEY")
+    api_key = os.getenv("KLUG_AI_FORECAST_API_KEY")
     if not api_key:
-        raise Exception("TIMEGPT_API_KEY is missing from .env")
+        raise Exception("KLUG_AI_FORECAST_API_KEY is missing from .env")
 
     # 2. Parse POST body from stdin
     payload = sys.stdin.read()
@@ -105,7 +105,7 @@ try:
 
     # Rename columns to match backend merge logic
     forecast_df = forecast_df.rename(columns={
-        "y": "TimeGPT",
+        "y": "Klug AI Forecast",
         "unique_id": "PRD_LVL_MEMBER_NAME",
         "ds": "TIM_LVL_MEMBER_VALUE"  
     })

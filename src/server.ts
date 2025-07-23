@@ -786,7 +786,7 @@ app.get('/api/download-csv', async (req, res) => {
   }
 });
 
-// Proxy to TimeGPT API
+// Proxy to Klug AI Forecast API
 
 const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<AWS.S3.GetObjectOutput> => {
   for (let i = 0; i < retries; i++) {
@@ -841,7 +841,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
     const payload = {
       series,
       horizon: req.body.horizon,
-      api_key: process.env.TIMEGPT_API_KEY
+      api_key: process.env.KLUG_AI_FORECAST_API_KEY
     };
     const payloadString = JSON.stringify(payload);
     console.log('Payload sent to Python (first 500 chars):', payloadString.slice(0, 500));
@@ -1057,8 +1057,8 @@ app.get('/api/final-forecast-report', async (req, res) => {
     const resultForecast = await client.query(`
       SELECT 
         t."PRD_LVL_MEMBER_NAME" AS item,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."TimeGPT" ELSE 0 END) AS forecast2025,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."TimeGPT" ELSE 0 END) AS forecast2026
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."Klug AI Forecast" ELSE 0 END) AS forecast2025,
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."Klug AI Forecast" ELSE 0 END) AS forecast2026
       FROM forecast_result t
       GROUP BY t."PRD_LVL_MEMBER_NAME"
     `);
@@ -1137,7 +1137,7 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
     const forecastQuery = await client.query(`
       SELECT 
         TO_CHAR("TIM_LVL_MEMBER_VALUE", 'YYYY-MM') AS month,
-        "TimeGPT"
+        "Klug AI Forecast"
       FROM forecast_result
       WHERE "PRD_LVL_MEMBER_NAME" = $1
     `, [item]);
@@ -1148,7 +1148,7 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
     origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r.TimeGPT));
+    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r["Klug AI Forecast"]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;
@@ -1241,8 +1241,8 @@ app.get('/api/business-level-forecast-report', async (req, res) => {
     const resultForecast = await client.query(`
       SELECT 
         t."PRD_LVL_MEMBER_NAME" AS item,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."TimeGPT" ELSE 0 END) AS forecast2025,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."TimeGPT" ELSE 0 END) AS forecast2026
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."Klug AI Forecast" ELSE 0 END) AS forecast2025,
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."Klug AI Forecast" ELSE 0 END) AS forecast2026
       FROM forecast_final t
       ${itemFilter}
       GROUP BY t."PRD_LVL_MEMBER_NAME"
@@ -1532,7 +1532,7 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     const forecastQuery = await client.query(`
       SELECT 
         TO_CHAR("TIM_LVL_MEMBER_VALUE", 'YYYY-MM') AS month,
-        "TimeGPT"
+        "Klug AI Forecast"
       FROM forecast_final
       ${forecastFilter}
     `, forecastParams);
@@ -1543,7 +1543,7 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r.TimeGPT));
+    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r["Klug AI Forecast"]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;
