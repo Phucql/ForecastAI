@@ -23,7 +23,6 @@ import {
   Upload,
   AlertCircle
 } from 'lucide-react';
-import KLUGLogo from './components/KLUGLogo';
 import Plot from 'react-plotly.js';
 import { FileUpload } from './components/FileUpload';
 import Calendars from './components/Calendars';
@@ -36,7 +35,7 @@ import UnitsOfMeasure from './components/UnitsOfMeasure';
 import ItemSubinventories from './components/ItemSubinventories';
 import CollectedMeasure from './components/CollectedMeasure';
 import NewForecastForm from './components/NewForecastForm';
-
+import TimeGPTForecastRunner from './components/TimeGPTForecastRunner';
 import ForecastReportTable from './components/ForecastReportTable';
 import ManageTables from './components/ManageTables';
 import { format } from 'date-fns';
@@ -100,19 +99,19 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
   ] as const;
 
   return (
-    <nav className="bg-transparent">
+    <nav className="bg-white border-b border-gray-200">
       <div className="container mx-auto">
-        <div className="flex space-x-6">
+        <div className="flex space-x-4">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors rounded-md
+                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
                   ${activeTab === tab.id 
-                    ? 'text-orange-500 bg-orange-50 bg-opacity-10'
-                    : 'text-white hover:text-orange-300 hover:bg-white hover:bg-opacity-10'
+                    ? (['reports-analytics', 'demand-plan-inputs', 'supply-network-model', 'manage-users'].includes(tab.id) ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
+                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -902,7 +901,7 @@ function App() {
       if (!res.ok) throw new Error("Forecast failed");
   
       const result = await res.json();
-      console.log("🔍 Klug AI Forecast Raw Result:", result);
+      console.log("🔍 TimeGPT Raw Result:", result);
   
       if (!result || !Array.isArray(result) || result.length === 0) {
         alert(" ✅ Forecast Completed.");
@@ -913,7 +912,7 @@ function App() {
       const convertedResult = result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.unique_id,
         TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
-        ForecastAI: row["Klug AI Forecast"]
+        ForecastAI: row.TimeGPT
       }));
   
       setForecastTableData(convertedResult);
@@ -1149,25 +1148,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-gray-700 text-white p-4">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div 
-              className="cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={navigateHome}
-            >
-              <KLUGLogo size="lg" />
-            </div>
-            <button 
-              className="p-2 hover:bg-gray-600 rounded-full transition-colors"
-              onClick={navigateHome}
-            >
-              <Home className="h-6 w-6 text-white" />
-            </button>
+      <header className="bg-gray-800 text-white p-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <div 
+            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={navigateHome}
+          >
+            <img src="/logo.svg" alt="KLUG ForecastAI Logo" className="h-12 w-auto" />
           </div>
-          <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <button 
+            className="p-2 hover:bg-gray-700 rounded-full"
+            onClick={navigateHome}
+          >
+            <Home className="h-6 w-6" />
+          </button>
         </div>
       </header>
+
+      <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto py-6">
         {activeTab === 'demand-plan-inputs' && <DemandPlanInputs />}
