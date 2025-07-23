@@ -1154,7 +1154,7 @@ function App() {
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
-            <img src="/logo.svg" alt="KLUG ForecastAI Logo" className="h-12 w-auto" />
+            <img src="/logo.png" alt="KLUG ForecastAI Logo" className="h-16 w-auto" />
           </div>
           <button 
             className="p-2 hover:bg-gray-700 rounded-full"
