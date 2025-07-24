@@ -1155,8 +1155,12 @@ function App() {
             onClick={navigateHome}
           >
             <div className="flex items-center space-x-4">
-              <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-24 w-auto" />
-              <img src="/logo1.jpg?v=1" alt="ForecastAI Logo" className="h-24 w-auto" />
+              <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
+              <div className="flex flex-col items-center">
+                <img src="/logo1.jpg?v=1" alt="ForecastAI Logo" className="h-16 w-auto" />
+                <div className="w-full h-px bg-black my-2"></div>
+                <span className="text-orange-500 font-bold text-xl">ForecastAI</span>
+              </div>
             </div>
           </div>
           <button 
