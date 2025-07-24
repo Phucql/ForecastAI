@@ -17,7 +17,38 @@ print(f"[DEBUG] Python version: {sys.version}", file=sys.stderr)
 try:
     # 1. Load key from environment variables
     print("[DEBUG] Loading environment variables...", file=sys.stderr)
-    load_dotenv()
+    
+    # Try to load .env file safely, handling potential encoding issues
+    try:
+        # Try to load from specific paths first
+        env_paths = [
+            os.path.join(os.getcwd(), '.env'),
+            os.path.join(os.path.dirname(__file__), '.env'),
+            os.path.join(os.path.dirname(__file__), '..', '.env'),
+            '.env'
+        ]
+        
+        env_loaded = False
+        for env_path in env_paths:
+            if os.path.exists(env_path):
+                try:
+                    # Check if file is readable as text
+                    with open(env_path, 'r', encoding='utf-8') as f:
+                        first_line = f.readline()
+                        if first_line and not first_line.startswith('\xff'):  # Check for JPEG signature
+                            load_dotenv(env_path)
+                            env_loaded = True
+                            print(f"[DEBUG] Successfully loaded .env from: {env_path}", file=sys.stderr)
+                            break
+                except (UnicodeDecodeError, IOError) as e:
+                    print(f"[DEBUG] Skipping corrupted .env file at {env_path}: {e}", file=sys.stderr)
+                    continue
+        
+        if not env_loaded:
+            print("[DEBUG] No valid .env file found, continuing without it", file=sys.stderr)
+            
+    except Exception as e:
+        print(f"[DEBUG] Error loading .env file: {e}, continuing without it", file=sys.stderr)
     
     # Try multiple possible environment variable names for the API key
     api_key = os.getenv("TIMEGPT_API_KEY") or os.getenv("VITE_TIMEGPT_API_KEY") or os.environ.get("TIMEGPT_API_KEY") or os.environ.get("VITE_TIMEGPT_API_KEY")
@@ -68,7 +99,13 @@ try:
         for key, value in os.environ.items():
             if 'TIMEGPT' in key or 'API' in key:
                 print(f"[DEBUG] {key}: {'***HIDDEN***' if 'KEY' in key else value}", file=sys.stderr)
-        raise Exception("TIMEGPT_API_KEY is missing from both payload and environment variables")
+        
+        # Provide a more helpful error message
+        error_msg = "TIMEGPT_API_KEY is missing from both payload and environment variables"
+        print(f"[DEBUG] {error_msg}", file=sys.stderr)
+        print(f"[DEBUG] Environment variables containing 'TIMEGPT': {[k for k in os.environ.keys() if 'TIMEGPT' in k]}", file=sys.stderr)
+        print(f"[DEBUG] Environment variables containing 'API': {[k for k in os.environ.keys() if 'API' in k]}", file=sys.stderr)
+        raise Exception(error_msg)
 
     # 4. Convert to DataFrame
     print("[DEBUG] Converting to DataFrame...", file=sys.stderr)
@@ -190,5 +227,15 @@ except Exception as e:
     print(f"[DEBUG] Exception occurred: {e}", file=sys.stderr)
     import traceback
     print(f"[DEBUG] Traceback: {traceback.format_exc()}", file=sys.stderr)
-    print(json.dumps({"error": str(e)}))
+    
+    # Provide more detailed error information
+    error_details = {
+        "error": str(e),
+        "type": type(e).__name__,
+        "python_version": sys.version,
+        "working_directory": os.getcwd(),
+        "script_location": __file__
+    }
+    
+    print(json.dumps({"error": str(e), "details": error_details}))
     sys.exit(1)
