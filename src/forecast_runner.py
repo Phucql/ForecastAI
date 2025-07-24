@@ -208,7 +208,7 @@ try:
 
     # Rename columns to match backend merge logic
     forecast_df = forecast_df.rename(columns={
-        "y": "TimeGPT",
+        "y": "Klug Forecast AI",
         "unique_id": "PRD_LVL_MEMBER_NAME",
         "ds": "TIM_LVL_MEMBER_VALUE"  
     })

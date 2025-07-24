@@ -921,7 +921,7 @@ function App() {
       const convertedResult = forecastResponse.result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.PRD_LVL_MEMBER_NAME,
         TIM_LVL_MEMBER_VALUE: row.TIM_LVL_MEMBER_VALUE,
-        'Klug Forecast AI': row.TimeGPT
+        'Klug Forecast AI': row["Klug Forecast AI"]
       }));
   
       setForecastTableData(convertedResult);
@@ -1166,7 +1166,7 @@ function App() {
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
                 <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
-                <div className="w-full h-1 bg-black my-1"></div>
+                <div className="w-1/2 h-1 bg-black my-1 mx-auto"></div>
                 <span className="text-orange-500 font-bold text-3xl">ForecastAI</span>
               </div>
             </div>
