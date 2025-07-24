@@ -1073,7 +1073,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
         // Only upload to Forecast_Result folder in the main bucket
         const today = new Date().toISOString().slice(0, 10);
-        const forecastFileNameOnly = `Forecast_${baseFileName}_${today}.csv`;
+        const forecastFileNameOnly = `Klug Forecast AI_${today}.csv`;
         // const forecastFileName = `forecasts/${forecastFileNameOnly}`;
         // const mergedKey = `forecasts/${baseFileName}_merged_${today}.csv`;
 
@@ -1215,12 +1215,23 @@ app.get('/api/final-forecast-report', async (req, res) => {
       GROUP BY f."PRD_LVL_MEMBER_NAME"
     `);
 
+    // First, get the column names from the forecast_result table
+    const columnQuery = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'forecast_result' 
+      AND column_name NOT IN ('PRD_LVL_MEMBER_NAME', 'TIM_LVL_MEMBER_VALUE')
+      ORDER BY ordinal_position
+    `);
+    
+    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    
     // Forecasts from forecast_result
     const resultForecast = await client.query(`
       SELECT 
         t."PRD_LVL_MEMBER_NAME" AS item,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."Klug Forecast AI" ELSE 0 END) AS forecast2025,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."Klug Forecast AI" ELSE 0 END) AS forecast2026
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2025,
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2026
       FROM forecast_result t
       GROUP BY t."PRD_LVL_MEMBER_NAME"
     `);
@@ -1296,10 +1307,21 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
       WHERE "PRD_LVL_MEMBER_NAME" = $1
     `, [item]);
 
+    // First, get the column names from the forecast_result table
+    const columnQuery = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'forecast_result' 
+      AND column_name NOT IN ('PRD_LVL_MEMBER_NAME', 'TIM_LVL_MEMBER_VALUE')
+      ORDER BY ordinal_position
+    `);
+    
+    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    
     const forecastQuery = await client.query(`
       SELECT 
         TO_CHAR("TIM_LVL_MEMBER_VALUE", 'YYYY-MM') AS month,
-        "Klug Forecast AI"
+        "${forecastColumnName}"
       FROM forecast_result
       WHERE "PRD_LVL_MEMBER_NAME" = $1
     `, [item]);
@@ -1310,7 +1332,7 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
     origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r["Klug Forecast AI"]));
+    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[forecastColumnName]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;
@@ -1399,12 +1421,23 @@ app.get('/api/business-level-forecast-report', async (req, res) => {
       )`;
     }
 
+    // First, get the column names from the forecast_final table
+    const columnQuery = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'forecast_final' 
+      AND column_name NOT IN ('PRD_LVL_MEMBER_NAME', 'TIM_LVL_MEMBER_VALUE')
+      ORDER BY ordinal_position
+    `);
+    
+    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    
     // Forecasts from forecast_final - filter by items that match Customer Class Code
     const resultForecast = await client.query(`
       SELECT 
         t."PRD_LVL_MEMBER_NAME" AS item,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."Klug Forecast AI" ELSE 0 END) AS forecast2025,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."Klug Forecast AI" ELSE 0 END) AS forecast2026
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2025,
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2026
       FROM forecast_final t
       ${itemFilter}
       GROUP BY t."PRD_LVL_MEMBER_NAME"
@@ -1691,10 +1724,21 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
       }
     }
 
+    // First, get the column names from the forecast_final table
+    const columnQuery = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'forecast_final' 
+      AND column_name NOT IN ('PRD_LVL_MEMBER_NAME', 'TIM_LVL_MEMBER_VALUE')
+      ORDER BY ordinal_position
+    `);
+    
+    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    
     const forecastQuery = await client.query(`
       SELECT 
         TO_CHAR("TIM_LVL_MEMBER_VALUE", 'YYYY-MM') AS month,
-        "Klug Forecast AI"
+        "${forecastColumnName}"
       FROM forecast_final
       ${forecastFilter}
     `, forecastParams);
@@ -1705,7 +1749,7 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r["Klug Forecast AI"]));
+    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[forecastColumnName]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;

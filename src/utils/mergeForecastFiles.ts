@@ -22,7 +22,7 @@ const s3 = new AWS.S3({
   }
 });
 
-export const mergeForecastFiles = async (originalKey: string, forecastKey: string): Promise<string> => {
+export const mergeForecastFiles = async (originalKey: string, forecastKey: string, forecastName?: string): Promise<string> => {
   const bucket = process.env.VITE_S3_BUCKET_NAME!;
 
   const [originalData, forecastData] = await Promise.all([
@@ -49,9 +49,12 @@ export const mergeForecastFiles = async (originalKey: string, forecastKey: strin
       f.TIM_LVL_MEMBER_VALUE === row.TIM_LVL_MEMBER_VALUE
     );
 
+    // Use the provided forecast name or default to 'Klug Forecast AI'
+    const forecastColumnName = forecastName || 'Klug Forecast AI';
+    
     return {
       ...row,
-      'Klug Forecast AI': match ? match['Klug Forecast AI'] : ''
+      [forecastColumnName]: match ? match[forecastColumnName] : ''
     };
   });
 

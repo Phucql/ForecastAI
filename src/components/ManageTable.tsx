@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 interface ForecastRow {
   PRD_LVL_MEMBER_NAME: string;
   TIM_LVL_MEMBER_VALUE: string;
-  'Klug Forecast AI': number;
+  [forecastName: string]: string | number;
 }
 
 interface PivotedRow {
@@ -31,7 +31,13 @@ const ManageTables = ({ open, onClose, forecastData }: { open: boolean; onClose:
       if (!pivotMap[name]) {
         pivotMap[name] = { item: name };
       }
-      pivotMap[name][year] = row['Klug Forecast AI'];
+      // Find the forecast column dynamically (exclude PRD_LVL_MEMBER_NAME and TIM_LVL_MEMBER_VALUE)
+      const forecastColumns = Object.keys(row).filter(key => 
+        key !== 'PRD_LVL_MEMBER_NAME' && key !== 'TIM_LVL_MEMBER_VALUE'
+      );
+      if (forecastColumns.length > 0) {
+        pivotMap[name][year] = row[forecastColumns[0]];
+      }
     });
 
     const sortedYears = Array.from(yearSet).sort();

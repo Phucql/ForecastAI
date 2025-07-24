@@ -157,7 +157,7 @@ function App() {
   const [forecastTableData, setForecastTableData] = useState<{ 
     PRD_LVL_MEMBER_NAME: string;
     TIM_LVL_MEMBER_VALUE: string;
-    'Klug Forecast AI': number;
+    [forecastName: string]: string | number;
   }[]>([]);
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -894,7 +894,7 @@ function App() {
         PRD_LVL_MEMBER_NAME: PRD_LVL_MEMBER_NAME[index]
       }));
       
-      const payload = { series, horizon, originalFileName: fileBase };
+      const payload = { series, horizon, originalFileName: fileBase, forecast_name: 'Klug Forecast AI' };
       console.log("\uD83D\uDCE6 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
   
       const res = await fetch(`${BASE_URL}/api/run-forecast-py`, {
@@ -921,7 +921,7 @@ function App() {
       const convertedResult = forecastResponse.result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.PRD_LVL_MEMBER_NAME,
         TIM_LVL_MEMBER_VALUE: row.TIM_LVL_MEMBER_VALUE,
-        'Klug Forecast AI': row["Klug Forecast AI"]
+        'Klug Forecast AI': row['Klug Forecast AI']
       }));
   
       setForecastTableData(convertedResult);
@@ -931,7 +931,7 @@ function App() {
       const csvRows = convertedResult.map(r => Object.values(r).join(","));
       const csvData = [csvHeader, ...csvRows].join("\n");
   
-      const fileKey = `Forecast_Result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
+      const fileKey = `Forecast_Result/Klug Forecast AI_${new Date().toISOString().split("T")[0]}.csv`;
   
       try {
         // Upload through backend to avoid CORS issues
@@ -974,13 +974,14 @@ function App() {
     }
     // Extract original name from forecast result file name
     const forecastResultName = selectedResultFile.split('/').pop() || '';
-    // Expected format: Forecast_<OriginalName>_<Date>.csv
-    const match = forecastResultName.match(/^Forecast_(.+)_\d{4}-\d{2}-\d{2}\.csv$/);
+    // Expected format: Klug Forecast AI_<Date>.csv
+    const match = forecastResultName.match(/^Klug Forecast AI_\d{4}-\d{2}-\d{2}\.csv$/);
     if (!match) {
       setRunReportMessage('❌ Could not determine original file from forecast result file name.');
       return;
     }
-    const originalName = match[1] + '.csv';
+    // Since we're now using a fixed name, we'll use a default original name
+    const originalName = 'forecast_file.csv';
     // Find the original file in forecastFiles
     const originalFile = forecastFiles.find(f => f.name === originalName);
     if (!originalFile) {
@@ -1166,7 +1167,7 @@ function App() {
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
                 <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
-                <div className="w-1/2 h-1 bg-black my-1 mx-auto"></div>
+                <div className="w-full h-1 bg-black my-1"></div>
                 <span className="text-orange-500 font-bold text-3xl">ForecastAI</span>
               </div>
             </div>
@@ -1430,7 +1431,7 @@ function App() {
               <tr>
                 <th className="p-2 border">PRD_LVL_MEMBER_NAME</th>
                 <th className="p-2 border">TIM_LVL_MEMBER_VALUE</th>
-                <th className="p-2 border">Klug Forecast AI</th>
+                <th className="p-2 border">{fileBase}</th>
               </tr>
             </thead>
             <tbody>
@@ -1438,7 +1439,7 @@ function App() {
                 <tr key={idx} className="hover:bg-gray-50">
                   <td className="p-2 border">{row.PRD_LVL_MEMBER_NAME}</td>
                   <td className="p-2 border">{row.TIM_LVL_MEMBER_VALUE}</td>
-                  <td className="p-2 border">{row['Klug Forecast AI']}</td>
+                  <td className="p-2 border">{row[fileBase]}</td>
                 </tr>
               ))}
             </tbody>

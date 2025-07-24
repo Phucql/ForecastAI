@@ -206,9 +206,12 @@ try:
         print(f"[DEBUG] TimeGPT API call failed: {e}", file=sys.stderr)
         raise Exception(f"TimeGPT API call failed: {e}")
 
+    # Get forecast name from payload or use default
+    forecast_name = data.get('forecast_name', 'Klug Forecast AI')
+    
     # Rename columns to match backend merge logic
     forecast_df = forecast_df.rename(columns={
-        "y": "Klug Forecast AI",
+        "y": forecast_name,
         "unique_id": "PRD_LVL_MEMBER_NAME",
         "ds": "TIM_LVL_MEMBER_VALUE"  
     })
