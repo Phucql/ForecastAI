@@ -889,7 +889,14 @@ function App() {
       const end = new Date(endDate);
       const horizon = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
   
-      const payload = { time, target, PRD_LVL_MEMBER_NAME, horizon, originalFileName: fileBase };
+      // Convert to the format expected by the backend
+      const series = time.map((t, index) => ({
+        time: t,
+        target: target[index],
+        PRD_LVL_MEMBER_NAME: PRD_LVL_MEMBER_NAME[index]
+      }));
+      
+      const payload = { series, horizon, originalFileName: fileBase };
       console.log("\uD83D\uDCE6 Forecast Payload (multi-series):", JSON.stringify(payload, null, 2));
   
       const res = await fetch(`${BASE_URL}/api/run-forecast-py`, {
@@ -898,20 +905,24 @@ function App() {
         body: JSON.stringify(payload)
       });
   
-      if (!res.ok) throw new Error("Forecast failed");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("❌ Forecast API Error:", res.status, errorText);
+        throw new Error(`Forecast failed: ${res.status} - ${errorText}`);
+      }
   
-      const result = await res.json();
-      console.log("🔍 TimeGPT Raw Result:", result);
-  
-      if (!result || !Array.isArray(result) || result.length === 0) {
+            const response = await res.json();
+      console.log("🔍 TimeGPT Raw Response:", response);
+
+      if (!response || !response.result || !Array.isArray(response.result) || response.result.length === 0) {
         alert(" ✅ Forecast Completed.");
         window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         return;
       }
-  
-      const convertedResult = result.map(row => ({
-        PRD_LVL_MEMBER_NAME: row.unique_id,
-        TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
+
+      const convertedResult = response.result.map(row => ({
+        PRD_LVL_MEMBER_NAME: row.PRD_LVL_MEMBER_NAME,
+        TIM_LVL_MEMBER_VALUE: row.TIM_LVL_MEMBER_VALUE,
         ForecastAI: row.TimeGPT
       }));
   
@@ -1157,7 +1168,7 @@ function App() {
             <div className="flex items-center space-x-4">
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
-                <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-8 w-auto" />
+                <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-5 w-auto" />
                 <div className="w-full h-0.5 bg-black my-1"></div>
                 <span className="text-orange-500 font-bold text-xl">ForecastAI</span>
               </div>

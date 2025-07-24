@@ -804,6 +804,36 @@ const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<AWS
   throw new Error(`File ${Key} not available after ${retries} retries`);
 };
 
+// Test endpoint to check Python environment
+app.get('/api/test-python', async (req, res) => {
+  try {
+    const pythonPath = process.env.PYTHON_PATH || 'python3';
+    console.log(`[TEST] Testing Python executable: ${pythonPath}`);
+    
+    const py = spawn(pythonPath, ['-c', 'import sys; print("Python version:", sys.version); import pandas; print("Pandas version:", pandas.__version__); import nixtla; print("Nixtla available")']);
+    
+    let result = '';
+    let error = '';
+    
+    py.stdout.on('data', data => result += data.toString());
+    py.stderr.on('data', data => error += data.toString());
+    
+    py.on('close', (code) => {
+      if (code === 0) {
+        res.json({ success: true, output: result, pythonPath });
+      } else {
+        res.status(500).json({ error: 'Python test failed', stderr: error, code });
+      }
+    });
+    
+    py.on('error', (err) => {
+      res.status(500).json({ error: 'Failed to spawn Python', details: err.message });
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Test failed', details: err.message });
+  }
+});
+
 app.post('/api/run-forecast-py', async (req, res) => {
   const { originalFileName, horizon, id } = req.body;
 
@@ -851,9 +881,23 @@ app.post('/api/run-forecast-py', async (req, res) => {
     console.log(`[Forecast] Using Python executable: ${pythonPath}`);
     const py = spawn(
       pythonPath,
-      ['src/forecast_runner.py']
+      ['forecast_runner.py']
     );
     console.log('[Forecast] Spawned Python process for forecast_runner.py');
+    
+    // Handle spawn errors
+    py.on('error', (err) => {
+      clearTimeout(timeout);
+      console.error('[PYTHON SPAWN ERROR]', err);
+      res.status(500).json({ error: 'Failed to spawn Python process', details: err.message });
+    });
+    
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      console.error('[PYTHON TIMEOUT] Process took too long, killing...');
+      py.kill('SIGKILL');
+      res.status(500).json({ error: 'Python process timed out' });
+    }, 300000); // 5 minutes timeout
     
     // Send payload via stdin instead of command line argument
     py.stdin.write(payloadString);
@@ -879,9 +923,11 @@ app.post('/api/run-forecast-py', async (req, res) => {
     });
 
     py.on('close', async code => {
+      clearTimeout(timeout); // Clear the timeout
       console.log('[PYTHON RAW STDOUT]', result);
       console.log('[PYTHON RAW STDERR]', error);
       console.log('[PYTHON EXIT CODE]', code);
+      console.log('[PYTHON PROCESS INFO]', { pythonPath, scriptPath: 'forecast_runner.py' });
 
       // Check if the result contains an error JSON
       if (result.trim().startsWith('{"error":')) {
