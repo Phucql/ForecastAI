@@ -162,6 +162,7 @@ function App() {
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedOriginalFile, setSelectedOriginalFile] = useState<string | null>(null);
+  const [currentFileBase, setCurrentFileBase] = useState<string>('forecast');
   const [showReportPage, setShowReportPage] = useState(false);
   const [showGraphModal, setShowGraphModal] = useState(false);
   const [selectedGraphItem, setSelectedGraphItem] = useState<string>('');
@@ -814,6 +815,9 @@ function App() {
         ? selectedForecastFile.split("/").pop()?.replace(".csv", "") || "forecast"
         : "forecast";
 
+      // Set the current fileBase for use in table rendering
+      setCurrentFileBase(fileBase);
+
       console.log("\uD83D\uDCE6 Run Forecast:", selectedForecastFile, startDate, endDate, fileBase);
   
       const response = await fetch(`${BASE_URL}/api/download-csv?key=${encodeURIComponent(selectedForecastFile)}`);
@@ -1431,7 +1435,7 @@ function App() {
               <tr>
                 <th className="p-2 border">PRD_LVL_MEMBER_NAME</th>
                 <th className="p-2 border">TIM_LVL_MEMBER_VALUE</th>
-                <th className="p-2 border">{fileBase}</th>
+                <th className="p-2 border">{currentFileBase}</th>
               </tr>
             </thead>
             <tbody>
@@ -1439,7 +1443,7 @@ function App() {
                 <tr key={idx} className="hover:bg-gray-50">
                   <td className="p-2 border">{row.PRD_LVL_MEMBER_NAME}</td>
                   <td className="p-2 border">{row.TIM_LVL_MEMBER_VALUE}</td>
-                  <td className="p-2 border">{row[fileBase]}</td>
+                  <td className="p-2 border">{row[currentFileBase]}</td>
                 </tr>
               ))}
             </tbody>
