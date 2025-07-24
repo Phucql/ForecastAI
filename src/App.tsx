@@ -912,7 +912,7 @@ function App() {
       const convertedResult = result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.unique_id,
         TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
-        ForecastAI: row.TimeGPT
+        "TimeGPT": row.TimeGPT
       }));
   
       setForecastTableData(convertedResult);
@@ -1157,8 +1157,8 @@ function App() {
             <div className="flex items-center space-x-4">
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
-                <img src="/logo1.png?v=1" alt="ForecastAI Logo" className="h-10 w-auto" />
-                <div className="w-full h-px bg-black my-2"></div>
+                <img src="/logo1.jpg?v=1" alt="KLUG Logo" className="h-8 w-auto" />
+                <div className="w-full h-0.5 bg-black my-1"></div>
                 <span className="text-orange-500 font-bold text-xl">ForecastAI</span>
               </div>
             </div>
