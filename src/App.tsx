@@ -39,7 +39,6 @@ import TimeGPTForecastRunner from './components/TimeGPTForecastRunner';
 import ForecastReportTable from './components/ForecastReportTable';
 import ManageTables from './components/ManageTables';
 import { format } from 'date-fns';
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { unparse } from "papaparse";
 import MergeAndUploadButton from './components/MergeAndUploadButton';
 import { Route, Routes, useNavigate } from 'react-router-dom';
@@ -298,7 +297,6 @@ function App() {
       });
       if (!response.ok) throw new Error('Failed to duplicate file');
       await fetchSavedForecasts(); // reload list
-      await fetchForecastFiles();
       await fetchForecastResultFiles();
       window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
       setActiveTab('manage-demand-plans');
@@ -932,32 +930,31 @@ function App() {
       const csvHeader = Object.keys(convertedResult[0]).join(",");
       const csvRows = convertedResult.map(r => Object.values(r).join(","));
       const csvData = [csvHeader, ...csvRows].join("\n");
-      const fileBuffer = new TextEncoder().encode(csvData);
-  
-      const s3 = new S3Client({
-        region: "us-east-2",
-        credentials: {
-          accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID!,
-          secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY!,
-        },
-      });
   
       const fileKey = `Forecast_Result/${fileBase}_forecast_${new Date().toISOString().split("T")[0]}.csv`;
   
       try {
-        const uploadRes = await s3.send(new PutObjectCommand({
-          Bucket: import.meta.env.VITE_S3_BUCKET_NAME!,
-          Key: fileKey,
-          Body: fileBuffer,
-          ContentType: "text/csv",
-        }));
-        console.log("✅ S3 Upload Successful:", uploadRes);
+        // Upload through backend to avoid CORS issues
+        const uploadRes = await fetch(`${BASE_URL}/api/upload-forecast-result`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            key: fileKey,
+            data: csvData
+          })
+        });
+        
+        if (!uploadRes.ok) {
+          throw new Error(`Upload failed: ${uploadRes.status}`);
+        }
+        
+        console.log("✅ S3 Upload Successful");
         alert("✅ Forecast uploaded to S3! View it in Reports & Analytics → Manage Tables.");
       } catch (uploadError) {
         console.error("❌ S3 Upload Failed:", uploadError);
         alert("Forecast complete but failed to upload to S3.");
       }
-      await fetchForecastFiles();
+      await fetchSavedForecasts();
       await fetchForecastResultFiles();
       window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
   
@@ -1169,7 +1166,7 @@ function App() {
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
                 <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
-                <div className="w-full h-1 bg-black my-2"></div>
+                <div className="w-full h-1 bg-black my-1"></div>
                 <span className="text-orange-500 font-bold text-2xl">ForecastAI</span>
               </div>
             </div>

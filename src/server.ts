@@ -1839,6 +1839,37 @@ app.post('/api/clear-forecast-tables', async (_req, res) => {
   }
 });
 
+// Endpoint to upload forecast result to S3 (to avoid CORS issues)
+app.post('/api/upload-forecast-result', async (req, res) => {
+  try {
+    const { key, data } = req.body;
+    
+    if (!key || !data) {
+      return res.status(400).json({ error: 'Missing key or data' });
+    }
+
+    const s3 = new AWS.S3({
+      region: 'us-east-2',
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    const uploadParams = {
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Key: key,
+      Body: data,
+      ContentType: 'text/csv',
+    };
+
+    await s3.upload(uploadParams).promise();
+    
+    res.json({ message: 'Forecast result uploaded successfully' });
+  } catch (err) {
+    console.error('[Upload Forecast Result Error]', err);
+    res.status(500).json({ error: 'Failed to upload forecast result' });
+  }
+});
+
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
 });
