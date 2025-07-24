@@ -936,6 +936,9 @@ function App() {
       const convertedResult = result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.unique_id,
         TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
+<<<<<<< HEAD
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
+=======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
         ForecastAI: row.TimeGPT
       }));
@@ -1177,6 +1180,7 @@ function App() {
         <div className="container mx-auto flex items-center justify-between">
           <div 
 <<<<<<< HEAD
+<<<<<<< HEAD
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
@@ -1189,10 +1193,15 @@ function App() {
               </div>
             </div>
 =======
+=======
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
             className="cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
             <KLUGLogo size="lg" />
+<<<<<<< HEAD
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
+=======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
           </div>
           <button 
