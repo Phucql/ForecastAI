@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 interface ForecastRow {
   PRD_LVL_MEMBER_NAME: string;
   TIM_LVL_MEMBER_VALUE: string;
-  ForecastAI: number;
+  'Klug Forecast AI': number;
 }
 
 interface PivotedRow {
@@ -31,7 +31,7 @@ const ManageTables = ({ open, onClose, forecastData }: { open: boolean; onClose:
       if (!pivotMap[name]) {
         pivotMap[name] = { item: name };
       }
-      pivotMap[name][year] = row.ForecastAI;
+      pivotMap[name][year] = row['Klug Forecast AI'];
     });
 
     const sortedYears = Array.from(yearSet).sort();

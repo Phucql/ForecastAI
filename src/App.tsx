@@ -157,7 +157,7 @@ function App() {
   const [forecastTableData, setForecastTableData] = useState<{ 
     PRD_LVL_MEMBER_NAME: string;
     TIM_LVL_MEMBER_VALUE: string;
-    ForecastAI: number;
+    'Klug Forecast AI': number;
   }[]>([]);
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -921,7 +921,7 @@ function App() {
       const convertedResult = forecastResponse.result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.PRD_LVL_MEMBER_NAME,
         TIM_LVL_MEMBER_VALUE: row.TIM_LVL_MEMBER_VALUE,
-        ForecastAI: row.TimeGPT
+        'Klug Forecast AI': row.TimeGPT
       }));
   
       setForecastTableData(convertedResult);
@@ -1167,7 +1167,7 @@ function App() {
               <div className="flex flex-col items-center">
                 <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
                 <div className="w-full h-1 bg-black my-1"></div>
-                <span className="text-orange-500 font-bold text-2xl">ForecastAI</span>
+                <span className="text-orange-500 font-bold text-3xl">ForecastAI</span>
               </div>
             </div>
           </div>
@@ -1430,7 +1430,7 @@ function App() {
               <tr>
                 <th className="p-2 border">PRD_LVL_MEMBER_NAME</th>
                 <th className="p-2 border">TIM_LVL_MEMBER_VALUE</th>
-                <th className="p-2 border">ForecastAI</th>
+                <th className="p-2 border">Klug Forecast AI</th>
               </tr>
             </thead>
             <tbody>
@@ -1438,7 +1438,7 @@ function App() {
                 <tr key={idx} className="hover:bg-gray-50">
                   <td className="p-2 border">{row.PRD_LVL_MEMBER_NAME}</td>
                   <td className="p-2 border">{row.TIM_LVL_MEMBER_VALUE}</td>
-                  <td className="p-2 border">{row.ForecastAI}</td>
+                  <td className="p-2 border">{row['Klug Forecast AI']}</td>
                 </tr>
               ))}
             </tbody>

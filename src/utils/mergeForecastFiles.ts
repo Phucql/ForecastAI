@@ -51,7 +51,7 @@ export const mergeForecastFiles = async (originalKey: string, forecastKey: strin
 
     return {
       ...row,
-      ForecastAI: match ? match.ForecastAI : ''
+      'Klug Forecast AI': match ? match['Klug Forecast AI'] : ''
     };
   });
 
