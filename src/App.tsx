@@ -911,18 +911,32 @@ function App() {
         throw new Error(`Forecast failed: ${res.status} - ${errorText}`);
       }
   
+<<<<<<< HEAD
             const response = await res.json();
       console.log("🔍 TimeGPT Raw Response:", response);
 
       if (!response || !response.result || !Array.isArray(response.result) || response.result.length === 0) {
+=======
+      const result = await res.json();
+      console.log("🔍 TimeGPT Raw Result:", result);
+  
+      if (!result || !Array.isArray(result) || result.length === 0) {
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
         alert(" ✅ Forecast Completed.");
         window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         return;
       }
+<<<<<<< HEAD
 
       const convertedResult = response.result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.PRD_LVL_MEMBER_NAME,
         TIM_LVL_MEMBER_VALUE: row.TIM_LVL_MEMBER_VALUE,
+=======
+  
+      const convertedResult = result.map(row => ({
+        PRD_LVL_MEMBER_NAME: row.unique_id,
+        TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
         ForecastAI: row.TimeGPT
       }));
   
@@ -1162,6 +1176,7 @@ function App() {
       <header className="bg-gray-800 text-white p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div 
+<<<<<<< HEAD
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
@@ -1173,6 +1188,12 @@ function App() {
                 <span className="text-orange-500 font-bold text-xl">ForecastAI</span>
               </div>
             </div>
+=======
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={navigateHome}
+          >
+            <KLUGLogo size="lg" />
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
           </div>
           <button 
             className="p-2 hover:bg-gray-700 rounded-full"
