@@ -35,7 +35,7 @@ import UnitsOfMeasure from './components/UnitsOfMeasure';
 import ItemSubinventories from './components/ItemSubinventories';
 import CollectedMeasure from './components/CollectedMeasure';
 import NewForecastForm from './components/NewForecastForm';
-import TimeGPTForecastRunner from './components/TimeGPTForecastRunner';
+
 import ForecastReportTable from './components/ForecastReportTable';
 import ManageTables from './components/ManageTables';
 import { format } from 'date-fns';

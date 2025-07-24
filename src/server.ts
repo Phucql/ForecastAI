@@ -752,7 +752,10 @@ app.get('/api/read-forecast-csv', async (req, res) => {
     
     if (!csvContent) throw new Error('Empty CSV content');
 
-    res.send(csvContent);
+    // Replace "TimeGPT" with "Klug Forecast AI" in the CSV content
+    const modifiedContent = csvContent.replace(/TimeGPT/g, 'Klug Forecast AI');
+
+    res.send(modifiedContent);
   } catch (err) {
     console.error('[S3 READ ERROR]', err);
     res.status(500).json({ error: 'Failed to read forecast CSV' });
@@ -779,8 +782,11 @@ app.get('/api/download-csv', async (req, res) => {
     const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
     const csvContent = csvBuffer.toString(csvEncoding);
     
+    // Replace "TimeGPT" with "Klug Forecast AI" in the CSV content
+    const modifiedContent = csvContent.replace(/TimeGPT/g, 'Klug Forecast AI');
+    
     res.header('Content-Type', 'text/csv');
-    res.send(csvContent);
+    res.send(modifiedContent);
   } catch (err) {
     console.error('[Download CSV Error]', err);
     res.status(500).json({ error: 'Failed to download CSV from S3' });
@@ -1225,7 +1231,7 @@ app.get('/api/final-forecast-report', async (req, res) => {
     `);
     
     // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
-    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
     const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     // Forecasts from forecast_result
@@ -1319,7 +1325,7 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
     `);
     
     // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
-    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
     const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     const forecastQuery = await client.query(`
@@ -1435,7 +1441,7 @@ app.get('/api/business-level-forecast-report', async (req, res) => {
     `);
     
     // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
-    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
     const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     // Forecasts from forecast_final - filter by items that match Customer Class Code
@@ -1740,7 +1746,7 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     `);
     
     // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
-    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
     const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     const forecastQuery = await client.query(`
@@ -1832,8 +1838,14 @@ app.get('/api/preview-forecast-result', async (req, res) => {
       Bucket: FORECAST_RESULT_BUCKET,
       Key: key,
     }).promise();
+    
+    // Convert buffer to string and replace TimeGPT with Klug Forecast AI
+    const csvBuffer = data.Body as Buffer;
+    const csvContent = csvBuffer.toString();
+    const modifiedContent = csvContent.replace(/TimeGPT/g, 'Klug Forecast AI');
+    
     res.setHeader('Content-Type', 'text/csv');
-    res.send(data.Body);
+    res.send(modifiedContent);
   } catch (err) {
     console.error('[Preview Forecast Result Error]', err);
     res.status(500).json({ error: 'Failed to preview forecast result file' });
