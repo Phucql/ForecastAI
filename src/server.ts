@@ -1906,16 +1906,19 @@ app.post('/api/upload-forecast-result', async (req, res) => {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     });
 
+    // Replace "TimeGPT" with "Klug Forecast AI" in the CSV data
+    const modifiedData = data.replace(/TimeGPT/g, 'Klug Forecast AI');
+
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME!,
       Key: key,
-      Body: data,
+      Body: modifiedData,
       ContentType: 'text/csv',
     };
 
     await s3.upload(uploadParams).promise();
     
-    res.json({ message: 'Forecast result uploaded successfully' });
+    res.json({ message: 'Forecast result uploaded successfully with Klug Forecast AI branding' });
   } catch (err) {
     console.error('[Upload Forecast Result Error]', err);
     res.status(500).json({ error: 'Failed to upload forecast result' });
