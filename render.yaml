@@ -1,9 +1,9 @@
 services:
   - type: web
     name: forecastai
-    env: python
-    buildCommand: pip install -r requirements.txt && npm install && npm run build:prod
-    startCommand: cd dist && npm install && npm start
+    env: node
+    buildCommand: npm install && pip install -r requirements.txt && npm run build:prod
+    startCommand: npm run start:prod
     envVars:
       - key: NODE_VERSION
         value: 18

@@ -18,7 +18,8 @@ execSync('npx tsc -p tsconfig.server.json', { stdio: 'inherit' });
 console.log('🐍 Copying Python files...');
 const pythonFiles = [
   'src/forecast_runner.py',
-  'requirements.txt'
+  'requirements.txt',
+  'test_render_python.py'
 ];
 
 pythonFiles.forEach(file => {

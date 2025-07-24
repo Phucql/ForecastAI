@@ -1169,8 +1169,8 @@ function App() {
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
                 <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
-                <div className="w-full h-0.5 bg-black my-1"></div>
-                <span className="text-orange-500 font-bold text-xl">ForecastAI</span>
+                <div className="w-full h-1 bg-black my-1"></div>
+                <span className="text-orange-500 font-bold text-2xl">ForecastAI</span>
               </div>
             </div>
           </div>

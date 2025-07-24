@@ -811,7 +811,27 @@ app.get('/api/test-python', async (req, res) => {
     const pythonPath = process.env.PYTHON_PATH || 'python3';
     console.log(`[TEST] Testing Python executable: ${pythonPath}`);
     
-    const py = spawn(pythonPath, ['-c', 'import sys; print("Python version:", sys.version); import pandas; print("Pandas version:", pandas.__version__); import nixtla; print("Nixtla available")']);
+    // Test environment variables
+    const timegptKey = process.env.TIMEGPT_API_KEY || process.env.VITE_TIMEGPT_API_KEY;
+    console.log(`[TEST] TIMEGPT_API_KEY available: ${timegptKey ? 'Yes' : 'No'}`);
+    
+    const py = spawn(pythonPath, ['-c', `
+import sys
+import os
+print("Python version:", sys.version)
+print("Current directory:", os.getcwd())
+print("TIMEGPT_API_KEY available:", "Yes" if os.getenv("TIMEGPT_API_KEY") or os.getenv("VITE_TIMEGPT_API_KEY") else "No")
+try:
+    import pandas
+    print("Pandas version:", pandas.__version__)
+except ImportError as e:
+    print("Pandas import failed:", e)
+try:
+    import nixtla
+    print("Nixtla available")
+except ImportError as e:
+    print("Nixtla import failed:", e)
+`]);
     
     let result = '';
     let error = '';
@@ -821,7 +841,12 @@ app.get('/api/test-python', async (req, res) => {
     
     py.on('close', (code) => {
       if (code === 0) {
-        res.json({ success: true, output: result, pythonPath });
+        res.json({ 
+          success: true, 
+          output: result, 
+          pythonPath,
+          timegptKeyAvailable: !!timegptKey
+        });
       } else {
         res.status(500).json({ error: 'Python test failed', stderr: error, code });
       }
@@ -841,8 +866,21 @@ app.get('/api/test-python-env', async (req, res) => {
     const pythonPath = process.env.PYTHON_PATH || 'python3';
     console.log(`[TEST ENV] Testing Python environment: ${pythonPath}`);
     
-    const scriptPath = path.join(process.cwd(), 'test_python_env.py');
+    // In production (dist folder), the script is in the root of dist
+    // In development, it's in the root folder
+    let scriptPath = path.join(process.cwd(), 'test_render_python.py');
+    if (!fs.existsSync(scriptPath)) {
+      scriptPath = path.join(process.cwd(), '..', 'test_render_python.py');
+    }
     console.log(`[TEST ENV] Script path: ${scriptPath}`);
+    
+    // Check if script exists
+    if (!fs.existsSync(scriptPath)) {
+      console.error(`[TEST ENV] Script not found: ${scriptPath}`);
+      console.error(`[TEST ENV] Current directory: ${process.cwd()}`);
+      console.error(`[TEST ENV] Available files:`, fs.readdirSync(process.cwd()));
+      return res.status(500).json({ error: 'Test script not found', scriptPath });
+    }
     
     const py = spawn(pythonPath, [scriptPath]);
     
@@ -922,7 +960,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
     const payload = {
       series,
       horizon: req.body.horizon,
-      api_key: process.env.TIMEGPT_API_KEY
+      api_key: process.env.TIMEGPT_API_KEY || process.env.VITE_TIMEGPT_API_KEY
     };
     const payloadString = JSON.stringify(payload);
     console.log('Payload sent to Python (first 500 chars):', payloadString.slice(0, 500));
@@ -932,8 +970,21 @@ app.post('/api/run-forecast-py', async (req, res) => {
     console.log(`[Forecast] Using Python executable: ${pythonPath}`);
     
     // Use the full path to the forecast_runner.py file
-    const scriptPath = path.join(process.cwd(), 'forecast_runner.py');
+    // In production (dist folder), the script is in the root of dist
+    // In development, it's in the src folder
+    let scriptPath = path.join(process.cwd(), 'forecast_runner.py');
+    if (!fs.existsSync(scriptPath)) {
+      scriptPath = path.join(process.cwd(), 'src', 'forecast_runner.py');
+    }
     console.log(`[Forecast] Script path: ${scriptPath}`);
+    
+    // Check if the script file exists
+    if (!fs.existsSync(scriptPath)) {
+      console.error(`[Forecast] Script file not found: ${scriptPath}`);
+      console.error(`[Forecast] Current directory: ${process.cwd()}`);
+      console.error(`[Forecast] Available files:`, fs.readdirSync(process.cwd()));
+      return res.status(500).json({ error: 'Forecast script not found' });
+    }
     
     const py = spawn(
       pythonPath,
@@ -945,7 +996,16 @@ app.post('/api/run-forecast-py', async (req, res) => {
     py.on('error', (err) => {
       clearTimeout(timeout);
       console.error('[PYTHON SPAWN ERROR]', err);
-      res.status(500).json({ error: 'Failed to spawn Python process', details: err.message });
+      console.error('[PYTHON SPAWN ERROR] Python path:', pythonPath);
+      console.error('[PYTHON SPAWN ERROR] Script path:', scriptPath);
+      console.error('[PYTHON SPAWN ERROR] Current directory:', process.cwd());
+      res.status(500).json({ 
+        error: 'Failed to spawn Python process', 
+        details: err.message,
+        pythonPath,
+        scriptPath,
+        currentDir: process.cwd()
+      });
     });
     
     // Add timeout to prevent hanging
