@@ -1224,14 +1224,16 @@ app.get('/api/final-forecast-report', async (req, res) => {
       ORDER BY ordinal_position
     `);
     
-    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     // Forecasts from forecast_result
     const resultForecast = await client.query(`
       SELECT 
         t."PRD_LVL_MEMBER_NAME" AS item,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2025,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2026
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."${actualColumnName}" ELSE 0 END) AS forecast2025,
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."${actualColumnName}" ELSE 0 END) AS forecast2026
       FROM forecast_result t
       GROUP BY t."PRD_LVL_MEMBER_NAME"
     `);
@@ -1316,12 +1318,14 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
       ORDER BY ordinal_position
     `);
     
-    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     const forecastQuery = await client.query(`
       SELECT 
         TO_CHAR("TIM_LVL_MEMBER_VALUE", 'YYYY-MM') AS month,
-        "${forecastColumnName}"
+        "${actualColumnName}"
       FROM forecast_result
       WHERE "PRD_LVL_MEMBER_NAME" = $1
     `, [item]);
@@ -1332,7 +1336,7 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
     origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[forecastColumnName]));
+    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[actualColumnName]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;
@@ -1430,14 +1434,16 @@ app.get('/api/business-level-forecast-report', async (req, res) => {
       ORDER BY ordinal_position
     `);
     
-    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     // Forecasts from forecast_final - filter by items that match Customer Class Code
     const resultForecast = await client.query(`
       SELECT 
         t."PRD_LVL_MEMBER_NAME" AS item,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2025,
-        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."${forecastColumnName}" ELSE 0 END) AS forecast2026
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2025 THEN t."${actualColumnName}" ELSE 0 END) AS forecast2025,
+        SUM(CASE WHEN EXTRACT(YEAR FROM t."TIM_LVL_MEMBER_VALUE"::date) = 2026 THEN t."${actualColumnName}" ELSE 0 END) AS forecast2026
       FROM forecast_final t
       ${itemFilter}
       GROUP BY t."PRD_LVL_MEMBER_NAME"
@@ -1733,12 +1739,14 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
       ORDER BY ordinal_position
     `);
     
-    const forecastColumnName = columnQuery.rows[0]?.column_name || 'Klug Forecast AI';
+    // Use the actual database column name for SQL queries, but always display "Klug Forecast AI"
+    const actualColumnName = columnQuery.rows[0]?.column_name || 'TimeGPT';
+    const forecastColumnName = 'Klug Forecast AI'; // Always display this name on frontend
     
     const forecastQuery = await client.query(`
       SELECT 
         TO_CHAR("TIM_LVL_MEMBER_VALUE", 'YYYY-MM') AS month,
-        "${forecastColumnName}"
+        "${actualColumnName}"
       FROM forecast_final
       ${forecastFilter}
     `, forecastParams);
@@ -1749,7 +1757,7 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[forecastColumnName]));
+    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[actualColumnName]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;

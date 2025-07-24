@@ -1171,7 +1171,7 @@ function App() {
               <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
               <div className="flex flex-col items-center">
                 <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
-                <div className="w-full h-1 bg-black my-1"></div>
+                <div className="w-full h-1 bg-black" style={{marginTop: 0, marginBottom: 0 }}></div>
                 <span className="text-orange-500 font-bold text-3xl">ForecastAI</span>
               </div>
             </div>
@@ -1435,7 +1435,7 @@ function App() {
               <tr>
                 <th className="p-2 border">PRD_LVL_MEMBER_NAME</th>
                 <th className="p-2 border">TIM_LVL_MEMBER_VALUE</th>
-                <th className="p-2 border">{currentFileBase}</th>
+                <th className="p-2 border">Klug Forecast AI</th>
               </tr>
             </thead>
             <tbody>
@@ -1443,7 +1443,7 @@ function App() {
                 <tr key={idx} className="hover:bg-gray-50">
                   <td className="p-2 border">{row.PRD_LVL_MEMBER_NAME}</td>
                   <td className="p-2 border">{row.TIM_LVL_MEMBER_VALUE}</td>
-                  <td className="p-2 border">{row[currentFileBase]}</td>
+                  <td className="p-2 border">{row['Klug Forecast AI']}</td>
                 </tr>
               ))}
             </tbody>
