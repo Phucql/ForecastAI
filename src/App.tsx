@@ -938,6 +938,9 @@ function App() {
         TIM_LVL_MEMBER_VALUE: new Date(row.ds).toLocaleDateString("en-US"),
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
+=======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
 =======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
@@ -1185,6 +1188,7 @@ function App() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
@@ -1201,12 +1205,17 @@ function App() {
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
 =======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
+=======
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
             className="cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
             <KLUGLogo size="lg" />
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
+=======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
 =======
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
