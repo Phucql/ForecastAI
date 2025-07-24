@@ -3,8 +3,6 @@ import sys
 import os
 import pandas as pd
 from dotenv import load_dotenv
-from nixtla import NixtlaClient
-from utilsforecast.preprocessing import fill_gaps
 import logging
 import signal
 
@@ -12,15 +10,25 @@ import signal
 logging.getLogger("nixtla.nixtla_client").setLevel(logging.CRITICAL)
 
 print("[DEBUG] Python script started", file=sys.stderr)
+print(f"[DEBUG] Current working directory: {os.getcwd()}", file=sys.stderr)
+print(f"[DEBUG] Python executable: {sys.executable}", file=sys.stderr)
+print(f"[DEBUG] Python version: {sys.version}", file=sys.stderr)
 
 try:
     # 1. Load key from .env
     load_dotenv()
     api_key = os.getenv("TIMEGPT_API_KEY")
+    print(f"[DEBUG] API key loaded: {'Yes' if api_key else 'No'}", file=sys.stderr)
     if not api_key:
         raise Exception("TIMEGPT_API_KEY is missing from .env")
 
-    # 2. Parse POST body from stdin
+    # 2. Import TimeGPT libraries
+    print("[DEBUG] Importing TimeGPT libraries...", file=sys.stderr)
+    from nixtla import NixtlaClient
+    from utilsforecast.preprocessing import fill_gaps
+    print("[DEBUG] TimeGPT libraries imported successfully", file=sys.stderr)
+
+    # 3. Parse POST body from stdin
     payload = sys.stdin.read()
     print(f"[DEBUG] Received payload from stdin, length: {len(payload)}", file=sys.stderr)
     
@@ -29,9 +37,10 @@ try:
     
     data = json.loads(payload)
     print("[DEBUG] Payload received and parsed", file=sys.stderr)
-    print("[DEBUG] Successfully parsed JSON payload", file=sys.stderr)
+    print(f"[DEBUG] Horizon value: {data.get('horizon', 'Not found')}", file=sys.stderr)
+    print(f"[DEBUG] Series count: {len(data.get('series', []))}", file=sys.stderr)
 
-    # 3. Convert to DataFrame
+    # 4. Convert to DataFrame
     df = pd.DataFrame(data["series"])
     print("[DEBUG] DataFrame after creation:", df.head(), file=sys.stderr)
     # Use PRD_LVL_MEMBER_NAME as the unique_id for each series
@@ -75,7 +84,10 @@ try:
         sys.exit(0)
 
     # 5. Forecast
+    print("[DEBUG] Creating NixtlaClient...", file=sys.stderr)
     client = NixtlaClient(api_key=api_key)
+    print("[DEBUG] NixtlaClient created successfully", file=sys.stderr)
+    
     # Robust debug output before forecasting
     print("[DEBUG] DataFrame sent to forecast (full):\n" + df.to_string(), file=sys.stderr)
     print("[DEBUG] DataFrame head:\n", df.head(), file=sys.stderr)
@@ -93,6 +105,10 @@ try:
         print("[DEBUG] DataFrame missing required columns!", file=sys.stderr)
         print(json.dumps({"error": "DataFrame missing required columns before forecast."}))
         sys.exit(0)
+    
+    print(f"[DEBUG] About to call TimeGPT with horizon={data['horizon']}", file=sys.stderr)
+    print("[DEBUG] TimeGPT API call starting...", file=sys.stderr)
+    
     forecast_df = client.forecast(
         df=df,
         h=data["horizon"],
@@ -101,6 +117,7 @@ try:
         target_col="y",
         id_col="unique_id"
     )
+    print("[DEBUG] TimeGPT API call completed successfully!", file=sys.stderr)
     print("[DEBUG] Forecast DataFrame:", forecast_df.head(), file=sys.stderr)
 
     # Rename columns to match backend merge logic

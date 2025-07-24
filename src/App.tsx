@@ -912,6 +912,7 @@ function App() {
       }
   
 <<<<<<< HEAD
+<<<<<<< HEAD
             const response = await res.json();
       console.log("🔍 TimeGPT Raw Response:", response);
 
@@ -922,13 +923,19 @@ function App() {
   
       if (!result || !Array.isArray(result) || result.length === 0) {
 >>>>>>> parent of 5f2c61a (fix new logo and Klug AI)
+=======
+            const forecastResponse = await res.json();
+      console.log("🔍 TimeGPT Raw Response:", forecastResponse);
+
+      if (!forecastResponse || !forecastResponse.result || !Array.isArray(forecastResponse.result) || forecastResponse.result.length === 0) {
+>>>>>>> c0b3f24 (fix new logo and better backend)
         alert(" ✅ Forecast Completed.");
         window.location.href = 'https://foodforecastai.netlify.app/ManageDemandPlans';
         return;
       }
 <<<<<<< HEAD
 
-      const convertedResult = response.result.map(row => ({
+      const convertedResult = forecastResponse.result.map(row => ({
         PRD_LVL_MEMBER_NAME: row.PRD_LVL_MEMBER_NAME,
         TIM_LVL_MEMBER_VALUE: row.TIM_LVL_MEMBER_VALUE,
 =======

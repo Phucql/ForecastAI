@@ -13,3 +13,5 @@ services:
         value: https://foodforecastai.netlify.app
       - key: PYTHON_PATH
         value: python3
+      - key: TIMEGPT_API_KEY
+        sync: false

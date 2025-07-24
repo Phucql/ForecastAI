@@ -14,6 +14,7 @@ import { spawn } from 'child_process';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
+import path from 'path'; // Added for path.join
 
 import { mergeForecastFiles } from './utils/mergeForecastFiles.js';
 import type { Request, Response, NextFunction } from 'express';
@@ -834,6 +835,56 @@ app.get('/api/test-python', async (req, res) => {
   }
 });
 
+// Enhanced Python environment test
+app.get('/api/test-python-env', async (req, res) => {
+  try {
+    const pythonPath = process.env.PYTHON_PATH || 'python3';
+    console.log(`[TEST ENV] Testing Python environment: ${pythonPath}`);
+    
+    const scriptPath = path.join(process.cwd(), 'test_python_env.py');
+    console.log(`[TEST ENV] Script path: ${scriptPath}`);
+    
+    const py = spawn(pythonPath, [scriptPath]);
+    
+    let result = '';
+    let error = '';
+    
+    py.stdout.on('data', data => result += data.toString());
+    py.stderr.on('data', data => error += data.toString());
+    
+    py.on('close', (code) => {
+      console.log(`[TEST ENV] Python process exited with code: ${code}`);
+      console.log(`[TEST ENV] Output: ${result}`);
+      if (error) console.log(`[TEST ENV] Error: ${error}`);
+      
+      if (code === 0) {
+        res.json({ 
+          success: true, 
+          output: result, 
+          error: error,
+          pythonPath,
+          scriptPath 
+        });
+      } else {
+        res.status(500).json({ 
+          error: 'Python environment test failed', 
+          stderr: error, 
+          stdout: result,
+          code 
+        });
+      }
+    });
+    
+    py.on('error', (err) => {
+      console.error(`[TEST ENV] Spawn error: ${err.message}`);
+      res.status(500).json({ error: 'Failed to spawn Python', details: err.message });
+    });
+  } catch (err: any) {
+    console.error(`[TEST ENV] Exception: ${err.message}`);
+    res.status(500).json({ error: 'Test failed', details: err.message });
+  }
+});
+
 app.post('/api/run-forecast-py', async (req, res) => {
   const { originalFileName, horizon, id } = req.body;
 
@@ -879,9 +930,14 @@ app.post('/api/run-forecast-py', async (req, res) => {
     // Use a configurable Python path for deployment friendliness
     const pythonPath = process.env.PYTHON_PATH || 'python3';
     console.log(`[Forecast] Using Python executable: ${pythonPath}`);
+    
+    // Use the full path to the forecast_runner.py file
+    const scriptPath = path.join(process.cwd(), 'forecast_runner.py');
+    console.log(`[Forecast] Script path: ${scriptPath}`);
+    
     const py = spawn(
       pythonPath,
-      ['forecast_runner.py']
+      [scriptPath]
     );
     console.log('[Forecast] Spawned Python process for forecast_runner.py');
     

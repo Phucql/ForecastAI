@@ -1,49 +1,71 @@
 #!/usr/bin/env python3
+
 import sys
-import json
 import os
 from dotenv import load_dotenv
 
-print("Python version:", sys.version)
-print("Python executable:", sys.executable)
+print("=== Python Environment Test ===")
+print(f"Python version: {sys.version}")
+print(f"Python executable: {sys.executable}")
+print(f"Current working directory: {os.getcwd()}")
 
-# Test imports
+# Load environment variables
+load_dotenv()
+api_key = os.getenv("TIMEGPT_API_KEY")
+print(f"TIMEGPT_API_KEY loaded: {'Yes' if api_key else 'No'}")
+
+# Try to import required libraries
 try:
     import pandas as pd
-    print("✅ pandas imported successfully")
+    print(f"Pandas version: {pd.__version__}")
 except ImportError as e:
-    print("❌ pandas import failed:", e)
+    print(f"Pandas import failed: {e}")
 
 try:
     from nixtla import NixtlaClient
-    print("✅ nixtla imported successfully")
+    print("NixtlaClient imported successfully")
 except ImportError as e:
-    print("❌ nixtla import failed:", e)
+    print(f"NixtlaClient import failed: {e}")
 
 try:
     from utilsforecast.preprocessing import fill_gaps
-    print("✅ utilsforecast imported successfully")
+    print("utilsforecast imported successfully")
 except ImportError as e:
-    print("❌ utilsforecast import failed:", e)
+    print(f"utilsforecast import failed: {e}")
 
-# Test environment variables
-load_dotenv()
-api_key = os.getenv("TIMEGPT_API_KEY")
+# Test TimeGPT connection if API key is available
 if api_key:
-    print("✅ TIMEGPT_API_KEY found")
+    try:
+        print("Testing TimeGPT connection...")
+        client = NixtlaClient(api_key=api_key)
+        print("TimeGPT client created successfully")
+        
+        # Test with minimal data
+        import pandas as pd
+        test_df = pd.DataFrame({
+            'ds': pd.date_range('2023-01-01', periods=12, freq='MS'),
+            'y': [100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210],
+            'unique_id': ['test'] * 12
+        })
+        
+        print("Test DataFrame created:")
+        print(test_df.head())
+        
+        forecast = client.forecast(
+            df=test_df,
+            h=3,
+            freq="MS",
+            time_col="ds",
+            target_col="y",
+            id_col="unique_id"
+        )
+        print("TimeGPT forecast test successful!")
+        print("Forecast result:")
+        print(forecast.head())
+        
+    except Exception as e:
+        print(f"TimeGPT test failed: {e}")
 else:
-    print("❌ TIMEGPT_API_KEY not found")
+    print("No API key available for TimeGPT test")
 
-# Test basic functionality
-try:
-    df = pd.DataFrame({
-        'time': ['2023-01-01', '2023-02-01', '2023-03-01'],
-        'target': [100, 150, 200],
-        'PRD_LVL_MEMBER_NAME': ['Item1', 'Item1', 'Item1']
-    })
-    print("✅ DataFrame creation successful")
-    print("DataFrame shape:", df.shape)
-except Exception as e:
-    print("❌ DataFrame creation failed:", e)
-
-print("Test completed") 
+print("=== Test Complete ===") 
