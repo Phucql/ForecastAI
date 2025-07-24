@@ -6,7 +6,7 @@
   "proxy": "https://forecastai-ii8z.onrender.com",
   "scripts": {
     "build:prod": "vite build && tsc -p tsconfig.server.json",
-    "dev": "ts-node src/server.ts",
+    "dev": "node --loader ts-node/esm src/server.ts",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
