@@ -1922,7 +1922,7 @@ app.post('/api/upload-forecast-result', async (req, res) => {
     const modifiedData = data.replace(/TimeGPT/g, 'Klug Forecast AI');
 
     const uploadParams = {
-      Bucket: process.env.S3_BUCKET_NAME!,
+      Bucket: FORECAST_RESULT_BUCKET,
       Key: key,
       Body: modifiedData,
       ContentType: 'text/csv',
