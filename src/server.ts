@@ -769,13 +769,23 @@ app.get('/api/download-csv', async (req, res) => {
     return res.status(400).json({ error: 'Missing S3 file key' });
   }
 
+  // Determine the correct bucket based on the key prefix
+  let bucketName: string;
+  if (key.startsWith('Forecast_Result/')) {
+    bucketName = FORECAST_RESULT_BUCKET;
+  } else {
+    bucketName = process.env.VITE_S3_BUCKET_NAME!;
+  }
+
   const params = {
-    Bucket: process.env.VITE_S3_BUCKET_NAME!,
+    Bucket: bucketName,
     Key: key,
   };
 
   try {
-    const data = await s3.getObject(params).promise();
+    // Use the correct S3 client based on the bucket
+    const s3Client = key.startsWith('Forecast_Result/') ? s3Result : s3;
+    const data = await s3Client.getObject(params).promise();
     
     // Use chardet to detect encoding instead of hardcoded utf-8
     const csvBuffer = data.Body as Buffer;
@@ -1075,11 +1085,22 @@ app.post('/api/run-forecast-py', async (req, res) => {
         }
         
         const parsed = JSON.parse(result);
-        const forecastCsv = Papa.unparse(parsed);
+        
+        // Replace "TimeGPT" with "Klug Forecast AI" in the JSON data
+        const modifiedParsed = parsed.map((row: any) => {
+          const newRow = { ...row };
+          if (newRow.TimeGPT !== undefined) {
+            newRow['Klug Forecast AI'] = newRow.TimeGPT;
+            delete newRow.TimeGPT;
+          }
+          return newRow;
+        });
+        
+        const forecastCsv = Papa.unparse(modifiedParsed);
 
         // Only upload to Forecast_Result folder in the main bucket
         const today = new Date().toISOString().slice(0, 10);
-        const forecastFileNameOnly = `Klug Forecast AI_${today}.csv`;
+        const forecastFileNameOnly = `Klug Forecast AI_${baseFileName}_${today}.csv`;
         // const forecastFileName = `forecasts/${forecastFileNameOnly}`;
         // const mergedKey = `forecasts/${baseFileName}_merged_${today}.csv`;
 
@@ -1112,7 +1133,8 @@ app.post('/api/run-forecast-py', async (req, res) => {
         res.json({
           message: 'Forecast complete',
           forecastFile: FORECAST_RESULT_PREFIX + forecastFileNameOnly,
-          result: parsed
+          baseFileName: baseFileName,
+          result: modifiedParsed
         });
       } catch (parseErr) {
         console.error("❌ Failed to parse or merge:", parseErr);
@@ -1169,18 +1191,18 @@ app.post('/api/merge-forecast-files', async (req, res) => {
 app.get('/api/forecast-results', async (req, res) => {
   try {
     const listParams = {
-      Bucket: process.env.VITE_S3_BUCKET_NAME!,
-      Prefix: 'forecast_result/', // folder where you save forecast results
+      Bucket: FORECAST_RESULT_BUCKET,
+      Prefix: FORECAST_RESULT_PREFIX,
     };
 
-    const data = await s3.listObjectsV2(listParams).promise();
+    const data = await s3Result.listObjectsV2(listParams).promise();
 
     const files = (data.Contents || []).filter(obj => obj.Key?.endsWith('.csv'));
 
     const parsedResults = await Promise.all(
       files.map(async (file) => {
-        const obj = await s3.getObject({
-          Bucket: process.env.VITE_S3_BUCKET_NAME!,
+        const obj = await s3Result.getObject({
+          Bucket: FORECAST_RESULT_BUCKET,
           Key: file.Key!,
         }).promise();
 

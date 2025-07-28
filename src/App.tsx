@@ -935,7 +935,9 @@ function App() {
       const csvRows = convertedResult.map(r => Object.values(r).join(","));
       const csvData = [csvHeader, ...csvRows].join("\n");
   
-      const fileKey = `Forecast_Result/Klug Forecast AI_${new Date().toISOString().split("T")[0]}.csv`;
+      // Use baseFileName from the response if available, otherwise fall back to current date
+      const baseFileName = forecastResponse.baseFileName || fileBase;
+      const fileKey = `Forecast_Result/Klug Forecast AI_${baseFileName}_${new Date().toISOString().split("T")[0]}.csv`;
   
       try {
         // Upload through backend to avoid CORS issues
@@ -978,14 +980,14 @@ function App() {
     }
     // Extract original name from forecast result file name
     const forecastResultName = selectedResultFile.split('/').pop() || '';
-    // Expected format: Klug Forecast AI_<Date>.csv
-    const match = forecastResultName.match(/^Klug Forecast AI_\d{4}-\d{2}-\d{2}\.csv$/);
+    // Expected format: Klug Forecast AI_<Original Name>_<Date>.csv
+    const match = forecastResultName.match(/^Klug Forecast AI_(.+)_\d{4}-\d{2}-\d{2}\.csv$/);
     if (!match) {
       setRunReportMessage('❌ Could not determine original file from forecast result file name.');
       return;
     }
-    // Since we're now using a fixed name, we'll use a default original name
-    const originalName = 'forecast_file.csv';
+    // Extract the original name from the match
+    const originalName = match[1] + '.csv';
     // Find the original file in forecastFiles
     const originalFile = forecastFiles.find(f => f.name === originalName);
     if (!originalFile) {
