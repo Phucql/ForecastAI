@@ -1258,7 +1258,14 @@ function App() {
                                 borderDash: [5, 5],
                                 tension: 0.3,
                               },
-
+                              {
+                                label: 'Adjusted Forecast',
+                                data: graphMonthlyData.map((m: any) => m.adjustedForecast),
+                                borderColor: '#f472b6',
+                                backgroundColor: 'rgba(244,114,182,0.2)',
+                                borderDash: [2, 2],
+                                tension: 0.3,
+                              },
                               {
                                 label: 'Approved Forecast',
                                 data: graphMonthlyData.map((m: any) => m.approvedForecast),
