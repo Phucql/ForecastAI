@@ -55,7 +55,6 @@ const monthMetrics = [
   { key: 'history2Y', label: 'Bookings History 2Y Ago' },
   { key: 'history1Y', label: 'Bookings History 1Y Ago' },
   { key: 'forecast', label: 'Bookings Forecast' },
-  { key: 'adjustedForecast', label: 'Adjusted Forecast' },
   { key: 'approvedForecast', label: 'Approved Forecast' },
   { key: 'percentChange', label: 'Percent Change' },
 ];
@@ -378,7 +377,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
             <TableCell className="bg-white">{typeof bu.history2023 === 'number' ? bu.history2023.toFixed(2) : bu.history2023}</TableCell>
             <TableCell className="bg-white">{typeof bu.history2024 === 'number' ? bu.history2024.toFixed(2) : bu.history2024}</TableCell>
             <TableCell className="bg-white">{typeof bu.forecast2025 === 'number' ? bu.forecast2025.toFixed(2) : bu.forecast2025}</TableCell>
-            <TableCell className="bg-white">{typeof bu.adjustedForecast2025 === 'number' ? bu.adjustedForecast2025.toFixed(2) : bu.adjustedForecast2025}</TableCell>
+
             <TableCell className="bg-white">
               <input
                 type="number"
@@ -415,7 +414,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
             <TableCell className="bg-white">{typeof bu.history2024_2026 === 'number' ? bu.history2024_2026.toFixed(2) : bu.history2024_2026}</TableCell>
             <TableCell className="bg-white">{typeof bu.history2025_2026 === 'number' ? bu.history2025_2026.toFixed(2) : bu.history2025_2026}</TableCell>
             <TableCell className="bg-white">{typeof bu.forecast2026 === 'number' ? bu.forecast2026.toFixed(2) : bu.forecast2026}</TableCell>
-            <TableCell className="bg-white">{typeof bu.adjustedForecast2026 === 'number' ? bu.adjustedForecast2026.toFixed(2) : bu.adjustedForecast2026}</TableCell>
+
             <TableCell className="bg-white">
               <input
                 type="number"
@@ -477,7 +476,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                   <TableCell className="bg-white">{typeof fam.history2023 === 'number' ? fam.history2023.toFixed(2) : fam.history2023}</TableCell>
                   <TableCell className="bg-white">{typeof fam.history2024 === 'number' ? fam.history2024.toFixed(2) : fam.history2024}</TableCell>
                   <TableCell className="bg-white">{typeof fam.forecast2025 === 'number' ? fam.forecast2025.toFixed(2) : fam.forecast2025}</TableCell>
-                  <TableCell className="bg-white">{typeof fam.adjustedForecast2025 === 'number' ? fam.adjustedForecast2025.toFixed(2) : fam.adjustedForecast2025}</TableCell>
+
                   <TableCell className="bg-white">
                     <input
                       type="number"
@@ -514,7 +513,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                   <TableCell className="bg-white">{typeof fam.history2024_2026 === 'number' ? fam.history2024_2026.toFixed(2) : fam.history2024_2026}</TableCell>
                   <TableCell className="bg-white">{typeof fam.history2025_2026 === 'number' ? fam.history2025_2026.toFixed(2) : fam.history2025_2026}</TableCell>
                   <TableCell className="bg-white">{typeof fam.forecast2026 === 'number' ? fam.forecast2026.toFixed(2) : fam.forecast2026}</TableCell>
-                  <TableCell className="bg-white">{typeof fam.adjustedForecast2026 === 'number' ? fam.adjustedForecast2026.toFixed(2) : fam.adjustedForecast2026}</TableCell>
+
                   <TableCell className="bg-white">
                     <input
                       type="number"
@@ -576,7 +575,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                         <TableCell className="bg-white">{typeof sub.history2023 === 'number' ? sub.history2023.toFixed(2) : sub.history2023}</TableCell>
                         <TableCell className="bg-white">{typeof sub.history2024 === 'number' ? sub.history2024.toFixed(2) : sub.history2024}</TableCell>
                         <TableCell className="bg-white">{typeof sub.forecast2025 === 'number' ? sub.forecast2025.toFixed(2) : sub.forecast2025}</TableCell>
-                        <TableCell className="bg-white">{typeof sub.adjustedForecast2025 === 'number' ? sub.adjustedForecast2025.toFixed(2) : sub.adjustedForecast2025}</TableCell>
+
                         <TableCell className="bg-white">
                           <input
                             type="number"
@@ -613,7 +612,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                         <TableCell className="bg-white">{typeof sub.history2024_2026 === 'number' ? sub.history2024_2026.toFixed(2) : sub.history2024_2026}</TableCell>
                         <TableCell className="bg-white">{typeof sub.history2025_2026 === 'number' ? sub.history2025_2026.toFixed(2) : sub.history2025_2026}</TableCell>
                         <TableCell className="bg-white">{typeof sub.forecast2026 === 'number' ? sub.forecast2026.toFixed(2) : sub.forecast2026}</TableCell>
-                        <TableCell className="bg-white">{typeof sub.adjustedForecast2026 === 'number' ? sub.adjustedForecast2026.toFixed(2) : sub.adjustedForecast2026}</TableCell>
+
                         <TableCell className="bg-white">
                         <input
                           type="number"
@@ -675,7 +674,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                               <TableCell className="bg-white">{typeof color.history2023 === 'number' ? color.history2023.toFixed(2) : color.history2023}</TableCell>
                               <TableCell className="bg-white">{typeof color.history2024 === 'number' ? color.history2024.toFixed(2) : color.history2024}</TableCell>
                               <TableCell className="bg-white">{typeof color.forecast2025 === 'number' ? color.forecast2025.toFixed(2) : color.forecast2025}</TableCell>
-                              <TableCell className="bg-white">{typeof color.adjustedForecast2025 === 'number' ? color.adjustedForecast2025.toFixed(2) : color.adjustedForecast2025}</TableCell>
+
                               <TableCell className="bg-white">
                                 <input
                                   type="number"
@@ -717,7 +716,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                               <TableCell className="bg-white">{typeof color.history2024_2026 === 'number' ? color.history2024_2026.toFixed(2) : color.history2024_2026}</TableCell>
                               <TableCell className="bg-white">{typeof color.history2025_2026 === 'number' ? color.history2025_2026.toFixed(2) : color.history2025_2026}</TableCell>
                               <TableCell className="bg-white">{typeof color.forecast2026 === 'number' ? color.forecast2026.toFixed(2) : color.forecast2026}</TableCell>
-                              <TableCell className="bg-white">{typeof color.adjustedForecast2026 === 'number' ? color.adjustedForecast2026.toFixed(2) : color.adjustedForecast2026}</TableCell>
+
                               <TableCell className="bg-white">
                         <input
                           type="number"
@@ -806,7 +805,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                     <TableCell className="bg-white">{typeof item.history2023 === 'number' ? (item.history2023 as number).toFixed(2) : (item.history2023 ?? '')}</TableCell>
                                     <TableCell className="bg-white">{typeof item.history2024 === 'number' ? (item.history2024 as number).toFixed(2) : (item.history2024 ?? '')}</TableCell>
                                     <TableCell className="bg-white">{typeof item.forecast2025 === 'number' ? (item.forecast2025 as number).toFixed(2) : (item.forecast2025 ?? '')}</TableCell>
-                                    <TableCell className="bg-white">{typeof item.adjustedForecast2025 === 'number' ? (item.adjustedForecast2025 as number).toFixed(2) : (item.adjustedForecast2025 ?? '')}</TableCell>
+
                                     <TableCell className="bg-white">
                                       <input
                                         type="number"
@@ -843,7 +842,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                     <TableCell className="bg-white">{typeof item.history2024_2026 === 'number' ? (item.history2024_2026 as number).toFixed(2) : (item.history2024_2026 ?? '')}</TableCell>
                                     <TableCell className="bg-white">{typeof item.history2025_2026 === 'number' ? (item.history2025_2026 as number).toFixed(2) : (item.history2025_2026 ?? '')}</TableCell>
                                     <TableCell className="bg-white">{typeof item.forecast2026 === 'number' ? (item.forecast2026 as number).toFixed(2) : (item.forecast2026 ?? '')}</TableCell>
-                                    <TableCell className="bg-white">{typeof item.adjustedForecast2026 === 'number' ? (item.adjustedForecast2026 as number).toFixed(2) : (item.adjustedForecast2026 ?? '')}</TableCell>
+
                                     <TableCell className="bg-white">
                                       <input
                                         type="number"
@@ -889,7 +888,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                           <TableCell key={`2025_${month}_history2Y`} className="bg-white">{isMonthlyRow(m25) && typeof m25.history2Y === 'number' ? m25.history2Y.toFixed(2) : ''}</TableCell>,
                                           <TableCell key={`2025_${month}_history1Y`} className="bg-white">{isMonthlyRow(m25) && typeof m25.history1Y === 'number' ? m25.history1Y.toFixed(2) : ''}</TableCell>,
                                           <TableCell key={`2025_${month}_forecast`} className="bg-white">{isMonthlyRow(m25) && typeof m25.forecast === 'number' ? m25.forecast.toFixed(2) : ''}</TableCell>,
-                                          <TableCell key={`2025_${month}_adjusted`} className="bg-white">{isMonthlyRow(m25) && typeof m25.forecast === 'number' ? (m25.forecast * 1.05).toFixed(2) : ''}</TableCell>,
+
                                           <TableCell key={`2025_${month}_approved`}>
                                             <div className="flex items-center">
                                               {isMonthlyRow(m25) && typeof m25.approvedForecast === 'number' ? (
@@ -939,7 +938,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                                           <TableCell key={`2026_${month}_history2Y`} className="bg-white">{isMonthlyRow(m26) && typeof m26.history2Y === 'number' ? m26.history2Y.toFixed(2) : ''}</TableCell>,
                                           <TableCell key={`2026_${month}_history1Y`} className="bg-white">{isMonthlyRow(m26) && typeof m26.history1Y === 'number' ? m26.history1Y.toFixed(2) : ''}</TableCell>,
                                           <TableCell key={`2026_forecast`} className="bg-white">{isMonthlyRow(m26) && typeof m26.forecast === 'number' ? m26.forecast.toFixed(2) : ''}</TableCell>,
-                                          <TableCell key={`2026_adjusted`} className="bg-white">{isMonthlyRow(m26) && typeof m26.forecast === 'number' ? (m26.forecast * 1.05).toFixed(2) : ''}</TableCell>,
+
                                           <TableCell key={`2026_approved`}>
                                             <div className="flex items-center">
                                               {isMonthlyRow(m26) && typeof m26.approvedForecast === 'number' ? (
@@ -1154,14 +1153,14 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                     <TableHead key={`2025_history2Y_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings History 2Y Ago</TableHead>,
                     <TableHead key={`2025_history1Y_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings History 1Y Ago</TableHead>,
                     <TableHead key={`2025_forecast_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings Forecast</TableHead>,
-                    <TableHead key={`2025_adjusted_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Adjusted Forecast</TableHead>,
+
                     <TableHead key={`2025_approved_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Approved Forecast</TableHead>,
                     <TableHead key={`2025_percent_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold border-r-2 border-orange-300">Percent Change</TableHead>
                   ])).flat() : [
                     <TableHead key="2025_history2Y" className="bg-orange-100 text-orange-900 font-bold">Bookings History 2Y Ago (2023)</TableHead>,
                     <TableHead key="2025_history1Y" className="bg-orange-100 text-orange-900 font-bold">Bookings History 1Y Ago (2024)</TableHead>,
                     <TableHead key="2025_forecast" className="bg-orange-100 text-orange-900 font-bold">Bookings Forecast</TableHead>,
-                    <TableHead key="2025_adjusted" className="bg-orange-100 text-orange-900 font-bold">Adjusted Forecast</TableHead>,
+
                     <TableHead key="2025_approved" className="bg-orange-100 text-orange-900 font-bold">Approved Forecast</TableHead>,
                     <TableHead key="2025_percent" className="bg-orange-100 text-orange-900 font-bold">Percent Change</TableHead>
                   ]}
@@ -1169,14 +1168,14 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                     <TableHead key={`2026_history2Y_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings History 2Y Ago</TableHead>,
                     <TableHead key={`2026_history1Y_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings History 1Y Ago</TableHead>,
                     <TableHead key={`2026_forecast_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings Forecast</TableHead>,
-                    <TableHead key={`2026_adjusted_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Adjusted Forecast</TableHead>,
+
                     <TableHead key={`2026_approved_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Approved Forecast</TableHead>,
                     <TableHead key={`2026_percent_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Percent Change</TableHead>
                   ])).flat() : [
                     <TableHead key="2026_history2Y" className="bg-orange-100 text-orange-900 font-bold">Bookings History 2Y Ago (2024)</TableHead>,
                     <TableHead key="2026_history1Y" className="bg-orange-100 text-orange-900 font-bold">Bookings History 1Y Ago (2025)</TableHead>,
                     <TableHead key="2026_forecast" className="bg-orange-100 text-orange-900 font-bold">Bookings Forecast</TableHead>,
-                    <TableHead key="2026_adjusted" className="bg-orange-100 text-orange-900 font-bold">Adjusted Forecast</TableHead>,
+
                     <TableHead key="2026_approved" className="bg-orange-100 text-orange-900 font-bold">Approved Forecast</TableHead>,
                     <TableHead key="2026_percent" className="bg-orange-100 text-orange-900 font-bold">Percent Change</TableHead>
                   ]}
@@ -1195,7 +1194,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                         <TableCell key={`2025_${month}_history2Y`}>{isMonthlyRow(m25) && typeof m25.history2Y === 'number' ? m25.history2Y.toFixed(2) : ''}</TableCell>,
                         <TableCell key={`2025_${month}_history1Y`}>{isMonthlyRow(m25) && typeof m25.history1Y === 'number' ? m25.history1Y.toFixed(2) : ''}</TableCell>,
                         <TableCell key={`2025_${month}_forecast`}>{isMonthlyRow(m25) && typeof m25.forecast === 'number' ? m25.forecast.toFixed(2) : ''}</TableCell>,
-                        <TableCell key={`2025_${month}_adjusted`}>{isMonthlyRow(m25) && typeof m25.forecast === 'number' ? (m25.forecast * 1.05).toFixed(2) : ''}</TableCell>,
+
                         <TableCell key={`2025_${month}_approved`}>
                           <div className="flex items-center">
                             {isMonthlyRow(m25) && typeof m25.approvedForecast === 'number' ? (
@@ -1241,7 +1240,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                       <TableCell key="2025_history2Y">{typeof row.history2023 === 'number' ? row.history2023.toFixed(2) : row.history2023}</TableCell>,
                       <TableCell key="2025_history1Y">{typeof row.history2024 === 'number' ? row.history2024.toFixed(2) : row.history2024}</TableCell>,
                       <TableCell key="2025_forecast">{typeof row.forecast2025 === 'number' ? row.forecast2025.toFixed(2) : row.forecast2025}</TableCell>,
-                      <TableCell key="2025_adjusted">{typeof row.adjustedForecast2025 === 'number' ? row.adjustedForecast2025.toFixed(2) : row.adjustedForecast2025}</TableCell>,
+
                       <TableCell key="2025_approved">
                         <div className="flex items-center">
                           <input
@@ -1270,7 +1269,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                         <TableCell key={`2026_${month}_history2Y`}>{isMonthlyRow(m26) && typeof m26.history2Y === 'number' ? m26.history2Y.toFixed(2) : ''}</TableCell>,
                         <TableCell key={`2026_${month}_history1Y`}>{isMonthlyRow(m26) && typeof m26.history1Y === 'number' ? m26.history1Y.toFixed(2) : ''}</TableCell>,
                         <TableCell key={`2026_forecast`}>{isMonthlyRow(m26) && typeof m26.forecast === 'number' ? m26.forecast.toFixed(2) : ''}</TableCell>,
-                        <TableCell key={`2026_adjusted`}>{isMonthlyRow(m26) && typeof m26.forecast === 'number' ? (m26.forecast * 1.05).toFixed(2) : ''}</TableCell>,
+
                         <TableCell key={`2026_approved`}>
                           <div className="flex items-center">
                             {isMonthlyRow(m26) && typeof m26.approvedForecast === 'number' ? (
@@ -1316,7 +1315,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                       <TableCell key="2026_history2Y">{typeof row.history2024_2026 === 'number' ? row.history2024_2026.toFixed(2) : row.history2024_2026}</TableCell>,
                       <TableCell key="2026_history1Y">{typeof row.history2025_2026 === 'number' ? row.history2025_2026.toFixed(2) : row.history2025_2026}</TableCell>,
                       <TableCell key="2026_forecast">{typeof row.forecast2026 === 'number' ? row.forecast2026.toFixed(2) : row.forecast2026}</TableCell>,
-                      <TableCell key="2026_adjusted">{typeof row.adjustedForecast2026 === 'number' ? row.adjustedForecast2026.toFixed(2) : row.adjustedForecast2026}</TableCell>,
+
                       <TableCell key="2026_approved">
                         <div className="flex items-center">
                           <input
@@ -1388,7 +1387,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                 <TableRow className="bg-orange-100 text-center font-bold text-orange-900">
                   <TableHead rowSpan={3} className="bg-orange-100 text-orange-900 font-bold sticky left-0 z-20" style={{ background: 'inherit' }}>Business Unit</TableHead>
                   {/* Removed Family, Subfamily, Color, Item headers */}
-                  <TableHead colSpan={businessExpandedYear2025 ? monthNames.length * 6 : 6} className="bg-orange-100 text-orange-900 font-bold">
+                  <TableHead colSpan={businessExpandedYear2025 ? monthNames.length * 5 : 5} className="bg-orange-100 text-orange-900 font-bold">
                     <button
                       onClick={() => setBusinessExpandedYear2025((prev) => !prev)}
                       className="flex items-center gap-2 hover:bg-orange-200 px-2 py-1 rounded transition-colors"
@@ -1399,7 +1398,7 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                       <span className={`inline-block transform transition-transform duration-200 ${businessExpandedYear2025 ? 'rotate-180' : ''}`}>▼</span>
                     </button>
                   </TableHead>
-                  <TableHead colSpan={businessExpandedYear2026 ? monthNames.length * 6 : 6} className="bg-orange-100 text-orange-900 font-bold">
+                  <TableHead colSpan={businessExpandedYear2026 ? monthNames.length * 5 : 5} className="bg-orange-100 text-orange-900 font-bold">
                     <button
                       onClick={() => setBusinessExpandedYear2026((prev) => !prev)}
                       className="flex items-center gap-2 hover:bg-orange-200 px-2 py-1 rounded transition-colors"
@@ -1417,24 +1416,24 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                   {businessExpandedYear2025 ? monthNames.map((month, idx) => (
                     <TableHead
                       key={`2025_${month}_header`}
-                      colSpan={6}
+                      colSpan={5}
                       className="bg-orange-100 text-orange-900 font-bold text-center"
                     >
                       {month} 2025
                     </TableHead>
                   )) : [
-                    <TableHead key="2025_year_header" colSpan={6} className="bg-orange-100 text-orange-900 font-bold text-center">Year 2025</TableHead>
+                    <TableHead key="2025_year_header" colSpan={5} className="bg-orange-100 text-orange-900 font-bold text-center">Year 2025</TableHead>
                   ]}
                   {businessExpandedYear2026 ? monthNames.map((month, idx) => (
                     <TableHead
                       key={`2026_${month}_header`}
-                      colSpan={6}
+                      colSpan={5}
                       className="bg-orange-100 text-orange-900 font-bold text-center"
                     >
                       {month} 2026
                     </TableHead>
                   )) : [
-                    <TableHead key="2026_year_header" colSpan={6} className="bg-orange-100 text-orange-900 font-bold text-center">Year 2026</TableHead>
+                    <TableHead key="2026_year_header" colSpan={5} className="bg-orange-100 text-orange-900 font-bold text-center">Year 2026</TableHead>
                   ]}
                 </TableRow>
                 {/* Row 3: Measure/metric headers for each month */}
@@ -1444,14 +1443,12 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                     <TableHead key={`2025_history2Y_${mIdx}`}>Bookings History 2Y Ago</TableHead>,
                     <TableHead key={`2025_history1Y_${mIdx}`}>Bookings History 1Y Ago</TableHead>,
                     <TableHead key={`2025_forecast_${mIdx}`}>Bookings Forecast</TableHead>,
-                    <TableHead key={`2025_adjusted_${mIdx}`}>Adjusted Forecast</TableHead>,
                     <TableHead key={`2025_approved_${mIdx}`}>Approved Forecast</TableHead>,
                     <TableHead key={`2025_percent_${mIdx}`} className="border-r-2 border-orange-300">Percent Change</TableHead>
                   ])).flat() : [
                     <TableHead key="2025_history2Y">Bookings History 2Y Ago (2023)</TableHead>,
                     <TableHead key="2025_history1Y">Bookings History 1Y Ago (2024)</TableHead>,
                     <TableHead key="2025_forecast">Bookings Forecast</TableHead>,
-                    <TableHead key="2025_adjusted">Adjusted Forecast</TableHead>,
                     <TableHead key="2025_approved">Approved Forecast</TableHead>,
                     <TableHead key="2025_percent">Percent Change</TableHead>
                   ]}
@@ -1459,7 +1456,6 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                     <TableHead key={`2026_history2Y_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings History 2Y Ago (2024)</TableHead>,
                     <TableHead key={`2026_history1Y_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings History 1Y Ago (2025)</TableHead>,
                     <TableHead key={`2026_forecast_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Bookings Forecast</TableHead>,
-                    <TableHead key={`2026_adjusted_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Adjusted Forecast</TableHead>,
                     <TableHead key={`2026_approved_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Approved Forecast</TableHead>,
                     <TableHead key={`2026_percent_${mIdx}`} className="bg-orange-100 text-orange-900 font-bold">Percent Change</TableHead>
                   
@@ -1468,7 +1464,6 @@ const ManageTablesReportPage = ({ onBack }: { onBack: () => void }) => {
                     <TableHead key="2026_history2Y" className="bg-orange-100 text-orange-900 font-bold">Bookings History 2Y Ago (2024)</TableHead>,
                     <TableHead key="2026_history1Y" className="bg-orange-100 text-orange-900 font-bold">Bookings History 1Y Ago (2025)</TableHead>,
                     <TableHead key="2026_forecast" className="bg-orange-100 text-orange-900 font-bold">Bookings Forecast</TableHead>,
-                    <TableHead key="2026_adjusted" className="bg-orange-100 text-orange-900 font-bold">Adjusted Forecast</TableHead>,
                     <TableHead key="2026_approved" className="bg-orange-100 text-orange-900 font-bold">Approved Forecast</TableHead>,
                     <TableHead key="2026_percent" className="bg-orange-100 text-orange-900 font-bold">Percent Change</TableHead>
                   ]}

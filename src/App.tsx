@@ -1170,12 +1170,7 @@ function App() {
             onClick={navigateHome}
           >
             <div className="flex items-center space-x-4">
-              <img src="/logo.jpg?v=1" alt="KLUG Logo" className="h-16 w-auto" />
-              <div className="flex flex-col items-center">
-                <img src="/logo1.png?v=1" alt="KLUG Logo" className="h-6 w-auto" />
-                <div className="w-full h-1 bg-gray-600" style={{marginTop: 5, marginBottom: -5 }}></div>
-                <span className="text-orange-500 font-bold text-2xl">ForecastAI</span>
-              </div>
+              <img src="/KLUGAI_logo.png" alt="KlugAI Logo" className="h-16 w-auto" />
             </div>
           </div>
           <button 
@@ -1258,14 +1253,7 @@ function App() {
                                 borderDash: [5, 5],
                                 tension: 0.3,
                               },
-                              {
-                                label: 'Adjusted Forecast',
-                                data: graphMonthlyData.map((m: any) => m.adjustedForecast),
-                                borderColor: '#f472b6',
-                                backgroundColor: 'rgba(244,114,182,0.2)',
-                                borderDash: [2, 2],
-                                tension: 0.3,
-                              },
+
                               {
                                 label: 'Approved Forecast',
                                 data: graphMonthlyData.map((m: any) => m.approvedForecast),

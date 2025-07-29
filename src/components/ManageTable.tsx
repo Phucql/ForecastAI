@@ -72,7 +72,7 @@ const ManageTables = ({ open, onClose, forecastData }: { open: boolean; onClose:
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl h-[80vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 bg-white">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-extrabold text-orange-900 tracking-tight drop-shadow-sm">Forecast AI Result Table</DialogTitle>
+          <DialogTitle className="text-2xl font-extrabold text-orange-900 tracking-tight drop-shadow-sm">KlugAI Result Table</DialogTitle>
         </DialogHeader>
         <div className="mb-4 flex justify-end">
           <button
