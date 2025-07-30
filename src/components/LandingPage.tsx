@@ -15,7 +15,11 @@ import {
   Monitor,
   Settings,
   Cloud,
-  Building
+  Building,
+  Search,
+  Minus,
+  Plus,
+  Leaf
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -64,19 +68,19 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
     },
     {
       step: "Step 2", 
-      title: "Custom Forecasting Algorithm",
-      subtitle: "AI-powered demand prediction",
-      description: "Using our proprietary machine learning model, we process both internal and external data to create a custom forecasting algorithm unique to your business. This algorithm continuously learns and adapts to your specific patterns and market conditions.",
-      icon: TrendingUp,
-      learnMore: "Learn more about our AI forecasting"
+      title: "Actionable Recommendations",
+      subtitle: "We convert forecasts into actionable recommendations",
+      description: "Based on current stock, case sizes, and other operational complexities of fresh, our AI recommendations algorithm turns forecasts into recommendations for ordering and production planning.",
+      icon: Lightbulb,
+      learnMore: "Learn more about our recommendations"
     },
     {
       step: "Step 3",
-      title: "Actionable Recommendations", 
-      subtitle: "Turn forecasts into business decisions",
-      description: "Our AI recommendations algorithm converts forecasts into actionable insights for ordering and production planning, considering factors like current stock, case sizes, shelf-life, recipes, and supplier lead times.",
-      icon: BarChart3,
-      learnMore: "Learn more about our recommendations"
+      title: "Products for Store Teams", 
+      subtitle: "Our products integrate recommendations with store workflows",
+      description: "With our products, store teams place more accurate orders and run more efficient operations with AI-powered insights and automation.",
+      icon: Smartphone,
+      learnMore: "Learn more about our products"
     }
   ];
 
@@ -259,119 +263,493 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
          </div>
        </section>
 
-             {/* 3-Step Process Section */}
-       <section className="py-24 bg-white relative">
-         <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-transparent"></div>
-         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <div className="text-center mb-20">
-             <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm font-medium mb-6">
-               How it works
-             </div>
-             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-               Our 3-step process to{' '}
-               <span className="bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
-                 optimize your operations
-               </span>
-             </h2>
-             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-               A proven methodology that transforms your data into actionable insights
-             </p>
-           </div>
-           
-           <div className="space-y-24">
-             {processSteps.map((step, index) => (
-               <div key={index} className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16`}>
-                 <div className="flex-1 space-y-6">
-                   <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm font-medium">
-                     {step.step}
-                   </div>
-                   <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                     {step.title}
-                   </h3>
-                   <h4 className="text-xl font-semibold text-gray-700">
-                     {step.subtitle}
-                   </h4>
-                   <p className="text-lg text-gray-600 leading-relaxed">
-                     {step.description}
-                   </p>
-                   <button 
-                     onClick={onOpenContactForm}
-                     className="group inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 transition-colors text-lg"
-                   >
-                     {step.learnMore}
-                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                   </button>
-                 </div>
-                 <div className="flex-1 flex justify-center">
-                   <div className="relative group">
-                     <div className="w-96 h-96 bg-gradient-to-br from-orange-100 via-orange-50 to-orange-200 rounded-3xl flex items-center justify-center shadow-2xl group-hover:shadow-orange-200/50 transition-all duration-500 transform group-hover:scale-105">
-                       <step.icon className="w-40 h-40 text-orange-600 group-hover:scale-110 transition-transform duration-500" />
-                     </div>
-                     <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                   </div>
-                 </div>
-               </div>
-             ))}
-           </div>
-         </div>
-       </section>
+             
 
-               {/* Solutions Section */}
-        <section id="solutions" className="py-24 bg-gradient-to-br from-gray-50 to-white relative">
-          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-20">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-6">
-                Data-Driven Approach
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                Our 3-step process to optimize your{' '}
-                <span className="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
-                  fresh operations
-                </span>
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                A comprehensive data-driven approach that transforms your business data into actionable insights.
-              </p>
-            </div>
-            
-            <div className="space-y-24">
-              {solutionSteps.map((step, index) => (
-                <div key={index} className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16`}>
-                  <div className="flex-1 space-y-6">
-                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium">
-                      {step.step}
-                    </div>
-                    <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                      {step.title}
-                    </h3>
-                    <h4 className="text-xl font-semibold text-gray-700">
-                      {step.subtitle}
-                    </h4>
-                    <p className="text-lg text-gray-600 leading-relaxed">
-                      {step.description}
-                    </p>
-                    <button 
-                      onClick={onOpenContactForm}
-                      className="group inline-flex items-center gap-2 text-green-600 font-semibold hover:text-green-700 transition-colors text-lg"
-                    >
-                      {step.learnMore}
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                  <div className="flex-1 flex justify-center">
-                    <div className="relative group">
-                      <div className="w-96 h-96 bg-gradient-to-br from-green-100 via-green-50 to-green-200 rounded-3xl flex items-center justify-center shadow-2xl group-hover:shadow-green-200/50 transition-all duration-500 transform group-hover:scale-105">
-                        <step.icon className="w-40 h-40 text-green-600 group-hover:scale-110 transition-transform duration-500" />
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+                               {/* Solutions Section */}
+         <section id="solutions" className="py-24 bg-gradient-to-br from-gray-50 to-white relative">
+           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div className="text-center mb-20">
+               <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm font-medium mb-6">
+                 Data-Driven Approach
+               </div>
+               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                 Our 3-step process to optimize your{' '}
+                 <span className="bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+                   fresh operations
+                 </span>
+               </h2>
+               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                 A comprehensive data-driven approach that transforms your business data into actionable insights.
+               </p>
+             </div>
+             
+             <div className="space-y-24">
+               {solutionSteps.map((step, index) => (
+                 <div key={index} className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16`}>
+                   <div className="flex-1 space-y-6">
+                     <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm font-medium">
+                       {step.step}
+                     </div>
+                     <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                       {step.title}
+                     </h3>
+                     <h4 className="text-xl font-semibold text-gray-700">
+                       {step.subtitle}
+                     </h4>
+                     <p className="text-lg text-gray-600 leading-relaxed">
+                       {step.description}
+                     </p>
+                     <button 
+                       onClick={onOpenContactForm}
+                       className="group inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 transition-colors text-lg"
+                     >
+                       {step.learnMore}
+                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                     </button>
+                   </div>
+                   <div className="flex-1 flex justify-center">
+                     {index === 0 ? (
+                       // Custom diagram for Step 1
+                       <div className="w-full max-w-2xl">
+                         <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                           {/* Internal Data Box */}
+                           <div className="bg-orange-50 rounded-xl p-6 mb-6 border border-orange-200">
+                             <h4 className="text-lg font-semibold text-orange-800 mb-4">Internal Data</h4>
+                             <div className="grid grid-cols-2 gap-3">
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">POS</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Point of Sale</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">PROM</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Promotions</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">REC</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Recipes</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">PROD</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Product Data</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">AVAIL</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Availability</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">PRICE</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Pricing</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                   <span className="text-orange-700 text-xs font-bold">LOSS</span>
+                                 </div>
+                                 <span className="text-sm text-orange-700">Known Loss</span>
+                               </div>
+                             </div>
+                           </div>
+
+                           {/* External Data Box */}
+                           <div className="bg-blue-50 rounded-xl p-6 mb-6 border border-blue-200">
+                             <h4 className="text-lg font-semibold text-blue-800 mb-4">External Data</h4>
+                             <div className="grid grid-cols-2 gap-3">
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">EVT</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">Events</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">WTH</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">Weather</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">HOL</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">Holidays</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">SOC</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">Social Media</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">SPT</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">Sports & Concerts</span>
+                               </div>
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">SCH</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">School Terms</span>
+                               </div>
+                               <div className="flex items-center space-x-2 col-span-2">
+                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                   <span className="text-blue-700 text-xs font-bold">240+</span>
+                                 </div>
+                                 <span className="text-sm text-blue-700">External Variables</span>
+                               </div>
+                             </div>
+                           </div>
+
+                           {/* Flow Arrows */}
+                           <div className="flex justify-center mb-6">
+                             <div className="flex items-center space-x-4">
+                               <div className="w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center">
+                                 <span className="text-orange-700 text-sm">↓</span>
+                               </div>
+                               <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
+                                 <span className="text-blue-700 text-sm">↓</span>
+                               </div>
+                             </div>
+                           </div>
+
+                           {/* Custom Forecasting Algorithm */}
+                           <div className="bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl p-6 border border-orange-300">
+                             <div className="flex items-center justify-center space-x-4 mb-4">
+                               <div className="w-12 h-12 bg-orange-300 rounded-lg flex items-center justify-center">
+                                 <span className="text-orange-800 text-lg">⚙️</span>
+                               </div>
+                               <div className="w-12 h-12 bg-orange-300 rounded-lg flex items-center justify-center">
+                                 <span className="text-orange-800 text-lg">⚙️</span>
+                               </div>
+                               <div className="w-12 h-12 bg-orange-300 rounded-lg flex items-center justify-center">
+                                 <span className="text-orange-800 text-lg">⚙️</span>
+                               </div>
+                             </div>
+                             <h4 className="text-lg font-semibold text-orange-800 text-center">Custom Forecasting Algorithm</h4>
+                           </div>
+                         </div>
+                       </div>
+                                           ) : index === 1 ? (
+                        // Custom diagram for Step 2 - Demand Forecast & Recommendations
+                        <div className="w-full max-w-2xl">
+                          <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+                            {/* Demand Forecast Flow */}
+                            <div className="mb-8">
+                              <div className="flex items-center justify-center mb-4">
+                                <div className="w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center mr-3">
+                                  <Star className="w-4 h-4 text-orange-700" />
+                                </div>
+                                <span className="text-lg font-semibold text-gray-800">Demand forecast</span>
+                              </div>
+                              <div className="w-0.5 h-8 bg-orange-300 mx-auto mb-4"></div>
+                              
+                              {/* Input Factors Circle */}
+                              <div className="relative mb-6">
+                                <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
+                                    <div className="text-xs font-medium text-orange-700">Display size</div>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
+                                    <div className="text-xs font-medium text-orange-700">Current stock</div>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
+                                    <div className="text-xs font-medium text-orange-700">Case size</div>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
+                                    <div className="text-xs font-medium text-orange-700">Shelf-life</div>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
+                                    <div className="text-xs font-medium text-orange-700">Recipes/Ingredients</div>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 text-center">
+                                    <div className="text-xs font-medium text-orange-700">Supplier lead times</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Recommendations Section */}
+                            <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
+                              <h4 className="text-lg font-semibold text-orange-800 mb-4 text-center">Recommendations</h4>
+                              
+                              {/* Navel Oranges */}
+                              <div className="bg-white rounded-lg p-4 mb-4 border border-orange-200">
+                                <div className="flex items-center mb-3">
+                                  <div className="w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center mr-3">
+                                    <span className="text-orange-700 text-sm">🍊</span>
+                                  </div>
+                                  <span className="font-medium text-gray-800">Navel Oranges</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-3">
+                                  <div>
+                                    <label className="text-xs text-gray-600 mb-1 block">Current stock</label>
+                                    <div className="flex items-center border border-gray-300 rounded">
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Minus className="w-3 h-3" />
+                                      </button>
+                                      <span className="px-3 py-1 text-sm">2</span>
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-gray-600 mb-1 block">Order</label>
+                                    <div className="flex items-center border border-gray-300 rounded">
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Minus className="w-3 h-3" />
+                                      </button>
+                                      <span className="px-3 py-1 text-sm">0</span>
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center text-sm">
+                                  <Leaf className="w-4 h-4 text-green-600 mr-2" />
+                                  <span className="text-green-700 font-medium">KLUGAI suggestion: 1</span>
+                                </div>
+                              </div>
+
+                              {/* Bananas */}
+                              <div className="bg-white rounded-lg p-4 border border-orange-200">
+                                <div className="flex items-center mb-3">
+                                  <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center mr-3">
+                                    <span className="text-yellow-700 text-sm">🍌</span>
+                                  </div>
+                                  <span className="font-medium text-gray-800">Bananas Bunches</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-3">
+                                  <div>
+                                    <label className="text-xs text-gray-600 mb-1 block">Current stock</label>
+                                    <div className="flex items-center border border-gray-300 rounded">
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Minus className="w-3 h-3" />
+                                      </button>
+                                      <span className="px-3 py-1 text-sm">1</span>
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs text-gray-600 mb-1 block">Order</label>
+                                    <div className="flex items-center border border-gray-300 rounded">
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Minus className="w-3 h-3" />
+                                      </button>
+                                      <span className="px-3 py-1 text-sm">0</span>
+                                      <button className="px-2 py-1 text-gray-500 hover:bg-gray-100">
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center text-sm">
+                                  <Leaf className="w-4 h-4 text-green-600 mr-2" />
+                                  <span className="text-green-700 font-medium">KLUGAI suggestion: 3</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : index === 2 ? (
+                        // Custom diagram for Step 3 - Fresh Ordering & Production Planning
+                        <div className="w-full max-w-4xl">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Fresh Ordering Panel */}
+                            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
+                              <h4 className="text-xl font-semibold text-orange-800 mb-6 text-center">Fresh ordering</h4>
+                              
+                              <div className="bg-white rounded-xl p-4 border border-orange-200">
+                                <div className="flex items-center justify-between mb-4">
+                                  <span className="text-sm text-gray-600">← Order</span>
+                                  <Search className="w-4 h-4 text-gray-500" />
+                                </div>
+                                
+                                {/* Order Items */}
+                                <div className="space-y-3">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-6 h-6 bg-yellow-200 rounded flex items-center justify-center">
+                                      <span className="text-yellow-700 text-xs">🍌</span>
+                                    </div>
+                                    <div className="flex-1 h-2 bg-gray-300 rounded"></div>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="flex items-center border border-gray-300 rounded">
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Minus className="w-3 h-3" />
+                                        </button>
+                                        <span className="px-2 py-1 text-xs">2</span>
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Plus className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                      <div className="flex items-center border border-gray-300 rounded">
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Minus className="w-3 h-3" />
+                                        </button>
+                                        <span className="px-2 py-1 text-xs">3</span>
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Plus className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-6 h-6 bg-red-200 rounded flex items-center justify-center">
+                                      <span className="text-red-700 text-xs">🍅</span>
+                                    </div>
+                                    <div className="flex-1 h-2 bg-gray-300 rounded"></div>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="flex items-center border border-gray-300 rounded">
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Minus className="w-3 h-3" />
+                                        </button>
+                                        <span className="px-2 py-1 text-xs">2</span>
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Plus className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                      <div className="flex items-center border border-gray-300 rounded">
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Minus className="w-3 h-3" />
+                                        </button>
+                                        <span className="px-2 py-1 text-xs">3</span>
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Plus className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-6 h-6 bg-purple-200 rounded flex items-center justify-center">
+                                      <span className="text-purple-700 text-xs">🧅</span>
+                                    </div>
+                                    <div className="flex-1 h-2 bg-gray-300 rounded"></div>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="flex items-center border border-gray-300 rounded">
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Minus className="w-3 h-3" />
+                                        </button>
+                                        <span className="px-2 py-1 text-xs">2</span>
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Plus className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                      <div className="flex items-center border border-gray-300 rounded">
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Minus className="w-3 h-3" />
+                                        </button>
+                                        <span className="px-2 py-1 text-xs">3</span>
+                                        <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                          <Plus className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <button className="w-full bg-orange-600 text-white py-2 rounded-lg mt-4 text-sm font-medium hover:bg-orange-700 transition-colors">
+                                  Continue
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Production Planning Panel */}
+                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+                              <h4 className="text-xl font-semibold text-blue-800 mb-6 text-center">Production planning</h4>
+                              
+                              <div className="bg-white rounded-xl p-4 border border-blue-200">
+                                <div className="flex items-center justify-between mb-4">
+                                  <span className="text-sm text-gray-600">Production planning</span>
+                                  <div className="w-4 h-4 bg-blue-200 rounded"></div>
+                                </div>
+                                
+                                {/* Production Tasks */}
+                                <div className="space-y-3">
+                                  {[1, 2, 3, 4, 5].map((task) => (
+                                    <div key={task} className="flex items-center space-x-3">
+                                      <div className="w-0.5 h-6 bg-gray-300"></div>
+                                      <div className="flex-1 h-2 bg-gray-300 rounded"></div>
+                                      <div className="flex items-center space-x-2">
+                                        <div className="flex items-center border border-gray-300 rounded">
+                                          <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                            <Minus className="w-3 h-3" />
+                                          </button>
+                                          <span className="px-2 py-1 text-xs">2</span>
+                                          <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                            <Plus className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                        <div className="flex items-center border border-gray-300 rounded">
+                                          <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                            <Minus className="w-3 h-3" />
+                                          </button>
+                                          <span className="px-2 py-1 text-xs">2</span>
+                                          <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                            <Plus className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                        <div className="flex items-center border border-gray-300 rounded">
+                                          <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                            <Minus className="w-3 h-3" />
+                                          </button>
+                                          <span className="px-2 py-1 text-xs">4</span>
+                                          <button className="px-1 py-1 text-gray-500 hover:bg-gray-100">
+                                            <Plus className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Connecting Arrow */}
+                          <div className="flex justify-center mt-6">
+                            <div className="flex flex-col items-center">
+                              <div className="w-0.5 h-8 bg-orange-300"></div>
+                              <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">↓</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Regular icon display for other steps
+                        <div className="relative group">
+                          <div className="w-96 h-96 bg-gradient-to-br from-orange-100 via-orange-50 to-orange-200 rounded-3xl flex items-center justify-center shadow-2xl group-hover:shadow-orange-200/50 transition-all duration-500 transform group-hover:scale-105">
+                            <step.icon className="w-40 h-40 text-orange-600 group-hover:scale-110 transition-transform duration-500" />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        </div>
+                      )}
+                   </div>
+                 </div>
+               ))}
+             </div>
+           </div>
+         </section>
 
                {/* Products Section */}
        <section className="py-24 bg-white relative">
