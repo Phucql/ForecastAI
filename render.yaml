@@ -19,3 +19,23 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      - key: VITE_AWS_ACCESS_KEY_ID
+        sync: false
+      - key: VITE_AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: VITE_AWS_REGION
+        value: us-east-2
+      - key: VITE_S3_BUCKET_NAME
+        sync: false
+      - key: VITE_DB_HOST
+        sync: false
+      - key: VITE_DB_NAME
+        sync: false
+      - key: VITE_DB_USER
+        sync: false
+      - key: VITE_DB_PASSWORD
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false

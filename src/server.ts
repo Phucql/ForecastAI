@@ -7,7 +7,8 @@ import chardet from 'chardet';
 dotenv.config();
 
 import multer from 'multer';
-import AWS from 'aws-sdk';
+import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, CopyObjectCommand, ListObjectsV2Command, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 import fs from 'fs';
 import Papa from 'papaparse';
 import { spawn } from 'child_process';
@@ -251,13 +252,8 @@ app.get('/api/debug/auth', (req, res) => {
 });
 
 
-AWS.config.update({
-  accessKeyId: process.env.VITE_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.VITE_AWS_SECRET_ACCESS_KEY,
-  region: process.env.VITE_AWS_REGION
-});
-
-const s3 = new AWS.S3({
+// S3 client for main bucket
+const s3 = new S3Client({
   region: 'us-east-2',
   credentials: {
     accessKeyId: process.env.VITE_AWS_ACCESS_KEY_ID!,
@@ -266,7 +262,7 @@ const s3 = new AWS.S3({
 });
 
 // S3 client for Forecast_Result bucket
-const s3Result = new AWS.S3({
+const s3Result = new S3Client({
   region: 'us-east-2',
   credentials: {
     accessKeyId: process.env.VITE_AWS_ACCESS_KEY_ID!,
@@ -288,10 +284,18 @@ if (!isAuthOnlyMode) {
   }
 }
 const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
-  const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+  const response = await s3.send(command);
+  
+  // Convert stream to buffer
+  const chunks: Uint8Array[] = [];
+  const stream = response.Body as any;
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  const csvBuffer = Buffer.concat(chunks);
   
   // Use chardet to detect encoding instead of hardcoded utf-8
-  const csvBuffer = data.Body as Buffer;
   const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
   const csvContent = csvBuffer.toString(csvEncoding);
 
@@ -406,17 +410,17 @@ const gracefulShutdown = async () => {
 
 
 app.get('/api/list-forecasts', async (_req, res) => {
-  const s3 = new AWS.S3();
   const bucket = process.env.VITE_S3_BUCKET_NAME!;
   const prefix = 'forecasts/';
 
   try {
-    const data = await s3.listObjectsV2({
+    const command = new ListObjectsV2Command({
       Bucket: bucket,
       Prefix: prefix,
-    }).promise();
+    });
+    const data = await s3.send(command);
 
-    const files = (data.Contents || []).map(obj => {
+    const files = (data.Contents || []).map((obj: any) => {
       const key = obj.Key!;
       const name = key.replace(prefix, '');
       return {
@@ -763,7 +767,11 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   
 
   try {
-    const data = await s3.upload(params).promise();
+    const upload = new Upload({
+      client: s3,
+      params: params
+    });
+    const data = await upload.done();
     fs.unlinkSync(req.file.path); 
 
     console.log('[UPLOAD] Upload success:', data.Location);
@@ -782,13 +790,15 @@ app.get('/api/forecast-files', async (_req, res) => {
       Prefix: 'forecasts/',
     };
 
-    const data = await s3.listObjectsV2(listParams).promise();
+    const listCommand = new ListObjectsV2Command(listParams);
+    const data = await s3.send(listCommand);
     const files = await Promise.all(
-      (data.Contents || []).map(async (obj) => {
-        const head = await s3.headObject({
+      (data.Contents || []).map(async (obj: any) => {
+        const headCommand = new HeadObjectCommand({
           Bucket: process.env.VITE_S3_BUCKET_NAME!,
           Key: obj.Key!,
-        }).promise();
+        });
+        const head = await s3.send(headCommand);
 
         return {
           key: obj.Key,
@@ -816,10 +826,11 @@ app.delete('/api/delete-file', async (req, res) => {
   }
 
   try {
-    await s3.deleteObject({
+    const command = new DeleteObjectCommand({
       Bucket: process.env.VITE_S3_BUCKET_NAME!,
       Key: key
-    }).promise();
+    });
+    await s3.send(command);
 
     console.log(`[DELETE] File deleted: ${key}`);
     res.json({ message: 'File deleted successfully' });
@@ -841,8 +852,6 @@ app.post('/api/duplicate-forecast', async (req, res) => {
   const timestamp = Date.now();
   const targetKey = `forecasts/${file.replace('.csv', `_copy_${timestamp}.csv`)}`;
 
-  const s3 = new AWS.S3();
-
   console.log('[DUPLICATE REQUEST]', {
     bucket,
     sourceKey,
@@ -851,11 +860,12 @@ app.post('/api/duplicate-forecast', async (req, res) => {
   });
 
   try {
-    const result = await s3.copyObject({
+    const command = new CopyObjectCommand({
       Bucket: bucket,
       CopySource: `/${bucket}/${sourceKey}`, 
       Key: targetKey,
-    }).promise();
+    });
+    const result = await s3.send(command);
 
     console.log('[✅ DUPLICATED]', result);
     res.json({ message: 'File duplicated successfully', newKey: targetKey });
@@ -875,13 +885,22 @@ app.get('/api/fetch-csv', async (req, res) => {
   console.log('[FETCH CSV] Key:', key);
 
   try {
-    const data = await s3.getObject({
+    const command = new GetObjectCommand({
       Bucket: process.env.VITE_S3_BUCKET_NAME!,
       Key: key,
-    }).promise();
+    });
+    const response = await s3.send(command);
+
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    const stream = response.Body as any;
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
 
     res.header('Content-Type', 'text/csv');
-    res.send(data.Body);
+    res.send(buffer);
   } catch (error: any) {
     console.error('[FETCH CSV ERROR]', error);
     res.status(500).json({ error: 'Failed to fetch CSV file from S3', message: error.message });
@@ -893,17 +912,25 @@ app.get('/api/read-forecast-csv', async (req, res) => {
   if (!key) return res.status(400).json({ error: 'Missing key' });
 
   try {
-    const data = await s3.getObject({
+    const command = new GetObjectCommand({
       Bucket: process.env.VITE_S3_BUCKET_NAME!,
       Key: key,
-    }).promise();
+    });
+    const response = await s3.send(command);
 
     // 🆕 Disable caching and always return new content
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/csv');
 
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    const stream = response.Body as any;
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    const csvBuffer = Buffer.concat(chunks);
+
     // Use chardet to detect encoding instead of hardcoded utf-8
-    const csvBuffer = data.Body as Buffer;
     const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
     const csvContent = csvBuffer.toString(csvEncoding);
     
@@ -942,10 +969,18 @@ app.get('/api/download-csv', async (req, res) => {
   try {
     // Use the correct S3 client based on the bucket
     const s3Client = key.startsWith('Forecast_Result/') ? s3Result : s3;
-    const data = await s3Client.getObject(params).promise();
+    const command = new GetObjectCommand(params);
+    const response = await s3Client.send(command);
+    
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    const stream = response.Body as any;
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    const csvBuffer = Buffer.concat(chunks);
     
     // Use chardet to detect encoding instead of hardcoded utf-8
-    const csvBuffer = data.Body as Buffer;
     const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
     const csvContent = csvBuffer.toString(csvEncoding);
     
@@ -962,10 +997,11 @@ app.get('/api/download-csv', async (req, res) => {
 
 // Proxy to TimeGPT API
 
-const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<AWS.S3.GetObjectOutput> => {
+const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<any> => {
   for (let i = 0; i < retries; i++) {
     try {
-      return await s3.getObject({ Bucket: process.env.VITE_S3_BUCKET_NAME!, Key }).promise();
+      const command = new GetObjectCommand({ Bucket: process.env.VITE_S3_BUCKET_NAME!, Key });
+      return await s3.send(command);
     } catch (err: any) {
       if (err.code === 'NoSuchKey') {
         console.warn(`[WAIT RETRY] ${Key} not ready yet... retry ${i + 1}`);
@@ -1106,8 +1142,16 @@ app.post('/api/run-forecast-py', async (req, res) => {
 
   try {
     // Download and decode the original CSV from S3
-    const originalData = await s3.getObject({ Bucket: bucket, Key: originalKey }).promise();
-    const originalBuffer = originalData.Body as Buffer;
+    const originalCommand = new GetObjectCommand({ Bucket: bucket, Key: originalKey });
+    const originalResponse = await s3.send(originalCommand);
+    
+    // Convert stream to buffer
+    const originalChunks: Uint8Array[] = [];
+    const originalStream = originalResponse.Body as any;
+    for await (const chunk of originalStream) {
+      originalChunks.push(chunk);
+    }
+    const originalBuffer = Buffer.concat(originalChunks);
     const originalEncoding = mapChardetToNodeEncoding(chardet.detect(originalBuffer));
     const originalCsv = originalBuffer.toString(originalEncoding);
 
@@ -1275,17 +1319,21 @@ app.post('/api/run-forecast-py', async (req, res) => {
         // }).promise();
 
         // Only upload to Forecast_Result
-        await s3Result.upload({
-          Bucket: FORECAST_RESULT_BUCKET,
-          Key: FORECAST_RESULT_PREFIX + forecastFileNameOnly,
-          Body: forecastCsv,
-          ContentType: 'text/csv',
-          Metadata: {
-            owner: 'KLUGAI',
-            status: 'Active',
-            description: `Forecast generated for ${baseFileName}.csv on ${today}`
+        const upload = new Upload({
+          client: s3Result,
+          params: {
+            Bucket: FORECAST_RESULT_BUCKET,
+            Key: FORECAST_RESULT_PREFIX + forecastFileNameOnly,
+            Body: forecastCsv,
+            ContentType: 'text/csv',
+            Metadata: {
+              owner: 'KLUGAI',
+              status: 'Active',
+              description: `Forecast generated for ${baseFileName}.csv on ${today}`
+            }
           }
-        }).promise();
+        });
+        await upload.done();
 
         res.json({
           message: 'Forecast complete',
@@ -1326,17 +1374,21 @@ app.post('/api/merge-forecast-files', async (req, res) => {
     const mergedKey = `forecasts/${baseName}_merged_${today}.csv`;
 
 
-    await s3.upload({
-      Bucket: process.env.VITE_S3_BUCKET_NAME!,
-      Key: mergedKey,
-      Body: mergedCsv,
-      ContentType: 'text/csv',
-      Metadata: {
-        owner: 'KLUGAI',
-        status: 'Final',
-        description: `Merged manually for ${originalKey} + ${forecastKey}`
+    const upload = new Upload({
+      client: s3,
+      params: {
+        Bucket: process.env.VITE_S3_BUCKET_NAME!,
+        Key: mergedKey,
+        Body: mergedCsv,
+        ContentType: 'text/csv',
+        Metadata: {
+          owner: 'KLUGAI',
+          status: 'Final',
+          description: `Merged manually for ${originalKey} + ${forecastKey}`
+        }
       }
-    }).promise();
+    });
+    await upload.done();
 
     res.json({ message: 'Merge successful', mergedFile: mergedKey });
   } catch (err) {
@@ -1352,18 +1404,27 @@ app.get('/api/forecast-results', async (req, res) => {
       Prefix: FORECAST_RESULT_PREFIX,
     };
 
-    const data = await s3Result.listObjectsV2(listParams).promise();
+    const listCommand = new ListObjectsV2Command(listParams);
+    const data = await s3Result.send(listCommand);
 
-    const files = (data.Contents || []).filter(obj => obj.Key?.endsWith('.csv'));
+    const files = (data.Contents || []).filter((obj: any) => obj.Key?.endsWith('.csv'));
 
     const parsedResults = await Promise.all(
-      files.map(async (file) => {
-        const obj = await s3Result.getObject({
+      files.map(async (file: any) => {
+        const getCommand = new GetObjectCommand({
           Bucket: FORECAST_RESULT_BUCKET,
           Key: file.Key!,
-        }).promise();
+        });
+        const response = await s3Result.send(getCommand);
 
-        const csvBuffer = obj.Body as Buffer;
+        // Convert stream to buffer
+        const chunks: Uint8Array[] = [];
+        const stream = response.Body as any;
+        for await (const chunk of stream) {
+          chunks.push(chunk);
+        }
+        const csvBuffer = Buffer.concat(chunks);
+        
         const csvEncoding = mapChardetToNodeEncoding(chardet.detect(csvBuffer));
         const csvContent = csvBuffer.toString(csvEncoding);
         const parsed = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
@@ -1991,11 +2052,12 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
 // Endpoint to list files in Forecast_Result folder
 app.get('/api/list-forecast-results', async (_req, res) => {
   try {
-    const data = await s3Result.listObjectsV2({
+    const command = new ListObjectsV2Command({
       Bucket: FORECAST_RESULT_BUCKET,
       Prefix: FORECAST_RESULT_PREFIX,
-    }).promise();
-    const files = (data.Contents || []).map(obj => ({
+    });
+    const data = await s3Result.send(command);
+    const files = (data.Contents || []).map((obj: any) => ({
       key: obj.Key!,
       name: obj.Key?.split('/').pop(),
       owner: 'KLUGAI',
@@ -2013,13 +2075,21 @@ app.get('/api/preview-forecast-result', async (req, res) => {
   const key = req.query.key as string;
   if (!key) return res.status(400).json({ error: 'Missing key' });
   try {
-    const data = await s3Result.getObject({
+    const command = new GetObjectCommand({
       Bucket: FORECAST_RESULT_BUCKET,
       Key: key,
-    }).promise();
+    });
+    const response = await s3Result.send(command);
+    
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    const stream = response.Body as any;
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    const csvBuffer = Buffer.concat(chunks);
     
     // Convert buffer to string and replace TimeGPT with Klug Forecast AI
-    const csvBuffer = data.Body as Buffer;
     const csvContent = csvBuffer.toString();
     const modifiedContent = csvContent.replace(/TimeGPT/g, 'Klug Forecast AI');
     
@@ -2036,10 +2106,11 @@ app.delete('/api/delete-forecast-result', async (req, res) => {
   const key = req.query.key as string;
   if (!key) return res.status(400).json({ error: 'Missing key' });
   try {
-    await s3Result.deleteObject({
+    const command = new DeleteObjectCommand({
       Bucket: FORECAST_RESULT_BUCKET,
       Key: key,
-    }).promise();
+    });
+    await s3Result.send(command);
     res.json({ message: 'Forecast result file deleted' });
   } catch (err) {
     console.error('[Delete Forecast Result Error]', err);
@@ -2054,13 +2125,13 @@ app.post('/api/duplicate-forecast-result', async (req, res) => {
     return res.status(400).json({ error: 'Missing sourceKey or newName' });
   }
   try {
-    const s3 = s3Result;
     const targetKey = FORECAST_RESULT_PREFIX + newName;
-    await s3.copyObject({
+    const command = new CopyObjectCommand({
       Bucket: FORECAST_RESULT_BUCKET,
       CopySource: `/${FORECAST_RESULT_BUCKET}/${sourceKey}`,
       Key: targetKey,
-    }).promise();
+    });
+    await s3Result.send(command);
     res.json({ message: 'Forecast result file duplicated', newKey: targetKey });
   } catch (err) {
     console.error('[Duplicate Forecast Result Error]', err);
@@ -2091,10 +2162,12 @@ app.post('/api/upload-forecast-result', async (req, res) => {
       return res.status(400).json({ error: 'Missing key or data' });
     }
 
-    const s3 = new AWS.S3({
+    const s3Client = new S3Client({
       region: 'us-east-2',
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      }
     });
 
     // Replace "TimeGPT" with "Klug Forecast AI" in the CSV data
@@ -2107,7 +2180,11 @@ app.post('/api/upload-forecast-result', async (req, res) => {
       ContentType: 'text/csv',
     };
 
-    await s3.upload(uploadParams).promise();
+    const upload = new Upload({
+      client: s3Client,
+      params: uploadParams
+    });
+    await upload.done();
     
     res.json({ message: 'Forecast result uploaded successfully with Klug Forecast AI branding' });
   } catch (err) {
