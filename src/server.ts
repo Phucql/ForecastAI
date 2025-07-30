@@ -33,6 +33,10 @@ declare module 'express-session' {
       email: string;
       username: string;
     };
+    testData?: {
+      message: string;
+      timestamp: number;
+    };
   }
 }
 
@@ -85,13 +89,16 @@ app.use(session({
   secret: SESSION_SECRET,
   resave: true, // Changed to true to ensure session is saved
   saveUninitialized: true, // Changed to true to save uninitialized sessions
+  name: 'forecastai.sid', // Custom session name
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     domain: undefined // Removed domain setting to avoid issues
-  }
+  },
+  // Add more debugging
+  unset: 'destroy'
 }));
 
 // User storage (replace with DB in production)
@@ -141,6 +148,7 @@ app.post('/api/signup', async (req, res) => {
     // Create session
     req.session.user = { email, username };
     console.log('🎫 Session created for new user');
+    console.log('🎫 Session ID:', req.sessionID);
     console.log('🎫 Session after creation:', req.session);
     
     // Save session explicitly
@@ -150,6 +158,7 @@ app.post('/api/signup', async (req, res) => {
         return res.status(500).json({ error: 'Failed to save session' });
       }
       console.log('✅ Session saved successfully');
+      console.log('✅ Session ID after save:', req.sessionID);
       console.log('✅ Signup successful for user:', email);
       res.json({ success: true, user: { email, username } });
     });
@@ -180,6 +189,7 @@ app.post('/api/login', async (req, res) => {
     // Create session
     req.session.user = { email: user.email, username: user.username };
     console.log('🎫 Session created successfully');
+    console.log('🎫 Session ID:', req.sessionID);
     console.log('🎫 Session after creation:', req.session);
     
     // Save session explicitly
@@ -189,6 +199,7 @@ app.post('/api/login', async (req, res) => {
         return res.status(500).json({ error: 'Failed to save session' });
       }
       console.log('✅ Session saved successfully');
+      console.log('✅ Session ID after save:', req.sessionID);
       console.log('✅ Login successful for user:', user.email);
       res.json({ success: true, user: { email: user.email, username: user.username } });
     });
@@ -199,10 +210,12 @@ app.post('/api/login', async (req, res) => {
 });
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
+  console.log('🔐 Auth check - Session ID:', req.sessionID);
   console.log('🔐 Auth check - Session:', req.session);
   console.log('🔐 Auth check - Session user:', req.session.user);
   console.log('🔐 Auth check - SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
   console.log('🔐 Auth check - NODE_ENV:', process.env.NODE_ENV);
+  console.log('🔐 Auth check - Cookies:', req.headers.cookie);
   
   if (!req.session.user) {
     console.log('❌ No user found in session');
@@ -229,6 +242,51 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ username: req.user.username, email: req.user.email });
 });
 
+// Test endpoint to set a simple session
+app.post('/api/test-session-set', (req, res) => {
+  console.log('🎫 Setting test session...');
+  console.log('🎫 Session ID before:', req.sessionID);
+  console.log('🎫 Session before:', req.session);
+  
+  req.session.testData = { message: 'Hello from session!', timestamp: Date.now() };
+  req.session.user = { email: 'test@example.com', username: 'testuser' };
+  
+  console.log('🎫 Session after setting:', req.session);
+  
+  req.session.save((err) => {
+    if (err) {
+      console.error('❌ Session save error:', err);
+      return res.status(500).json({ error: 'Failed to save session', details: err.message });
+    }
+    console.log('✅ Test session saved successfully');
+    console.log('✅ Session ID after save:', req.sessionID);
+    res.json({ 
+      success: true, 
+      message: 'Test session set successfully',
+      sessionID: req.sessionID,
+      session: req.session
+    });
+  });
+});
+
+// Test endpoint to get session data
+app.get('/api/test-session-get', (req, res) => {
+  console.log('🔍 Getting test session...');
+  console.log('🔍 Session ID:', req.sessionID);
+  console.log('🔍 Session:', req.session);
+  console.log('🔍 Cookies:', req.headers.cookie);
+  
+  res.json({
+    sessionID: req.sessionID,
+    session: req.session,
+    hasTestData: !!req.session.testData,
+    hasUser: !!req.session.user,
+    testData: req.session.testData,
+    user: req.session.user,
+    cookies: req.headers.cookie
+  });
+});
+
 // Debug endpoint to check current users (remove in production)
 app.get('/api/debug/users', (req, res) => {
   console.log('🔍 Debug - Current users:', USERS.map(u => ({ email: u.email, username: u.username })));
@@ -245,8 +303,10 @@ app.get('/api/debug/auth', (req, res) => {
     hasSessionSecret: !!process.env.SESSION_SECRET,
     nodeEnv: process.env.NODE_ENV,
     session: req.session,
+    sessionID: req.sessionID,
     hasUser: !!req.session.user,
-    user: req.session.user
+    user: req.session.user,
+    cookies: req.headers.cookie
   });
 });
 

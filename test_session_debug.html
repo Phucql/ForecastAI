@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { margin: 10px; padding: 10px; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        .info { background-color: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <h1>Session Debug Test</h1>
+    
+    <h2>Test Session Endpoints</h2>
+    <button onclick="testSetSession()">Set Test Session</button>
+    <button onclick="testGetSession()">Get Test Session</button>
+    <button onclick="testDebug()">Debug Info</button>
+    
+    <h2>Authentication Test</h2>
+    <button onclick="testSignup()">Test Signup</button>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testMe()">Test /api/me</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'https://forecastai-ii8z.onrender.com';
+        
+        async function testSetSession() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test-session-set`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ test: 'data' })
+                });
+                
+                const data = await response.json();
+                showResult('Set Test Session Result', data, response.ok);
+            } catch (error) {
+                showResult('Set Test Session Error', error.message, false);
+            }
+        }
+        
+        async function testGetSession() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test-session-get`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('Get Test Session Result', data, response.ok);
+            } catch (error) {
+                showResult('Get Test Session Error', error.message, false);
+            }
+        }
+        
+        async function testDebug() {
+            try {
+                const response = await fetch(`${API_BASE}/api/debug/auth`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('Debug Info', data, response.ok);
+            } catch (error) {
+                showResult('Debug Error', error.message, false);
+            }
+        }
+        
+        async function testSignup() {
+            try {
+                const response = await fetch(`${API_BASE}/api/signup`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: '123456',
+                        username: 'testuser'
+                    })
+                });
+                
+                const data = await response.json();
+                showResult('Signup Result', data, response.ok);
+            } catch (error) {
+                showResult('Signup Error', error.message, false);
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: '123456'
+                    })
+                });
+                
+                const data = await response.json();
+                showResult('Login Result', data, response.ok);
+            } catch (error) {
+                showResult('Login Error', error.message, false);
+            }
+        }
+        
+        async function testMe() {
+            try {
+                const response = await fetch(`${API_BASE}/api/me`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('/api/me Result', data, response.ok);
+            } catch (error) {
+                showResult('/api/me Error', error.message, false);
+            }
+        }
+        
+        function showResult(title, data, success) {
+            const resultDiv = document.getElementById('result');
+            const className = success ? 'success' : 'error';
+            resultDiv.innerHTML = `
+                <div class="result ${className}">
+                    <h3>${title}</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 
