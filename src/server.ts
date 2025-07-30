@@ -115,6 +115,24 @@ app.use(session({
 // User storage (replace with DB in production)
 const USERS: { email: string; passwordHash: string; username: string }[] = [];
 
+// Simple token storage (replace with Redis/DB in production)
+const ACTIVE_TOKENS: { [token: string]: { email: string; username: string; expires: number } } = {};
+
+// Cleanup expired tokens every hour
+setInterval(() => {
+  const now = Date.now();
+  let cleaned = 0;
+  for (const [token, data] of Object.entries(ACTIVE_TOKENS)) {
+    if (data.expires < now) {
+      delete ACTIVE_TOKENS[token];
+      cleaned++;
+    }
+  }
+  if (cleaned > 0) {
+    console.log(`🧹 Cleaned up ${cleaned} expired tokens`);
+  }
+}, 60 * 60 * 1000); // Every hour
+
 // Email validation function
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -162,6 +180,20 @@ app.post('/api/signup', async (req, res) => {
     console.log('🎫 Session ID:', req.sessionID);
     console.log('🎫 Session after creation:', req.session);
     
+    // Generate a secure token
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+    
+    // Store token
+    ACTIVE_TOKENS[token] = {
+      email: email,
+      username: username,
+      expires: expires
+    };
+    
+    console.log('🎫 Token generated:', token);
+    console.log('🎫 Token expires:', new Date(expires).toISOString());
+    
     // Save session explicitly
     req.session.save((err) => {
       if (err) {
@@ -175,7 +207,7 @@ app.post('/api/signup', async (req, res) => {
       res.json({ 
         success: true, 
         user: { email, username },
-        token: email // Simple token for fallback auth
+        token: token // Secure token for fallback auth
       });
     });
   } catch (error) {
@@ -208,6 +240,20 @@ app.post('/api/login', async (req, res) => {
     console.log('🎫 Session ID:', req.sessionID);
     console.log('🎫 Session after creation:', req.session);
     
+    // Generate a secure token
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+    
+    // Store token
+    ACTIVE_TOKENS[token] = {
+      email: user.email,
+      username: user.username,
+      expires: expires
+    };
+    
+    console.log('🎫 Token generated:', token);
+    console.log('🎫 Token expires:', new Date(expires).toISOString());
+    
     // Save session explicitly
     req.session.save((err) => {
       if (err) {
@@ -220,7 +266,7 @@ app.post('/api/login', async (req, res) => {
       res.json({ 
         success: true, 
         user: { email: user.email, username: user.username },
-        token: user.email // Simple token for fallback auth
+        token: token // Secure token for fallback auth
       });
     });
   } catch (error) {
@@ -245,16 +291,23 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
   
   // Fallback: Check for user in memory (temporary solution)
-  console.log('🔍 Checking memory-based authentication...');
+  console.log('🔍 Checking token-based authentication...');
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
-    // Simple token validation (in production, use proper JWT or similar)
-    const user = USERS.find(u => u.email === token);
-    if (user) {
-      req.user = { email: user.email, username: user.username };
-      console.log('✅ Memory-based auth successful for user:', req.user);
+    console.log('🔍 Token received:', token);
+    
+    // Check if token exists and is not expired
+    const tokenData = ACTIVE_TOKENS[token];
+    if (tokenData && tokenData.expires > Date.now()) {
+      req.user = { email: tokenData.email, username: tokenData.username };
+      console.log('✅ Token-based auth successful for user:', req.user);
       return next();
+    } else if (tokenData) {
+      console.log('❌ Token expired');
+      delete ACTIVE_TOKENS[token];
+    } else {
+      console.log('❌ Token not found');
     }
   }
   
