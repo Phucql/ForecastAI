@@ -506,10 +506,46 @@ const insertRows = async (table: string, rows: any[]) => {
 
   const client = await pool.connect();
   try {
+    console.log(`🔄 Starting insertion of ${rows.length} rows into ${table}`);
+    console.log(`📋 Columns: ${columns.join(', ')}`);
+    
+    let insertedCount = 0;
+    let updatedCount = 0;
+    
     for (const row of rows) {
       const values = columns.map(c => row[c]);
-      await client.query(`INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders})`, values);
+      
+      // Use UPSERT (INSERT ... ON CONFLICT DO UPDATE) to handle duplicates
+      // This will insert new records or update existing ones based on the primary key
+      const updateClause = columns
+        .filter(col => col !== 'PRD_LVL_MEMBER_NAME' && col !== 'TIM_LVL_MEMBER_VALUE') // Don't update the key columns
+        .map(col => `"${col}" = EXCLUDED."${col}"`)
+        .join(', ');
+      
+      const upsertQuery = `
+        INSERT INTO "${table}" (${quotedColumns}) 
+        VALUES (${placeholders})
+        ON CONFLICT ("PRD_LVL_MEMBER_NAME", "TIM_LVL_MEMBER_VALUE") 
+        DO UPDATE SET ${updateClause}
+      `;
+      
+      try {
+        const result = await client.query(upsertQuery, values);
+        // PostgreSQL doesn't directly tell us if it was INSERT or UPDATE
+        // But we can infer from the row count
+        if (result.rowCount === 1) {
+          insertedCount++;
+        }
+      } catch (error) {
+        console.error(`❌ Error inserting row into ${table}:`, error);
+        console.error(`Row data:`, row);
+        throw error;
+      }
     }
+    
+    console.log(`✅ Successfully processed ${rows.length} rows in ${table}`);
+    console.log(`📊 Inserted: ~${insertedCount}, Updated: ~${rows.length - insertedCount}`);
+    
   } finally {
     client.release();
   }
@@ -543,10 +579,14 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 
     if (originalKey) {
       const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+      console.log(`📊 Inserting ${originalRows.length} rows into forecast_original`);
       await insertRows('forecast_original', originalRows);
+      console.log('✅ Original data inserted successfully');
     }
     const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
+    console.log(`📊 Inserting ${forecastRows.length} rows into forecast_result`);
     await insertRows('forecast_result', forecastRows);
+    console.log('✅ Forecast data inserted successfully');
 
     console.log('✅ Data uploaded to forecast tables');
     res.status(200).json({ message: 'Data uploaded to forecast tables' });
@@ -2268,6 +2308,25 @@ app.post('/api/clear-forecast-tables', async (_req, res) => {
     res.status(200).json({ message: 'Forecast tables cleared' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to clear forecast tables' });
+  } finally {
+    client.release();
+  }
+});
+
+// Add endpoint to check forecast table counts
+app.get('/api/forecast-table-counts', async (_req, res) => {
+  const client = await pool.connect();
+  try {
+    const originalCount = await client.query('SELECT COUNT(*) FROM "forecast_original"');
+    const resultCount = await client.query('SELECT COUNT(*) FROM "forecast_result"');
+    
+    res.status(200).json({ 
+      forecast_original: parseInt(originalCount.rows[0].count),
+      forecast_result: parseInt(resultCount.rows[0].count)
+    });
+  } catch (err) {
+    console.error('Error getting table counts:', err);
+    res.status(500).json({ error: 'Failed to get table counts' });
   } finally {
     client.release();
   }
