@@ -54,9 +54,22 @@ export default function LoginForm({ onLogin, onSignup, isLoading = false, error 
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              <span className="text-red-700 text-sm">{error}</span>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+                <span className="text-red-700 text-sm">{error}</span>
+              </div>
+              {error === 'For demo purposes, please contact us' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('openContactForm'));
+                  }}
+                  className="w-full bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm"
+                >
+                  Contact Us
+                </button>
+              )}
             </div>
           )}
 

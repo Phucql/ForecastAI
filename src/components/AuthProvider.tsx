@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     // Demo credentials check
     if (email !== 'admin@klug.com' || password !== 'Klug2025') {
-      return { success: false, error: 'For demo purposes, please use admin@klug.com / Klug2025' };
+      return { success: false, error: 'For demo purposes, please contact us' };
     }
 
     try {

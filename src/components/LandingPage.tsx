@@ -318,43 +318,43 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
                              <h4 className="text-lg font-semibold text-orange-800 mb-4">Internal Data</h4>
                              <div className="grid grid-cols-2 gap-3">
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">POS</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Point of Sale</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">PROM</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Promotions</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">REC</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Recipes</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">PROD</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Product Data</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">AVAIL</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Availability</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">PRICE</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Pricing</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-orange-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-orange-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-orange-700 text-xs font-bold">LOSS</span>
                                  </div>
                                  <span className="text-sm text-orange-700">Known Loss</span>
@@ -367,43 +367,43 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
                              <h4 className="text-lg font-semibold text-blue-800 mb-4">External Data</h4>
                              <div className="grid grid-cols-2 gap-3">
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">EVT</span>
                                  </div>
                                  <span className="text-sm text-blue-700">Events</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">WTH</span>
                                  </div>
                                  <span className="text-sm text-blue-700">Weather</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">HOL</span>
                                  </div>
                                  <span className="text-sm text-blue-700">Holidays</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">SOC</span>
                                  </div>
                                  <span className="text-sm text-blue-700">Social Media</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">SPT</span>
                                  </div>
                                  <span className="text-sm text-blue-700">Sports & Concerts</span>
                                </div>
                                <div className="flex items-center space-x-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">SCH</span>
                                  </div>
                                  <span className="text-sm text-blue-700">School Terms</span>
                                </div>
                                <div className="flex items-center space-x-2 col-span-2">
-                                 <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
+                                 <div className="px-3 py-1 bg-blue-200 rounded-md flex items-center justify-center min-w-fit">
                                    <span className="text-blue-700 text-xs font-bold">240+</span>
                                  </div>
                                  <span className="text-sm text-blue-700">External Variables</span>
@@ -575,9 +575,8 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Fresh Ordering Panel */}
                             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
-                              <h4 className="text-xl font-semibold text-orange-800 mb-6 text-center">Fresh ordering</h4>
-                              
                               <div className="bg-white rounded-xl p-4 border border-orange-200">
+                                <h4 className="text-xl font-semibold text-orange-800 mb-4 text-center">Fresh ordering</h4>
                                 <div className="flex items-center justify-between mb-4">
                                   <span className="text-sm text-gray-600">← Order</span>
                                   <Search className="w-4 h-4 text-gray-500" />
@@ -675,9 +674,8 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
 
                             {/* Production Planning Panel */}
                             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
-                              <h4 className="text-xl font-semibold text-blue-800 mb-6 text-center">Production planning</h4>
-                              
                               <div className="bg-white rounded-xl p-4 border border-blue-200">
+                                <h4 className="text-xl font-semibold text-blue-800 mb-4 text-center">Production planning</h4>
                                 <div className="flex items-center justify-between mb-4">
                                   <span className="text-sm text-gray-600">Production planning</span>
                                   <div className="w-4 h-4 bg-blue-200 rounded"></div>

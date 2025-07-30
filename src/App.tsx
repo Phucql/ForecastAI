@@ -102,21 +102,22 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="container mx-auto">
-        <div className="flex space-x-1">
+        <div className="flex overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-all duration-200 rounded-t-lg
+                className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-6 py-4 text-xs sm:text-sm font-medium transition-all duration-200 rounded-t-lg whitespace-nowrap flex-shrink-0
                   ${activeTab === tab.id 
                     ? 'bg-orange-50 border-b-2 border-orange-500 text-orange-700 shadow-sm'
                     : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50 hover:border-b-2 hover:border-orange-300'
                   }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
               </button>
             );
           })}
@@ -594,7 +595,7 @@ function App() {
         </div>
           <div className="p-8">
             <h3 className="text-lg font-bold mb-4 text-black">Search Results</h3>
-            <div className="flex items-end gap-2 mb-4">
+            <div className="flex flex-col sm:flex-row items-end gap-2 mb-4">
               <input
                 type="text"
                 value={searchResultsTerm}
@@ -603,7 +604,7 @@ function App() {
                 placeholder="Search by name..."
               />
               <button
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded whitespace-nowrap"
                 onClick={() => {/* Optionally trigger a search, or just filter as you type */}}
               >
                 <Search className="w-4 h-4 inline-block mr-1" /> Search
@@ -633,68 +634,133 @@ function App() {
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                 </div>
               )}
-              <table className="w-full rounded-xl overflow-hidden shadow-sm">
-                <thead className="sticky top-0 z-10 bg-orange-50/90">
-              <tr className="border-b-2 border-orange-200">
-                <th className="text-left py-2 px-4 text-black font-bold">Name</th>
-                <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
-                <th className="text-left py-2 px-4 text-black font-bold">Status</th>
-                <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-                  {filteredOriginalFiles.length === 0 ? (
-                    <tr><td colSpan={4} className="text-center text-orange-400 py-8">No demand plans found.</td></tr>
-                  ) : filteredOriginalFiles.map((file, idx) => (
-                <tr
-                  key={file.key}
-                      className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedForecastFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
-                      onClick={() => setSelectedForecastFile(file.key)}
-                      title={file.name}
-                >
-                      <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                  <td className="py-2 px-4">{file.owner}</td>
-                  <td className="py-2 px-4">
-                        <span className={`px-2 py-1 text-xs rounded-full font-semibold border
-                          ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
-                          file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                          'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
-                        >
-                          {file.status}
-                        </span>
-                  </td>
-                  <td className="py-2 px-4">
-                    <div className="flex gap-4">
+              
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <table className="w-full rounded-xl overflow-hidden shadow-sm">
+                  <thead className="sticky top-0 z-10 bg-orange-50/90">
+                    <tr className="border-b-2 border-orange-200">
+                      <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                      <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOriginalFiles.length === 0 ? (
+                      <tr><td colSpan={4} className="text-center text-orange-400 py-8">No demand plans found.</td></tr>
+                    ) : filteredOriginalFiles.map((file, idx) => (
+                      <tr
+                        key={file.key}
+                        className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedForecastFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'} hover:bg-orange-100`}
+                        onClick={() => setSelectedForecastFile(file.key)}
+                        title={file.name}
+                      >
+                        <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                        <td className="py-2 px-4">{file.owner}</td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                            ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                            file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                            'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                          >
+                            {file.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          <div className="flex gap-4">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handlePreviewFile(file.name); }}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Preview file"
+                              disabled={!selectedForecastFile || selectedForecastFile !== file.key}
+                            >
+                              Preview
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDownloadResult(file.name); }}
+                              className="text-orange-600 hover:underline text-sm font-semibold"
+                              title="Download file"
+                              disabled={!selectedForecastFile || selectedForecastFile !== file.key}
+                            >
+                              Download
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.name); }}
+                              className="text-red-500 hover:underline text-sm font-semibold"
+                              title="Delete file"
+                              disabled={!selectedForecastFile || selectedForecastFile !== file.key}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {filteredOriginalFiles.length === 0 ? (
+                  <div className="text-center text-orange-400 py-8">No demand plans found.</div>
+                ) : filteredOriginalFiles.map((file, idx) => (
+                  <div
+                    key={file.key}
+                    className={`border border-orange-200 rounded-lg p-4 cursor-pointer transition-colors ${
+                      selectedForecastFile === file.key 
+                        ? 'bg-orange-100 border-orange-400 shadow-md' 
+                        : idx % 2 === 0 
+                          ? 'bg-white' 
+                          : 'bg-orange-50/50'
+                    } hover:bg-orange-100`}
+                    onClick={() => setSelectedForecastFile(file.key)}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 truncate" title={file.name}>
+                          {file.name}
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">{file.owner}</p>
+                      </div>
+                      <span className={`ml-2 px-2 py-1 text-xs rounded-full font-semibold border flex-shrink-0
+                        ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                        file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                        'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                      >
+                        {file.status}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 mt-3">
                       <button
-                        onClick={() => handlePreviewFile(file.name)}
-                        className="text-orange-600 hover:underline text-sm font-semibold"
+                        onClick={(e) => { e.stopPropagation(); handlePreviewFile(file.name); }}
+                        className="flex-1 bg-orange-50 text-orange-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-orange-100 transition-colors"
                         title="Preview file"
                         disabled={!selectedForecastFile || selectedForecastFile !== file.key}
                       >
                         Preview
                       </button>
                       <button
-                        onClick={() => handleDownloadResult(file.name)}
-                        className="text-orange-600 hover:underline text-sm font-semibold"
+                        onClick={(e) => { e.stopPropagation(); handleDownloadResult(file.name); }}
+                        className="flex-1 bg-orange-50 text-orange-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-orange-100 transition-colors"
                         title="Download file"
                         disabled={!selectedForecastFile || selectedForecastFile !== file.key}
                       >
                         Download
                       </button>
                       <button
-                        onClick={() => handleDeleteFile(file.name)}
-                        className="text-red-500 hover:underline text-sm font-semibold"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.name); }}
+                        className="flex-1 bg-red-50 text-red-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-red-100 transition-colors"
                         title="Delete file"
                         disabled={!selectedForecastFile || selectedForecastFile !== file.key}
                       >
                         Delete
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
             <button
@@ -721,7 +787,7 @@ function App() {
             {/* Forecast Result Files Table - moved here */}
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4 text-black">Forecast Result Files</h3>
-              <div className="flex items-end gap-2 mb-4 mt-2">
+              <div className="flex flex-col sm:flex-row items-end gap-2 mb-4 mt-2">
                 <input
                   type="text"
                   value={resultSearchTerm}
@@ -730,7 +796,7 @@ function App() {
                   placeholder="Search by name..."
                 />
                 <button
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded"
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded whitespace-nowrap"
                   onClick={() => {/* Optionally trigger a search, or just filter as you type */}}
                 >
                   <Search className="w-4 h-4 inline-block mr-1" /> Search
@@ -760,65 +826,127 @@ function App() {
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                   </div>
                 )}
-                <table className="w-full rounded-xl overflow-hidden shadow-sm">
-                  <thead className="sticky top-0 z-10 bg-orange-50/90">
-                    <tr className="border-b-2 border-orange-200">
-                      <th className="text-left py-2 px-4 text-black font-bold">Name</th>
-                      <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
-                      <th className="text-left py-2 px-4 text-black font-bold">Status</th>
-                      <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredResultFiles.length === 0 ? (
-                      <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
-                    ) : filteredResultFiles.map((file, idx) => (
-                      <tr
-                        key={file.key}
-                        onClick={() => setSelectedResultFile(file.key)}
-                        className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedResultFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'}`}
-                        title={file.name}
-                      >
-                        <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
-                        <td className="py-2 px-4">{file.owner}</td>
-                        <td className="py-2 px-4">
-                          <span className={`px-2 py-1 text-xs rounded-full font-semibold border
-                            ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
-                            file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
-                            'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
-                          >
-                            {file.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-4">
-                          <div className="flex gap-4">
-                            <button
-                              onClick={() => handlePreviewResult(file.key)}
-                              className="text-orange-600 hover:underline text-sm font-semibold"
-                              title="Preview file"
-                            >
-                              Preview
-                            </button>
-                            <button
-                              onClick={() => handleDownloadResult(file.key)}
-                              className="text-orange-600 hover:underline text-sm font-semibold"
-                              title="Download file"
-                            >
-                              Download
-                            </button>
-                            <button
-                              onClick={() => handleDeleteResult(file.key)}
-                              className="text-red-500 hover:underline text-sm font-semibold"
-                              title="Delete file"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
+                
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <table className="w-full rounded-xl overflow-hidden shadow-sm">
+                    <thead className="sticky top-0 z-10 bg-orange-50/90">
+                      <tr className="border-b-2 border-orange-200">
+                        <th className="text-left py-2 px-4 text-black font-bold">Name</th>
+                        <th className="text-left py-2 px-4 text-black font-bold">Owner</th>
+                        <th className="text-left py-2 px-4 text-black font-bold">Status</th>
+                        <th className="text-left py-2 px-4 text-black font-bold">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredResultFiles.length === 0 ? (
+                        <tr><td colSpan={4} className="text-center text-orange-400 py-8">No forecast results found.</td></tr>
+                      ) : filteredResultFiles.map((file, idx) => (
+                        <tr
+                          key={file.key}
+                          onClick={() => setSelectedResultFile(file.key)}
+                          className={`border-b border-orange-100 cursor-pointer transition-colors ${selectedResultFile === file.key ? 'bg-orange-100 border-l-4 border-orange-400' : idx % 2 === 0 ? 'bg-white' : 'bg-orange-50/50'}`}
+                          title={file.name}
+                        >
+                          <td className="py-2 px-4 max-w-xs truncate" title={file.name}>{file.name}</td>
+                          <td className="py-2 px-4">{file.owner}</td>
+                          <td className="py-2 px-4">
+                            <span className={`px-2 py-1 text-xs rounded-full font-semibold border
+                              ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                              file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                              'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                            >
+                              {file.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4">
+                            <div className="flex gap-4">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handlePreviewResult(file.key); }}
+                                className="text-orange-600 hover:underline text-sm font-semibold"
+                                title="Preview file"
+                              >
+                                Preview
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDownloadResult(file.key); }}
+                                className="text-orange-600 hover:underline text-sm font-semibold"
+                                title="Download file"
+                              >
+                                Download
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteResult(file.key); }}
+                                className="text-red-500 hover:underline text-sm font-semibold"
+                                title="Delete file"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {filteredResultFiles.length === 0 ? (
+                    <div className="text-center text-orange-400 py-8">No forecast results found.</div>
+                  ) : filteredResultFiles.map((file, idx) => (
+                    <div
+                      key={file.key}
+                      className={`border border-orange-200 rounded-lg p-4 cursor-pointer transition-colors ${
+                        selectedResultFile === file.key 
+                          ? 'bg-orange-100 border-orange-400 shadow-md' 
+                          : idx % 2 === 0 
+                            ? 'bg-white' 
+                            : 'bg-orange-50/50'
+                      } hover:bg-orange-100`}
+                      onClick={() => setSelectedResultFile(file.key)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 truncate" title={file.name}>
+                            {file.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 mt-1">{file.owner}</p>
+                        </div>
+                        <span className={`ml-2 px-2 py-1 text-xs rounded-full font-semibold border flex-shrink-0
+                          ${file.status === 'Active' ? 'bg-orange-100 text-orange-700 border-orange-300' :
+                          file.status === 'Draft' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                          'bg-yellow-100 text-yellow-800 border-yellow-200'}`}
+                        >
+                          {file.status}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePreviewResult(file.key); }}
+                          className="flex-1 bg-orange-50 text-orange-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-orange-100 transition-colors"
+                          title="Preview file"
+                        >
+                          Preview
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDownloadResult(file.key); }}
+                          className="flex-1 bg-orange-50 text-orange-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-orange-100 transition-colors"
+                          title="Download file"
+                        >
+                          Download
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteResult(file.key); }}
+                          className="flex-1 bg-red-50 text-red-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-red-100 transition-colors"
+                          title="Delete file"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-end items-center">
                   <button
                     className={`py-2 px-4 rounded-md flex items-center gap-2 font-semibold shadow-sm transition-all ${selectedResultFile && !runReportLoading ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}

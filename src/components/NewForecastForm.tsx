@@ -282,13 +282,13 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {renderDropdown('Planning Unit', planningUnit, setPlanningUnit, planningUnits)}
-        {renderDropdown('Business Unit', businessUnit, setBusinessUnit, businessUnits)}
-        {renderDropdown('Family', family, setFamily, families)}
-        {renderDropdown('Subfamily', subfamily, setSubfamily, subfamilies)}
-        {renderDropdown('Color', color, setColor, colors)}
+        {renderDropdown('Region / Store Cluster', planningUnit, setPlanningUnit, planningUnits)}
+        {renderDropdown('Food Department (e.g., Grocery, Perishables)', businessUnit, setBusinessUnit, businessUnits)}
+        {renderDropdown('Food Category', family, setFamily, families)}
+        {renderDropdown('Sub-Category', subfamily, setSubfamily, subfamilies)}
+        {renderDropdown('Brand', color, setColor, colors)}
         {renderDropdown('Product (Optional)', product, setProduct, products)}
-        {renderDropdown('Demand Class', demandClass, setDemandClass, filteredDemandClasses)}
+        {renderDropdown('Promotion Types', demandClass, setDemandClass, filteredDemandClasses)}
         {renderDropdown('Customer Name (Optional)', customerName, setCustomerName, customerNames)}
       </div>
 
