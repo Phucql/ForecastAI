@@ -30,6 +30,7 @@
     <button onclick="testLogin()">Test Login</button>
     <button onclick="testMe()">Test /api/me</button>
     <button onclick="testAuth()">Test Auth (with token)</button>
+    <button onclick="showToken()">Show Current Token</button>
     
     <div id="result"></div>
 
@@ -101,6 +102,7 @@
                 const data = await response.json();
                 if (data.success && data.token) {
                     currentToken = data.token;
+                    console.log('🎫 Token received from signup:', currentToken);
                 }
                 showResult('Signup Result', data, response.ok);
             } catch (error) {
@@ -125,6 +127,7 @@
                 const data = await response.json();
                 if (data.success && data.token) {
                     currentToken = data.token;
+                    console.log('🎫 Token received from login:', currentToken);
                 }
                 showResult('Login Result', data, response.ok);
             } catch (error) {
@@ -134,9 +137,18 @@
         
         async function testMe() {
             try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (currentToken) {
+                    headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+                
                 const response = await fetch(`${API_BASE}/api/me`, {
                     method: 'GET',
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers: headers
                 });
                 
                 const data = await response.json();
@@ -198,6 +210,18 @@
                 showResult('Test Auth Result', data, response.ok);
             } catch (error) {
                 showResult('Test Auth Error', error.message, false);
+            }
+        }
+        
+        function showToken() {
+            if (currentToken) {
+                showResult('Current Token', {
+                    token: currentToken,
+                    tokenLength: currentToken.length,
+                    tokenPreview: currentToken.substring(0, 20) + '...'
+                }, true);
+            } else {
+                showResult('Current Token', { error: 'No token available' }, false);
             }
         }
         
