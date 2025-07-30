@@ -175,12 +175,6 @@ app.post('/api/signup', async (req, res) => {
     USERS.push(newUser);
     console.log('👤 New user created:', email);
     
-    // Create session
-    req.session.user = { email, username };
-    console.log('🎫 Session created for new user');
-    console.log('🎫 Session ID:', req.sessionID);
-    console.log('🎫 Session after creation:', req.session);
-    
     // Generate a secure token
     const token = crypto.randomBytes(32).toString('hex');
     const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
@@ -194,22 +188,12 @@ app.post('/api/signup', async (req, res) => {
     
     console.log('🎫 Token generated:', token);
     console.log('🎫 Token expires:', new Date(expires).toISOString());
+    console.log('✅ Signup successful for user:', email);
     
-    // Save session explicitly
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Session save error:', err);
-        return res.status(500).json({ error: 'Failed to save session' });
-      }
-      console.log('✅ Session saved successfully');
-      console.log('✅ Session ID after save:', req.sessionID);
-      console.log('✅ Cookie domain:', process.env.NODE_ENV === 'production' ? '.onrender.com' : 'undefined');
-      console.log('✅ Signup successful for user:', email);
-      res.json({ 
-        success: true, 
-        user: { email, username },
-        token: token // Secure token for fallback auth
-      });
+    res.json({ 
+      success: true, 
+      user: { email, username },
+      token: token
     });
   } catch (error) {
     console.error('Signup error:', error);
@@ -235,12 +219,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    // Create session
-    req.session.user = { email: user.email, username: user.username };
-    console.log('🎫 Session created successfully');
-    console.log('🎫 Session ID:', req.sessionID);
-    console.log('🎫 Session after creation:', req.session);
-    
     // Generate a secure token
     const token = crypto.randomBytes(32).toString('hex');
     const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
@@ -254,21 +232,12 @@ app.post('/api/login', async (req, res) => {
     
     console.log('🎫 Token generated:', token);
     console.log('🎫 Token expires:', new Date(expires).toISOString());
+    console.log('✅ Login successful for user:', user.email);
     
-    // Save session explicitly
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Session save error:', err);
-        return res.status(500).json({ error: 'Failed to save session' });
-      }
-      console.log('✅ Session saved successfully');
-      console.log('✅ Session ID after save:', req.sessionID);
-      console.log('✅ Login successful for user:', user.email);
-      res.json({ 
-        success: true, 
-        user: { email: user.email, username: user.username },
-        token: token // Secure token for fallback auth
-      });
+    res.json({ 
+      success: true, 
+      user: { email: user.email, username: user.username },
+      token: token
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -277,22 +246,9 @@ app.post('/api/login', async (req, res) => {
 });
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
-  console.log('🔐 Auth check - Session ID:', req.sessionID);
-  console.log('🔐 Auth check - Session:', req.session);
-  console.log('🔐 Auth check - Session user:', req.session.user);
-  console.log('🔐 Auth check - SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
-  console.log('🔐 Auth check - NODE_ENV:', process.env.NODE_ENV);
-  console.log('🔐 Auth check - Cookies:', req.headers.cookie);
+  console.log('🔐 Auth check - Authorization header:', req.headers.authorization);
   
-  // Check for session user first
-  if (req.session.user) {
-    req.user = req.session.user;
-    console.log('✅ Session verified successfully for user:', req.user);
-    return next();
-  }
-  
-  // Fallback: Check for user in memory (temporary solution)
-  console.log('🔍 Checking token-based authentication...');
+  // Token-based authentication only
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
@@ -312,18 +268,20 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     }
   }
   
-  console.log('❌ No user found in session or memory');
+  console.log('❌ No valid token found');
   return res.status(401).json({ error: 'Not authenticated' });
 }
 
 app.post('/api/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Logout error:', err);
-      return res.status(500).json({ error: 'Failed to logout' });
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    if (ACTIVE_TOKENS[token]) {
+      delete ACTIVE_TOKENS[token];
+      console.log('✅ Token invalidated for logout');
     }
-    res.json({ success: true });
-  });
+  }
+  res.json({ success: true });
 });
 
 app.get('/api/me', requireAuth, (req, res) => {

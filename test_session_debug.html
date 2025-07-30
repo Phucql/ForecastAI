@@ -30,7 +30,9 @@
     <button onclick="testLogin()">Test Login</button>
     <button onclick="testMe()">Test /api/me</button>
     <button onclick="testAuth()">Test Auth (with token)</button>
+    <button onclick="testLogout()">Test Logout</button>
     <button onclick="showToken()">Show Current Token</button>
+    <button onclick="setTestToken()">Set Test Token</button>
     
     <div id="result"></div>
 
@@ -143,11 +145,17 @@
                 
                 if (currentToken) {
                     headers['Authorization'] = `Bearer ${currentToken}`;
+                    console.log('🔑 Sending token:', currentToken);
+                } else {
+                    console.log('❌ No token available');
+                    showResult('/api/me Error', 'No token available. Please login first.', false);
+                    return;
                 }
+                
+                console.log('🔑 Request headers:', headers);
                 
                 const response = await fetch(`${API_BASE}/api/me`, {
                     method: 'GET',
-                    credentials: 'include',
                     headers: headers
                 });
                 
@@ -198,11 +206,13 @@
                 
                 if (currentToken) {
                     headers['Authorization'] = `Bearer ${currentToken}`;
+                } else {
+                    showResult('Test Auth Error', 'No token available. Please login first.', false);
+                    return;
                 }
                 
                 const response = await fetch(`${API_BASE}/api/test-auth`, {
                     method: 'GET',
-                    credentials: 'include',
                     headers: headers
                 });
                 
@@ -222,6 +232,42 @@
                 }, true);
             } else {
                 showResult('Current Token', { error: 'No token available' }, false);
+            }
+        }
+        
+        function setTestToken() {
+            // Set a test token manually for debugging
+            currentToken = 'c65a2072e094c8b513db9c1795d947929de4bf068f1aa9452279397b466340e0';
+            console.log('🔧 Test token set:', currentToken);
+            showResult('Test Token Set', {
+                message: 'Test token has been set manually',
+                token: currentToken
+            }, true);
+        }
+        
+        async function testLogout() {
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (currentToken) {
+                    headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+                
+                const response = await fetch(`${API_BASE}/api/logout`, {
+                    method: 'POST',
+                    headers: headers
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    currentToken = null; // Clear the token
+                    console.log('🔓 Token cleared after logout');
+                }
+                showResult('Logout Result', data, response.ok);
+            } catch (error) {
+                showResult('Logout Error', error.message, false);
             }
         }
         
