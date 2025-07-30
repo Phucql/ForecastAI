@@ -91,36 +91,130 @@ const initialDemandPlans: DemandPlan[] = [
 type Tab = 'demand-plan-inputs' | 'supply-network-model' | 'manage-demand-plans' | 'manage-users' | 'reports-analytics' | 'new-forecast' | 'edit-forecast';
 
 function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActiveTab: (tab: Tab) => void }) {
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  
   const tabs = [
-    { id: 'demand-plan-inputs', label: 'Demand Plan Inputs', icon: Database },
-    { id: 'supply-network-model', label: 'Supply Network Model', icon: Grid },
-    { id: 'manage-demand-plans', label: 'Manage Demand Plans', icon: BarChart3 },
-    { id: 'manage-users', label: 'Manage Users', icon: Users },
-    { id: 'reports-analytics', label: 'Reports & Analytics', icon: LineChart },
+    { id: 'demand-plan-inputs', label: 'Demand Plan Inputs', shortLabel: 'Demand', icon: Database },
+    { id: 'supply-network-model', label: 'Supply Network Model', shortLabel: 'Supply', icon: Grid },
+    { id: 'manage-demand-plans', label: 'Manage Demand Plans', shortLabel: 'Manage', icon: BarChart3 },
+    { id: 'manage-users', label: 'Manage Users', shortLabel: 'Users', icon: Users },
+    { id: 'reports-analytics', label: 'Reports & Analytics', shortLabel: 'Reports', icon: LineChart },
   ] as const;
+
+  const currentTab = tabs.find(tab => tab.id === activeTab);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.mobile-nav-dropdown')) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMobileMenu]);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="container mx-auto">
-        <div className="flex overflow-x-auto scrollbar-hide">
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-6 py-4 text-xs sm:text-sm font-medium transition-all duration-200 rounded-t-lg whitespace-nowrap flex-shrink-0
+                className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-all duration-200 rounded-t-lg whitespace-nowrap flex-shrink-0
                   ${activeTab === tab.id 
                     ? 'bg-orange-50 border-b-2 border-orange-500 text-orange-700 shadow-sm'
                     : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50 hover:border-b-2 hover:border-orange-300'
                   }`}
+                title={tab.label}
               >
-                <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span>{tab.label}</span>
               </button>
             );
           })}
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden">
+          {/* Mobile Dropdown */}
+          <div className="relative mobile-nav-dropdown">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200 ${
+                showMobileMenu 
+                  ? 'border-orange-500 text-orange-700 bg-orange-50' 
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                {currentTab && <currentTab.icon className="w-4 h-4" />}
+                <span>{currentTab?.label || 'Select Tab'}</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${showMobileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Mobile Dropdown Menu */}
+            {showMobileMenu && (
+              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setActiveTab(tab.id as Tab);
+                        setShowMobileMenu(false);
+                      }}
+                      className={`flex items-center space-x-3 w-full px-4 py-3 text-sm font-medium transition-colors duration-200
+                        ${activeTab === tab.id 
+                          ? 'bg-orange-50 text-orange-700 border-l-4 border-orange-500'
+                          : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Horizontal Scroll (for medium mobile screens) */}
+          <div className="flex overflow-x-auto scrollbar-hide mt-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as Tab)}
+                  className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium transition-all duration-200 rounded-lg whitespace-nowrap flex-shrink-0 min-w-fit
+                    ${activeTab === tab.id 
+                      ? 'bg-orange-50 border border-orange-500 text-orange-700 shadow-sm'
+                      : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50 hover:border hover:border-orange-300'
+                    }`}
+                  title={tab.label}
+                >
+                  <Icon className="w-3 h-3 flex-shrink-0" />
+                  <span>{tab.shortLabel}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </nav>

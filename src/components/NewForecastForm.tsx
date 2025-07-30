@@ -148,8 +148,33 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
         return;
       }
   
-      // Upload the original file (always named `${name}.csv`)
-      const blob = new Blob([csv], { type: 'text/csv' });
+      // Parse CSV and rename columns
+      const lines = csv.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      
+      // Create column mapping
+      const columnMapping: Record<string, string> = {
+        'Planning Unit': 'Region / Store Cluster',
+        'Business Unit': 'Food Department',
+        'Family': 'Food Category',
+        'Subfamily': 'Sub-Category',
+        'Color': 'Brand',
+        'Customer Class Code': 'Promotion Types'
+      };
+      
+      // Rename headers
+      const renamedHeaders = headers.map(header => {
+        return columnMapping[header] || header;
+      });
+      
+      // Reconstruct CSV with renamed headers
+      const renamedCSV = [
+        renamedHeaders.join(','),
+        ...lines.slice(1) // Keep all data rows unchanged
+      ].join('\n');
+  
+      // Upload the renamed file
+      const blob = new Blob([renamedCSV], { type: 'text/csv' });
       const originalFile = new File([blob], `${name}.csv`, { type: 'text/csv' });
   
       const uploadResponse = await fetch(`${BASE_URL}/api/upload`, {
