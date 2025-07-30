@@ -559,6 +559,7 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
   console.log('📦 Upload forecastKey:', forecastKey);
 
   const bucket = process.env.VITE_S3_BUCKET_NAME!;
+  const FORECAST_RESULT_BUCKET = 'forecastai-file-upload';
 
   if (!forecastKey) {
     return res.status(400).json({ error: 'Missing forecastKey' });
@@ -583,7 +584,19 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       await insertRows('forecast_original', originalRows);
       console.log('✅ Original data inserted successfully');
     }
-    const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
+    
+    // Determine which bucket to use for forecast data
+    let forecastRows;
+    if (forecastKey.startsWith('Forecast_Result/')) {
+      // Forecast result is in the forecast result bucket
+      console.log('📊 Reading forecast from forecast result bucket');
+      forecastRows = parseDateField(await parseS3Csv(FORECAST_RESULT_BUCKET, forecastKey));
+    } else {
+      // Forecast result is in the main bucket
+      console.log('📊 Reading forecast from main bucket');
+      forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
+    }
+    
     console.log(`📊 Inserting ${forecastRows.length} rows into forecast_result`);
     await insertRows('forecast_result', forecastRows);
     console.log('✅ Forecast data inserted successfully');
@@ -2320,15 +2333,89 @@ app.get('/api/forecast-table-counts', async (_req, res) => {
     const originalCount = await client.query('SELECT COUNT(*) FROM "forecast_original"');
     const resultCount = await client.query('SELECT COUNT(*) FROM "forecast_result"');
     
+    // Also get a sample of data to verify structure
+    const sampleOriginal = await client.query('SELECT * FROM "forecast_original" LIMIT 1');
+    const sampleResult = await client.query('SELECT * FROM "forecast_result" LIMIT 1');
+    
     res.status(200).json({ 
-      forecast_original: parseInt(originalCount.rows[0].count),
-      forecast_result: parseInt(resultCount.rows[0].count)
+      forecast_original: {
+        count: parseInt(originalCount.rows[0].count),
+        sample: sampleOriginal.rows[0] || null
+      },
+      forecast_result: {
+        count: parseInt(resultCount.rows[0].count),
+        sample: sampleResult.rows[0] || null
+      }
     });
   } catch (err) {
     console.error('Error getting table counts:', err);
     res.status(500).json({ error: 'Failed to get table counts' });
   } finally {
     client.release();
+  }
+});
+
+// Test endpoint to manually upload latest forecast to database
+app.post('/api/test-upload-latest-forecast', async (req, res) => {
+  try {
+    const s3 = new AWS.S3();
+    const forecastResultBucket = 'forecastai-file-upload';
+    const mainBucket = process.env.VITE_S3_BUCKET_NAME!;
+    
+    // List the latest forecast result file
+    const listResult = await s3.listObjectsV2({
+      Bucket: forecastResultBucket,
+      Prefix: 'Forecast_Result/',
+      MaxKeys: 1
+    }).promise();
+    
+    if (!listResult.Contents || listResult.Contents.length === 0) {
+      return res.status(404).json({ error: 'No forecast result files found' });
+    }
+    
+    const latestForecastKey = listResult.Contents[0].Key!;
+    console.log('🔍 Latest forecast key:', latestForecastKey);
+    
+    // Try to find a matching original file
+    const originalName = latestForecastKey.replace('Forecast_Result/Klug Forecast AI_', '').replace(/_\d{4}-\d{2}-\d{2}\.csv$/, '.csv');
+    console.log('🔍 Looking for original file:', originalName);
+    
+    // List original files to find a match
+    const originalList = await s3.listObjectsV2({
+      Bucket: mainBucket,
+      Prefix: 'forecasts/'
+    }).promise();
+    
+    const originalFile = originalList.Contents?.find(f => f.Key?.includes(originalName));
+    
+    if (originalFile) {
+      console.log('✅ Found original file:', originalFile.Key);
+      
+      // Upload to database tables
+      const uploadRes = await fetch(`${req.protocol}://${req.get('host')}/api/upload-to-forecast-tables`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalKey: originalFile.Key,
+          forecastKey: latestForecastKey
+        })
+      });
+      
+      if (uploadRes.ok) {
+        res.json({ 
+          message: 'Latest forecast uploaded to database successfully',
+          originalKey: originalFile.Key,
+          forecastKey: latestForecastKey
+        });
+      } else {
+        res.status(500).json({ error: 'Failed to upload to database' });
+      }
+    } else {
+      res.status(404).json({ error: 'Original file not found', originalName });
+    }
+  } catch (err) {
+    console.error('Test upload error:', err);
+    res.status(500).json({ error: 'Test upload failed' });
   }
 });
 
