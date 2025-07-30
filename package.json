@@ -21,6 +21,7 @@
     "@types/pg": "^8.11.0",
     "@types/react-plotly.js": "^2.6.3",
     "@vitejs/plugin-react": "^4.3.1",
+    "aws-sdk": "^2.1692.0",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "chardet": "^2.1.0",
