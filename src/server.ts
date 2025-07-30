@@ -63,6 +63,14 @@ const port = 3001;
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'your-session-secret-key';
 
+// Debug environment variables
+console.log('🔧 Environment check:');
+console.log('🔧 SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
+console.log('🔧 SESSION_SECRET value:', process.env.SESSION_SECRET ? '***' : 'undefined');
+console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔧 All env vars:', Object.keys(process.env).filter(key => key.includes('SESSION') || key.includes('NODE')));
+console.log('🔧 Using SESSION_SECRET:', SESSION_SECRET ? '***' : 'fallback');
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
@@ -75,13 +83,14 @@ app.use(cors({
 // Session configuration
 app.use(session({
   secret: SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
+  resave: true, // Changed to true to ensure session is saved
+  saveUninitialized: true, // Changed to true to save uninitialized sessions
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    domain: undefined // Removed domain setting to avoid issues
   }
 }));
 
@@ -132,9 +141,18 @@ app.post('/api/signup', async (req, res) => {
     // Create session
     req.session.user = { email, username };
     console.log('🎫 Session created for new user');
+    console.log('🎫 Session after creation:', req.session);
     
-    console.log('✅ Signup successful for user:', email);
-    res.json({ success: true, user: { email, username } });
+    // Save session explicitly
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Session save error:', err);
+        return res.status(500).json({ error: 'Failed to save session' });
+      }
+      console.log('✅ Session saved successfully');
+      console.log('✅ Signup successful for user:', email);
+      res.json({ success: true, user: { email, username } });
+    });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -162,9 +180,18 @@ app.post('/api/login', async (req, res) => {
     // Create session
     req.session.user = { email: user.email, username: user.username };
     console.log('🎫 Session created successfully');
+    console.log('🎫 Session after creation:', req.session);
     
-    console.log('✅ Login successful for user:', user.email);
-    res.json({ success: true, user: { email: user.email, username: user.username } });
+    // Save session explicitly
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Session save error:', err);
+        return res.status(500).json({ error: 'Failed to save session' });
+      }
+      console.log('✅ Session saved successfully');
+      console.log('✅ Login successful for user:', user.email);
+      res.json({ success: true, user: { email: user.email, username: user.username } });
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
