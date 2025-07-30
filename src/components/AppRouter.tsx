@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 import LoginPage from './LoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import App from '../App';
 import DemoPopup from './DemoPopup';
+import ContactForm from './ContactForm';
 
 export default function AppRouter() {
   const { user, login, signup, isLoading, showDemoPopup, setShowDemoPopup } = useAuth();
   const [loginError, setLoginError] = useState<string>('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
     setIsLoggingIn(true);
@@ -42,6 +44,18 @@ export default function AppRouter() {
       setIsLoggingIn(false);
     }
   };
+
+  // Handle contact form event
+  useEffect(() => {
+    const handleOpenContactForm = () => {
+      setShowContactForm(true);
+    };
+
+    window.addEventListener('openContactForm', handleOpenContactForm);
+    return () => {
+      window.removeEventListener('openContactForm', handleOpenContactForm);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -86,6 +100,12 @@ export default function AppRouter() {
       <DemoPopup 
         isOpen={showDemoPopup} 
         onClose={() => setShowDemoPopup(false)} 
+      />
+      
+      {/* Contact Form */}
+      <ContactForm 
+        isOpen={showContactForm} 
+        onClose={() => setShowContactForm(false)} 
       />
     </Router>
   );

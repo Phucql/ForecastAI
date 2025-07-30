@@ -36,9 +36,18 @@ export default function LoginForm({ onLogin, onSignup, isLoading = false, error 
           </p>
           {!isSignup && (
             <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-sm text-orange-700">
-                <strong>Demo:</strong> admin@klug.com / Klug2025
+              <p className="text-sm text-orange-700 mb-3">
+                <strong>For demo purposes, please contact us</strong>
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('openContactForm'));
+                }}
+                className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors text-sm"
+              >
+                Contact Us
+              </button>
             </div>
           )}
         </div>

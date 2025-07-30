@@ -32,19 +32,29 @@ export default function DemoPopup({ isOpen, onClose }: DemoPopupProps) {
             Demo Version
           </h2>
 
-          {/* Message */}
-          <p className="text-gray-600 mb-6 leading-relaxed">
-            For demo purposes, please contact{' '}
-            <span className="font-semibold text-orange-600">KLUGAI</span> to get full access to the platform.
-          </p>
+                     {/* Message */}
+           <p className="text-gray-600 mb-6 leading-relaxed">
+             For demo purposes, please contact{' '}
+             <span className="font-semibold text-orange-600">KLUGAI</span> to get full access to the platform.
+           </p>
 
-          {/* Contact info */}
-          <div className="bg-orange-50 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-center space-x-2 text-orange-700">
-              <Phone className="w-4 h-4" />
-              <span className="font-medium">Contact us for full access</span>
-            </div>
-          </div>
+           {/* Contact info */}
+           <div className="bg-orange-50 rounded-lg p-4 mb-6">
+             <div className="flex items-center justify-center space-x-2 text-orange-700">
+               <Phone className="w-4 h-4" />
+               <span className="font-medium">Contact us for full access</span>
+             </div>
+             <button
+               onClick={() => {
+                 onClose();
+                 // This will be handled by the parent component
+                 window.dispatchEvent(new CustomEvent('openContactForm'));
+               }}
+               className="mt-3 w-full bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+             >
+               Open Contact Form
+             </button>
+           </div>
 
           {/* Demo credentials */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
