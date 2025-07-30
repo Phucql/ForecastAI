@@ -5,6 +5,7 @@ This guide explains how to set up the authentication system for your ForecastAI 
 
 ## Features
 - Beautiful landing page with modern design
+- Email-based user registration and login
 - Secure login/logout functionality
 - Protected routes
 - JWT-based authentication
@@ -26,14 +27,19 @@ VITE_API_BASE_URL=https://your-render-backend-url.onrender.com
 
 ### 2. Backend Configuration
 
-Your server already has the authentication endpoints configured:
+Your server has the authentication endpoints configured:
+- `POST /api/signup` - User registration endpoint
 - `POST /api/login` - Login endpoint
 - `POST /api/logout` - Logout endpoint  
 - `GET /api/me` - Get current user info
 
-### 3. Admin Credentials
-- Username: `admin`
-- Password: `Klug123`
+### 3. User Registration
+
+Users can now sign up using their email address. The system includes:
+- Email validation
+- Password requirements (minimum 6 characters)
+- Username creation
+- Automatic login after successful signup
 
 ### 4. Deployment
 
@@ -72,10 +78,12 @@ src/
 ## How It Works
 
 1. **Landing Page**: Users see a beautiful landing page when not authenticated
-2. **Login**: Click "Get Started" to open login modal
-3. **Authentication**: JWT tokens are stored in HTTP-only cookies
-4. **Protected Routes**: All app routes require authentication
-5. **Logout**: Users can logout from the header
+2. **Registration/Login**: Click "Get Started" to open login/signup modal
+3. **Signup**: Users can create accounts with email, username, and password
+4. **Login**: Existing users can sign in with email and password
+5. **Authentication**: JWT tokens are stored in HTTP-only cookies
+6. **Protected Routes**: All app routes require authentication
+7. **Logout**: Users can logout from the header
 
 ## Security Features
 
@@ -91,14 +99,13 @@ src/
 The components use Tailwind CSS. You can customize colors, spacing, and layout by modifying the className attributes.
 
 ### User Management
-To add more users, modify the `USERS` array in `server.ts`:
+The system now uses email-based registration. Users are stored in memory (replace with database in production):
 
 ```javascript
-const USERS = [
-  { username: 'admin', passwordHash: bcrypt.hashSync('Klug123', 10) },
-  { username: 'user2', passwordHash: bcrypt.hashSync('user2password', 10) }
-];
+const USERS: { email: string; passwordHash: string; username: string }[] = [];
 ```
+
+For production, integrate with your PostgreSQL database to persist user data.
 
 ### Database Integration
 For production, replace the in-memory user array with database queries in the login endpoint.

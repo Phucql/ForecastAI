@@ -36,7 +36,7 @@ const KLUGLogo: React.FC<KLUGLogoProps> = ({ className = '', size = 'md' }) => {
       {/* Text part */}
       <div className="flex flex-col">
         <span className="text-gray-500 font-semibold text-sm leading-tight">KLUG</span>
-        <span className="text-orange-500 font-bold text-lg leading-tight">ForecastAI</span>
+        <span className="text-orange-500 font-bold text-lg leading-tight">AI</span>
       </div>
     </div>
   );

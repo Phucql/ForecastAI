@@ -4,12 +4,13 @@ import LandingPage from './LandingPage';
 import LoginForm from './LoginForm';
 
 interface LoginPageProps {
-  onLogin: (username: string, password: string) => Promise<void>;
+  onLogin: (email: string, password: string) => Promise<void>;
+  onSignup: (email: string, password: string, username: string) => Promise<void>;
   isLoading?: boolean;
   error?: string;
 }
 
-export default function LoginPage({ onLogin, isLoading = false, error }: LoginPageProps) {
+export default function LoginPage({ onLogin, onSignup, isLoading = false, error }: LoginPageProps) {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleGetStarted = () => {
@@ -20,8 +21,12 @@ export default function LoginPage({ onLogin, isLoading = false, error }: LoginPa
     setShowLoginModal(false);
   };
 
-  const handleLogin = async (username: string, password: string) => {
-    await onLogin(username, password);
+  const handleLogin = async (email: string, password: string) => {
+    await onLogin(email, password);
+  };
+
+  const handleSignup = async (email: string, password: string, username: string) => {
+    await onSignup(email, password, username);
   };
 
   return (
@@ -45,6 +50,7 @@ export default function LoginPage({ onLogin, isLoading = false, error }: LoginPa
               
               <LoginForm 
                 onLogin={handleLogin}
+                onSignup={handleSignup}
                 isLoading={isLoading}
                 error={error}
               />

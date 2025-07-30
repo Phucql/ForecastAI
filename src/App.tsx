@@ -98,7 +98,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
   ] as const;
 
   return (
-    <nav className="bg-white border-b border-gray-200">
+    <nav className="bg-white border-b border-orange-200">
       <div className="container mx-auto">
         <div className="flex space-x-4">
           {tabs.map((tab) => {
@@ -109,8 +109,8 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
                   ${activeTab === tab.id 
-                    ? (['reports-analytics', 'demand-plan-inputs', 'supply-network-model', 'manage-users'].includes(tab.id) ? 'text-orange-500' : 'border-b-2 border-orange-500 text-orange-500')
-                    : 'text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300'
+                    ? 'border-b-2 border-orange-500 text-orange-600'
+                    : 'text-gray-500 hover:text-orange-600 hover:border-b-2 hover:border-orange-300'
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -1163,18 +1163,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-gray-800 text-white p-4">
+      <header className="bg-orange-600 text-white p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div 
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={navigateHome}
           >
             <div className="flex items-center space-x-4">
-              <img src="/KLUGAI_logo.png" alt="KlugAI Logo" className="h-16 w-auto" />
+              <img src="/KLUGAI_logo.png" alt="KLUGAI Logo" className="h-16 w-auto" />
+              <span className="text-2xl font-bold">KLUGAI</span>
             </div>
           </div>
           <button 
-            className="p-2 hover:bg-gray-700 rounded-full"
+            className="p-2 hover:bg-orange-700 rounded-full transition-colors"
             onClick={navigateHome}
           >
             <Home className="h-6 w-6" />

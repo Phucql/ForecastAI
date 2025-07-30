@@ -56,28 +56,92 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const COOKIE_NAME = 'token';
 
 app.use(cookieParser());
+app.use(express.json());
 app.use(cors({
   origin: ['https://foodforecastai.netlify.app', 'http://localhost:5173'],
   credentials: true
 }));
 
-// Global admin user (replace with DB lookup in production)
-const USERS = [{ username: 'admin', passwordHash: bcrypt.hashSync('Klug123', 10) }];
+// User storage (replace with DB in production)
+const USERS: { email: string; passwordHash: string; username: string }[] = [];
+
+// Email validation function
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Signup endpoint
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { email, password, username } = req.body;
+    
+    // Validation
+    if (!email || !password || !username) {
+      return res.status(400).json({ error: 'Email, password, and username are required' });
+    }
+    
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+    
+    // Check if user already exists
+    const existingUser = USERS.find(u => u.email === email || u.username === username);
+    if (existingUser) {
+      return res.status(409).json({ error: 'User with this email or username already exists' });
+    }
+    
+    // Hash password and create user
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const newUser = { email, passwordHash, username };
+    USERS.push(newUser);
+    
+    // Create JWT token
+    const token = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+    
+    res.json({ success: true, user: { email, username } });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = USERS.find(u => u.username === username);
-  if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    
+    const user = USERS.find(u => u.email === email);
+    if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign({ email: user.email, username: user.username }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+    
+    res.json({ success: true, user: { email: user.email, username: user.username } });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1d' });
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  });
-  res.json({ success: true });
 });
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -97,10 +161,8 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
-  res.json({ username: req.user.username });
+  res.json({ username: req.user.username, email: req.user.email });
 });
-
-app.use(express.json());
 
 
 AWS.config.update({
@@ -1111,7 +1173,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
         //   Body: forecastCsv,
         //   ContentType: 'text/csv',
         //   Metadata: {
-        //     owner: 'ForecastAI',
+        //     owner: 'KLUGAI',
         //     status: 'Active',
         //     description: `Forecast generated for ${baseFileName}.csv on ${today}`
         //   }
@@ -1124,7 +1186,7 @@ app.post('/api/run-forecast-py', async (req, res) => {
           Body: forecastCsv,
           ContentType: 'text/csv',
           Metadata: {
-            owner: 'ForecastAI',
+            owner: 'KLUGAI',
             status: 'Active',
             description: `Forecast generated for ${baseFileName}.csv on ${today}`
           }
@@ -1175,7 +1237,7 @@ app.post('/api/merge-forecast-files', async (req, res) => {
       Body: mergedCsv,
       ContentType: 'text/csv',
       Metadata: {
-        owner: 'ForecastAI',
+        owner: 'KLUGAI',
         status: 'Final',
         description: `Merged manually for ${originalKey} + ${forecastKey}`
       }
@@ -1841,7 +1903,7 @@ app.get('/api/list-forecast-results', async (_req, res) => {
     const files = (data.Contents || []).map(obj => ({
       key: obj.Key!,
       name: obj.Key?.split('/').pop(),
-      owner: 'ForecastAI',
+      owner: 'KLUGAI',
       status: 'Active',
     }));
     res.json(files);
