@@ -21,6 +21,10 @@
     <button onclick="testGetSession()">Get Test Session</button>
     <button onclick="testDebug()">Debug Info</button>
     
+    <h2>Test Cookie Endpoints</h2>
+    <button onclick="testSetCookie()">Set Test Cookie</button>
+    <button onclick="testGetCookie()">Get Test Cookie</button>
+    
     <h2>Authentication Test</h2>
     <button onclick="testSignup()">Test Signup</button>
     <button onclick="testLogin()">Test Login</button>
@@ -131,6 +135,38 @@
                 showResult('/api/me Result', data, response.ok);
             } catch (error) {
                 showResult('/api/me Error', error.message, false);
+            }
+        }
+        
+        async function testSetCookie() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test-cookie`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ test: 'data' })
+                });
+                
+                const data = await response.json();
+                showResult('Set Test Cookie Result', data, response.ok);
+            } catch (error) {
+                showResult('Set Test Cookie Error', error.message, false);
+            }
+        }
+        
+        async function testGetCookie() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test-cookie`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('Get Test Cookie Result', data, response.ok);
+            } catch (error) {
+                showResult('Get Test Cookie Error', error.message, false);
             }
         }
         

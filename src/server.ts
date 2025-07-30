@@ -77,11 +77,21 @@ console.log('🔧 Using SESSION_SECRET:', SESSION_SECRET ? '***' : 'fallback');
 
 app.use(cookieParser());
 app.use(express.json());
+
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log('🌐 Request:', req.method, req.path);
+  console.log('🌐 Origin:', req.headers.origin);
+  console.log('🌐 All cookies:', req.headers.cookie);
+  console.log('🌐 User-Agent:', req.headers['user-agent']);
+  next();
+});
 app.use(cors({
   origin: ['https://foodforecastai.netlify.app', 'http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie'],
+  exposedHeaders: ['Set-Cookie']
 }));
 
 // Session configuration
@@ -93,7 +103,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'none', // Changed to 'none' for cross-origin requests
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     domain: undefined // Removed domain setting to avoid issues
   },
@@ -284,6 +294,42 @@ app.get('/api/test-session-get', (req, res) => {
     testData: req.session.testData,
     user: req.session.user,
     cookies: req.headers.cookie
+  });
+});
+
+// Test endpoint to set a simple cookie
+app.post('/api/test-cookie', (req, res) => {
+  console.log('🍪 Setting test cookie...');
+  
+  // Set a simple cookie
+  res.cookie('testCookie', 'hello-world', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000
+  });
+  
+  res.json({ 
+    success: true, 
+    message: 'Test cookie set',
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none'
+    }
+  });
+});
+
+// Test endpoint to get cookies
+app.get('/api/test-cookie', (req, res) => {
+  console.log('🍪 Getting test cookie...');
+  console.log('🍪 All cookies:', req.headers.cookie);
+  console.log('🍪 Parsed cookies:', req.cookies);
+  
+  res.json({
+    allCookies: req.headers.cookie,
+    parsedCookies: req.cookies,
+    testCookie: req.cookies.testCookie
   });
 });
 
