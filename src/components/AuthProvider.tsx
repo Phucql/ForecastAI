@@ -19,14 +19,21 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUser = async () => {
+    if (!token) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${BASE_URL}/api/me`, { 
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
       if (res.ok) {
@@ -34,10 +41,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
       } else {
         setUser(null);
+        // Clear invalid token
+        localStorage.removeItem('authToken');
+        setToken(null);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
       setUser(null);
+      // Clear invalid token
+      localStorage.removeItem('authToken');
+      setToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [token]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -54,13 +67,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
       if (res.ok) {
-        await fetchUser(); // Refresh user data
-        return { success: true };
+        const data = await res.json();
+        if (data.token) {
+          // Store token
+          localStorage.setItem('authToken', data.token);
+          setToken(data.token);
+          setUser(data.user);
+          return { success: true };
+        } else {
+          return { success: false, error: 'No token received' };
+        }
       } else {
         const errorData = await res.json();
         return { success: false, error: errorData.error || 'Login failed' };
@@ -78,13 +98,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({ email, password, username }),
       });
 
       if (res.ok) {
-        await fetchUser(); // Refresh user data
-        return { success: true };
+        const data = await res.json();
+        if (data.token) {
+          // Store token
+          localStorage.setItem('authToken', data.token);
+          setToken(data.token);
+          setUser(data.user);
+          return { success: true };
+        } else {
+          return { success: false, error: 'No token received' };
+        }
       } else {
         const errorData = await res.json();
         return { success: false, error: errorData.error || 'Signup failed' };
@@ -97,16 +124,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch(`${BASE_URL}/api/logout`, { 
-        method: 'POST', 
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      if (token) {
+        await fetch(`${BASE_URL}/api/logout`, { 
+          method: 'POST', 
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear token and user
+      localStorage.removeItem('authToken');
+      setToken(null);
       setUser(null);
     }
   };
