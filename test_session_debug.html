@@ -29,11 +29,13 @@
     <button onclick="testSignup()">Test Signup</button>
     <button onclick="testLogin()">Test Login</button>
     <button onclick="testMe()">Test /api/me</button>
+    <button onclick="testAuth()">Test Auth (with token)</button>
     
     <div id="result"></div>
 
     <script>
         const API_BASE = 'https://forecastai-ii8z.onrender.com';
+        let currentToken = null;
         
         async function testSetSession() {
             try {
@@ -97,6 +99,9 @@
                 });
                 
                 const data = await response.json();
+                if (data.success && data.token) {
+                    currentToken = data.token;
+                }
                 showResult('Signup Result', data, response.ok);
             } catch (error) {
                 showResult('Signup Error', error.message, false);
@@ -118,6 +123,9 @@
                 });
                 
                 const data = await response.json();
+                if (data.success && data.token) {
+                    currentToken = data.token;
+                }
                 showResult('Login Result', data, response.ok);
             } catch (error) {
                 showResult('Login Error', error.message, false);
@@ -167,6 +175,29 @@
                 showResult('Get Test Cookie Result', data, response.ok);
             } catch (error) {
                 showResult('Get Test Cookie Error', error.message, false);
+            }
+        }
+        
+        async function testAuth() {
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (currentToken) {
+                    headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+                
+                const response = await fetch(`${API_BASE}/api/test-auth`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: headers
+                });
+                
+                const data = await response.json();
+                showResult('Test Auth Result', data, response.ok);
+            } catch (error) {
+                showResult('Test Auth Error', error.message, false);
             }
         }
         
