@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import pkg from 'pg';
 import chardet from 'chardet';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -181,7 +182,7 @@ app.post('/api/signup', async (req, res) => {
     console.log('🎫 Session after creation:', req.session);
     
     // Generate a secure token
-    const token = require('crypto').randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex');
     const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
     
     // Store token
@@ -241,7 +242,7 @@ app.post('/api/login', async (req, res) => {
     console.log('🎫 Session after creation:', req.session);
     
     // Generate a secure token
-    const token = require('crypto').randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex');
     const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
     
     // Store token
