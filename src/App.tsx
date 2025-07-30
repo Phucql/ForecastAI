@@ -21,7 +21,8 @@ import {
   Edit2,
   Play,
   Upload,
-  AlertCircle
+  AlertCircle,
+  LogOut
 } from 'lucide-react';
 import Plot from 'react-plotly.js';
 import { FileUpload } from './components/FileUpload';
@@ -44,6 +45,7 @@ import MergeAndUploadButton from './components/MergeAndUploadButton';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import ManageTablesReportPage from './components/ManageTablesReportPage';
 import { Card, CardContent } from '@/components/utils/card';
+import { useAuth } from './components/AuthProvider';
 import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
@@ -98,19 +100,19 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
   ] as const;
 
   return (
-    <nav className="bg-white border-b border-orange-200">
+    <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="container mx-auto">
-        <div className="flex space-x-4">
+        <div className="flex space-x-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors
+                className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-all duration-200 rounded-t-lg
                   ${activeTab === tab.id 
-                    ? 'border-b-2 border-orange-500 text-orange-600'
-                    : 'text-gray-500 hover:text-orange-600 hover:border-b-2 hover:border-orange-300'
+                    ? 'bg-orange-50 border-b-2 border-orange-500 text-orange-700 shadow-sm'
+                    : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50 hover:border-b-2 hover:border-orange-300'
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -125,6 +127,7 @@ function NavigationTabs({ activeTab, setActiveTab }: { activeTab: Tab; setActive
 }
 
 function App() {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('demand-plan-inputs');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('starts-with');
@@ -421,62 +424,90 @@ function App() {
   };
 
   const DemandPlanInputs = () => (
-    <div className="grid grid-cols-3 gap-6 p-6">
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowCalendarModal(true)}>
-        <Calendar className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Calendar Values</span>
+    <div className="max-w-7xl mx-auto p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowCalendarModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Calendar className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Calendar Values</span>
+        </div>
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowCollectedMeasureModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Database className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Collected Measure Data</span>
+        </div>
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowDemandClassesModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Grid className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Demand Classes</span>
+        </div>
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowItemColorsModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Package className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Items</span>
+        </div>
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowSubinventoriesModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Warehouse className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Item Subinventories</span>
+        </div>
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowUnitsModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Ruler className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Units of Measure</span>
+        </div>
       </div>
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowCollectedMeasureModal(true)}>
-        <Database className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Collected Measure Data</span>
-      </div>
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowDemandClassesModal(true)}>
-        <Grid className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Demand Classes</span>
-      </div>
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowItemColorsModal(true)}>
-        <Package className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Items</span>
-      </div>
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowSubinventoriesModal(true)}>
-        <Warehouse className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Item Subinventories</span>
-      </div>
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowUnitsModal(true)}>
-        <Ruler className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Units of Measure</span>
-      </div>
-      <div className="bg-white rounded-lg border-2 border-orange-200 shadow-sm p-8 flex flex-col items-center justify-center text-center">
-        <FileUpload
-          accept=".csv,.json"
-          onUploadSuccess={handleFileUploadSuccess}
-          onUploadError={(error) => {
-            console.error('Upload error:', error);
-            alert(error);
-          }}
-        />
+      
+      {/* Upload Data Section */}
+      <div className="mt-12">
+        <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl border-2 border-dashed border-orange-300 p-12 flex flex-col items-center justify-center text-center">
+          <FileUpload
+            accept=".csv,.json"
+            onUploadSuccess={handleFileUploadSuccess}
+            onUploadError={(error) => {
+              console.error('Upload error:', error);
+              alert(error);
+            }}
+          />
+        </div>
       </div>
     </div>
   );
 
   const SupplyNetworkModel = () => (
-    <div className="grid grid-cols-3 gap-6 p-6">
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowOrganizationsModal(true)}>
-        <Building2 className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Organizations</span>
-      </div>
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowCustomerNamesModal(true)}>
-        <Users className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Customers</span>
+    <div className="max-w-7xl mx-auto p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowOrganizationsModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Building2 className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Organizations</span>
+        </div>
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowCustomerNamesModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Users className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Customers</span>
+        </div>
       </div>
     </div>
   );
 
   const ManageUsers = () => (
-    <div className="grid grid-cols-3 gap-6 p-6">
-      <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group" onClick={() => setShowUsersModal(true)}>
-        <Users className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-        <span className="text-lg font-semibold text-black">Users</span>
+    <div className="max-w-7xl mx-auto p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group" onClick={() => setShowUsersModal(true)}>
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+            <Users className="w-10 h-10 text-white" />
+          </div>
+          <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Users</span>
+        </div>
       </div>
     </div>
   );
@@ -489,20 +520,26 @@ function App() {
     onShowReport: () => void;
   }) => {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6">
-        <div
-          onClick={() => setShowReportPage(true)}
-          className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group"
-        >
-          <TableIcon className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-          <span className="text-lg font-semibold text-black">Manage Tables</span>
-        </div>
-        <div
-          onClick={() => setShowGraphModal(true)}
-          className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-lg border-2 border-orange-200 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all p-8 text-center group"
-        >
-          <LineChart className="w-16 h-16 text-orange-500 mb-4 group-hover:text-orange-600 transition-colors" />
-          <span className="text-lg font-semibold text-black">Manage Graphs</span>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div
+            onClick={() => setShowReportPage(true)}
+            className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group"
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+              <TableIcon className="w-10 h-10 text-white" />
+            </div>
+            <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Manage Tables</span>
+          </div>
+          <div
+            onClick={() => setShowGraphModal(true)}
+            className="cursor-pointer flex flex-col items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-orange-300 hover:scale-105 transition-all duration-300 p-10 text-center group"
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:from-orange-500 group-hover:to-orange-700 transition-all duration-300">
+              <LineChart className="w-10 h-10 text-white" />
+            </div>
+            <span className="text-xl font-semibold text-gray-800 group-hover:text-orange-700 transition-colors">Manage Graphs</span>
+          </div>
         </div>
       </div>
     );
@@ -1163,7 +1200,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-orange-600 text-white p-4">
+      <header className="bg-black text-white p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div 
             className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -1171,15 +1208,26 @@ function App() {
           >
             <div className="flex items-center space-x-4">
               <img src="/KLUGAI_logo.png" alt="KLUGAI Logo" className="h-16 w-auto" />
-              <span className="text-2xl font-bold">KLUGAI</span>
             </div>
           </div>
-          <button 
-            className="p-2 hover:bg-orange-700 rounded-full transition-colors"
-            onClick={navigateHome}
-          >
-            <Home className="h-6 w-6" />
-          </button>
+          <div className="flex items-center space-x-4">
+            <button 
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              onClick={navigateHome}
+            >
+              <Home className="h-6 w-6" />
+            </button>
+            <div className="flex items-center space-x-2 text-sm">
+              <span>Welcome, {user?.username} ({user?.email})</span>
+            </div>
+            <button
+              onClick={logout}
+              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </header>
 

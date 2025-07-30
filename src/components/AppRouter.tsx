@@ -3,10 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuth } from './AuthProvider';
 import LoginPage from './LoginPage';
 import ProtectedRoute from './ProtectedRoute';
-import MainApp from './MainApp';
+import App from '../App';
+import DemoPopup from './DemoPopup';
 
 export default function AppRouter() {
-  const { user, login, signup, isLoading } = useAuth();
+  const { user, login, signup, isLoading, showDemoPopup, setShowDemoPopup } = useAuth();
   const [loginError, setLoginError] = useState<string>('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -75,11 +76,17 @@ export default function AppRouter() {
           path="/*" 
           element={
             <ProtectedRoute>
-              <MainApp />
+              <App />
             </ProtectedRoute>
           } 
         />
       </Routes>
+      
+      {/* Demo Popup */}
+      <DemoPopup 
+        isOpen={showDemoPopup} 
+        onClose={() => setShowDemoPopup(false)} 
+      />
     </Router>
   );
 } 

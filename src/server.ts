@@ -211,6 +211,32 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
+    // Demo credentials check
+    if (email === 'admin@klug.com' && password === 'Klug2025') {
+      console.log('✅ Demo login successful');
+      
+      // Generate a secure token
+      const token = crypto.randomBytes(32).toString('hex');
+      const expires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+      
+      // Store token
+      ACTIVE_TOKENS[token] = {
+        email: email,
+        username: 'Admin',
+        expires: expires
+      };
+      
+      console.log('🎫 Token generated:', token);
+      console.log('🎫 Token expires:', new Date(expires).toISOString());
+      
+      return res.json({ 
+        success: true, 
+        user: { email: email, username: 'Admin' },
+        token: token
+      });
+    }
+    
+    // Regular user authentication
     const user = USERS.find(u => u.email === email);
     console.log('🔍 User lookup result:', user ? 'User found' : 'User not found');
     

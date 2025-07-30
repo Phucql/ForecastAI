@@ -11,6 +11,8 @@ interface AuthContextType {
   signup: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isLoading: boolean;
+  showDemoPopup: boolean;
+  setShowDemoPopup: (show: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -21,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
   const [isLoading, setIsLoading] = useState(true);
+  const [showDemoPopup, setShowDemoPopup] = useState(false);
 
   const fetchUser = async () => {
     if (!token) {
@@ -61,6 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    // Demo credentials check
+    if (email !== 'admin@klug.com' || password !== 'Klug2025') {
+      return { success: false, error: 'For demo purposes, please use admin@klug.com / Klug2025' };
+    }
+
     try {
       const res = await fetch(`${BASE_URL}/api/login`, {
         method: 'POST',
@@ -92,34 +100,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signup = async (email: string, password: string, username: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, username }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.token) {
-          // Store token
-          localStorage.setItem('authToken', data.token);
-          setToken(data.token);
-          setUser(data.user);
-          return { success: true };
-        } else {
-          return { success: false, error: 'No token received' };
-        }
-      } else {
-        const errorData = await res.json();
-        return { success: false, error: errorData.error || 'Signup failed' };
-      }
-    } catch (error) {
-      console.error('Signup error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
-    }
+    // Show demo popup after signup
+    setShowDemoPopup(true);
+    return { success: true };
   };
 
   const logout = async () => {
@@ -144,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, showDemoPopup, setShowDemoPopup }}>
       {children}
     </AuthContext.Provider>
   );

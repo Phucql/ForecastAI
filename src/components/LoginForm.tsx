@@ -34,6 +34,13 @@ export default function LoginForm({ onLogin, onSignup, isLoading = false, error 
           <p className="text-gray-600">
             {isSignup ? 'Sign up to get started' : 'Sign in to your account to continue'}
           </p>
+          {!isSignup && (
+            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-700">
+                <strong>Demo:</strong> admin@klug.com / Klug2025
+              </p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
