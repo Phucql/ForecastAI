@@ -11,7 +11,7 @@ import AWS from 'aws-sdk';
 import fs from 'fs';
 import Papa from 'papaparse';
 import { spawn } from 'child_process';
-import jwt from 'jsonwebtoken';
+import session from 'express-session';
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import path from 'path'; // Added for path.join
@@ -24,6 +24,15 @@ declare global {
     interface Request {
       user?: any;
     }
+  }
+}
+
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      email: string;
+      username: string;
+    };
   }
 }
 
@@ -52,8 +61,7 @@ const { Pool } = pkg;
 const app = express();
 const port = 3001;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const COOKIE_NAME = 'token';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'your-session-secret-key';
 
 app.use(cookieParser());
 app.use(express.json());
@@ -62,6 +70,19 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
+
+// Session configuration
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // User storage (replace with DB in production)
@@ -108,16 +129,9 @@ app.post('/api/signup', async (req, res) => {
     USERS.push(newUser);
     console.log('👤 New user created:', email);
     
-    // Create JWT token
-    const token = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '1d' });
-    console.log('🎫 Token created for new user');
-    
-    res.cookie(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true for HTTPS in production
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    });
+    // Create session
+    req.session.user = { email, username };
+    console.log('🎫 Session created for new user');
     
     console.log('✅ Signup successful for user:', email);
     res.json({ success: true, user: { email, username } });
@@ -145,15 +159,9 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    const token = jwt.sign({ email: user.email, username: user.username }, JWT_SECRET, { expiresIn: '1d' });
-    console.log('🎫 Token created successfully');
-    
-    res.cookie(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true for HTTPS in production
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    });
+    // Create session
+    req.session.user = { email: user.email, username: user.username };
+    console.log('🎫 Session created successfully');
     
     console.log('✅ Login successful for user:', user.email);
     res.json({ success: true, user: { email: user.email, username: user.username } });
@@ -164,34 +172,29 @@ app.post('/api/login', async (req, res) => {
 });
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
-  console.log('🔐 Auth check - Cookies:', req.cookies);
-  console.log('🔐 Auth check - Cookie name:', COOKIE_NAME);
-  console.log('🔐 Auth check - JWT_SECRET exists:', !!process.env.JWT_SECRET);
+  console.log('🔐 Auth check - Session:', req.session);
+  console.log('🔐 Auth check - Session user:', req.session.user);
+  console.log('🔐 Auth check - SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
   console.log('🔐 Auth check - NODE_ENV:', process.env.NODE_ENV);
   
-  const token = req.cookies[COOKIE_NAME];
-  if (!token) {
-    console.log('❌ No token found in cookies');
-    return res.status(401).json({ error: 'No token' });
+  if (!req.session.user) {
+    console.log('❌ No user found in session');
+    return res.status(401).json({ error: 'Not authenticated' });
   }
   
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    console.log('✅ Token verified successfully for user:', req.user);
-    next();
-  } catch (error) {
-    console.log('❌ Token verification failed:', error);
-    res.status(401).json({ error: 'Invalid token' });
-  }
+  req.user = req.session.user;
+  console.log('✅ Session verified successfully for user:', req.user);
+  next();
 }
 
 app.post('/api/logout', (req, res) => {
-  res.clearCookie(COOKIE_NAME, { 
-    httpOnly: true, 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Failed to logout' });
+    }
+    res.json({ success: true });
   });
-  res.json({ success: true });
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
@@ -208,15 +211,15 @@ app.get('/api/debug/users', (req, res) => {
   });
 });
 
-// Debug endpoint to check environment and cookies
+// Debug endpoint to check environment and session
 app.get('/api/debug/auth', (req, res) => {
   console.log('🔍 Debug - Auth environment check');
   res.json({ 
-    hasJwtSecret: !!process.env.JWT_SECRET,
+    hasSessionSecret: !!process.env.SESSION_SECRET,
     nodeEnv: process.env.NODE_ENV,
-    cookies: req.cookies,
-    cookieName: COOKIE_NAME,
-    hasToken: !!req.cookies[COOKIE_NAME]
+    session: req.session,
+    hasUser: !!req.session.user,
+    user: req.session.user
   });
 });
 
@@ -442,7 +445,7 @@ app.get('/', (_req, res) => {
 app.get('/api/planning-units', async (_req, res) => {
   try {
     const result = await pool.query('SELECT DISTINCT "Planning Unit" FROM "inital_db" WHERE "Planning Unit" IS NOT NULL ORDER BY "Planning Unit"');
-    res.json(result.rows.map(r => r['Planning Unit']));
+    res.json(result.rows.map((r: any) => r['Planning Unit']));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch planning units' });
   }
@@ -452,7 +455,7 @@ app.get('/api/business-units', async (req, res) => {
   const { planningUnit } = req.query;
   try {
     const result = await pool.query('SELECT DISTINCT "Business Unit" FROM "inital_db" WHERE "Planning Unit" = $1 AND "Business Unit" IS NOT NULL ORDER BY "Business Unit"', [planningUnit]);
-    res.json(result.rows.map(r => r['Business Unit']));
+    res.json(result.rows.map((r: any) => r['Business Unit']));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch business units' });
   }
@@ -462,7 +465,7 @@ app.get('/api/families', async (req, res) => {
   const { businessUnit } = req.query;
   try {
     const result = await pool.query('SELECT DISTINCT "Family" FROM "inital_db" WHERE "Business Unit" = $1 AND "Family" IS NOT NULL ORDER BY "Family"', [businessUnit]);
-    res.json(result.rows.map(r => r['Family']));
+    res.json(result.rows.map((r: any) => r['Family']));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch families' });
   }
@@ -472,7 +475,7 @@ app.get('/api/subfamilies', async (req, res) => {
   const { family } = req.query;
   try {
     const result = await pool.query('SELECT DISTINCT "Subfamily" FROM "inital_db" WHERE "Family" = $1 AND "Subfamily" IS NOT NULL ORDER BY "Subfamily"', [family]);
-    res.json(result.rows.map(r => r['Subfamily']));
+    res.json(result.rows.map((r: any) => r['Subfamily']));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch subfamilies' });
   }
@@ -482,7 +485,7 @@ app.get('/api/colors', async (req, res) => {
   const { subfamily } = req.query;
   try {
     const result = await pool.query('SELECT DISTINCT "Color" FROM "inital_db" WHERE "Subfamily" = $1 AND "Color" IS NOT NULL ORDER BY "Color"', [subfamily]);
-    res.json(result.rows.map(r => r['Color']));
+    res.json(result.rows.map((r: any) => r['Color']));
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch colors' });
   }
@@ -506,7 +509,7 @@ app.get('/api/products', async (req, res) => {
     const result = await pool.query(query, [parsedColor]);
     console.log('[DEBUG] Products found:', result.rows.length);
 
-    res.json(result.rows.map(r => r["PRD_LVL_MEMBER_NAME"]));
+    res.json(result.rows.map((r: any) => r["PRD_LVL_MEMBER_NAME"]));
   } catch (err) {
     console.error('[ERROR] Failed to fetch products:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -524,7 +527,7 @@ app.get('/api/demand-classes', async (req, res) => {
     }
     query += ' ORDER BY "Customer Class Code"';
     const result = await pool.query(query, params);
-    const arr = Array.isArray(result.rows) ? result.rows.map(r => r['Customer Class Code']) : [];
+    const arr = Array.isArray(result.rows) ? result.rows.map((r: any) => r['Customer Class Code']) : [];
     res.json(arr);
   } catch (err) {
     res.json([]);
@@ -563,7 +566,7 @@ app.get('/api/available-demand-classes', async (req, res) => {
     }
     query += ' ORDER BY "Customer Class Code"';
     const result = await pool.query(query, params);
-    const arr = Array.isArray(result.rows) ? result.rows.map(r => r['Customer Class Code']) : [];
+    const arr = Array.isArray(result.rows) ? result.rows.map((r: any) => r['Customer Class Code']) : [];
     res.json(arr);
   } catch (err) {
     res.json([]);
@@ -582,7 +585,7 @@ app.get('/api/calendar-data', async (_req, res) => {
         ORDER BY full_date DESC
       `;
     const result = await pool.query(query);
-    const response = result.rows.map(row => ({
+    const response = result.rows.map((row: any) => ({
       date: row.full_date,
       year: row.year,
       month: row.month
@@ -1405,7 +1408,7 @@ app.get('/api/final-forecast-report', async (req, res) => {
     }
 
     // Merge and calculate adjusted forecasts
-    const formatted = result.rows.map((row) => {
+    const formatted = result.rows.map((row: any) => {
       const forecast = forecastMap.get(row.item) || { forecast2025: 0, forecast2026: 0 };
       const adjusted2025 = forecast.forecast2025 * 1.05;
       const adjusted2026 = forecast.forecast2026 * 1.05;
@@ -1488,10 +1491,10 @@ app.get('/api/final-forecast-report/monthly', async (req, res) => {
     client.release();
 
     const origMap = new Map();
-    origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
+    origQuery.rows.forEach((r: any) => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[actualColumnName]));
+    forecastQuery.rows.forEach((r: any) => forecastMap.set(r.month, r[actualColumnName]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;
@@ -1616,7 +1619,7 @@ app.get('/api/business-level-forecast-report', async (req, res) => {
     }
 
     // Process individual items
-    const individualData = individualItems.rows.map((row) => {
+    const individualData = individualItems.rows.map((row: any) => {
       const forecast = forecastMap.get(row.item) || { forecast2025: 0, forecast2026: 0 };
       const adjusted2025 = forecast.forecast2025 * 1.05;
       const adjusted2026 = forecast.forecast2026 * 1.05;
@@ -1648,7 +1651,7 @@ app.get('/api/business-level-forecast-report', async (req, res) => {
 
     // Group by Color
     const colorGroups = new Map();
-    individualData.forEach(item => {
+    individualData.forEach((item: any) => {
       const colorKey = `${item.business_unit}||${item.family}||${item.subfamily}||${item.color}`;
       if (!colorGroups.has(colorKey)) {
         colorGroups.set(colorKey, {
@@ -1909,10 +1912,10 @@ app.get('/api/business-level-forecast-report/monthly', async (req, res) => {
     client.release();
 
     const origMap = new Map();
-    origQuery.rows.forEach(r => origMap.set(r.month, r.VALUE_NUMBER));
+    origQuery.rows.forEach((r: any) => origMap.set(r.month, r.VALUE_NUMBER));
 
     const forecastMap = new Map();
-    forecastQuery.rows.forEach(r => forecastMap.set(r.month, r[actualColumnName]));
+    forecastQuery.rows.forEach((r: any) => forecastMap.set(r.month, r[actualColumnName]));
 
     const buildRow = (month: string, year: number): any => {
       const history2YMonth = `${year - 2}-${month.slice(5)}`;

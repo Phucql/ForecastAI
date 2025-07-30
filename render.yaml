@@ -15,7 +15,7 @@ services:
         value: python3
       - key: TIMEGPT_API_KEY
         sync: false
-      - key: JWT_SECRET
+      - key: SESSION_SECRET
         sync: false
       - key: NODE_ENV
         value: production
