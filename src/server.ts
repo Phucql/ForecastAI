@@ -61,8 +61,8 @@ app.use(cors({
   credentials: true
 }));
 
-// Example user (replace with DB lookup in production)
-const USERS = [{ username: 'admin', passwordHash: bcrypt.hashSync('password123', 10) }];
+// Global admin user (replace with DB lookup in production)
+const USERS = [{ username: 'admin', passwordHash: bcrypt.hashSync('Klug123', 10) }];
 
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
