@@ -82,6 +82,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   console.log('🌐 Request:', req.method, req.path);
   console.log('🌐 Origin:', req.headers.origin);
+  console.log('🌐 Host:', req.headers.host);
   console.log('🌐 All cookies:', req.headers.cookie);
   console.log('🌐 User-Agent:', req.headers['user-agent']);
   next();
@@ -105,7 +106,7 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none', // Changed to 'none' for cross-origin requests
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    domain: undefined // Removed domain setting to avoid issues
+    domain: undefined // Let the browser handle the domain automatically
   },
   // Add more debugging
   unset: 'destroy'
@@ -169,6 +170,7 @@ app.post('/api/signup', async (req, res) => {
       }
       console.log('✅ Session saved successfully');
       console.log('✅ Session ID after save:', req.sessionID);
+      console.log('✅ Cookie domain:', process.env.NODE_ENV === 'production' ? '.onrender.com' : 'undefined');
       console.log('✅ Signup successful for user:', email);
       res.json({ success: true, user: { email, username } });
     });
@@ -300,13 +302,24 @@ app.get('/api/test-session-get', (req, res) => {
 // Test endpoint to set a simple cookie
 app.post('/api/test-cookie', (req, res) => {
   console.log('🍪 Setting test cookie...');
+  console.log('🍪 Host:', req.headers.host);
   
   // Set a simple cookie
   res.cookie('testCookie', 'hello-world', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none',
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 24 * 60 * 60 * 1000,
+    domain: undefined // Let browser handle domain
+  });
+  
+  // Also set a session cookie manually
+  res.cookie('manualSession', 'test-session-data', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    maxAge: 24 * 60 * 60 * 1000,
+    domain: undefined
   });
   
   res.json({ 
@@ -315,7 +328,8 @@ app.post('/api/test-cookie', (req, res) => {
     cookieOptions: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none'
+      sameSite: 'none',
+      domain: 'undefined (auto)'
     }
   });
 });
