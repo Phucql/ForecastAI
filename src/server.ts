@@ -58,8 +58,10 @@ const COOKIE_NAME = 'token';
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-  origin: ['https://foodforecastai.netlify.app', 'http://localhost:5173'],
-  credentials: true
+  origin: ['https://foodforecastai.netlify.app', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
 
 // User storage (replace with DB in production)
@@ -74,24 +76,29 @@ function isValidEmail(email: string): boolean {
 // Signup endpoint
 app.post('/api/signup', async (req, res) => {
   try {
+    console.log('📝 Signup attempt - Body:', req.body);
     const { email, password, username } = req.body;
     
     // Validation
     if (!email || !password || !username) {
+      console.log('❌ Signup failed - Missing required fields');
       return res.status(400).json({ error: 'Email, password, and username are required' });
     }
     
     if (!isValidEmail(email)) {
+      console.log('❌ Signup failed - Invalid email format');
       return res.status(400).json({ error: 'Invalid email format' });
     }
     
     if (password.length < 6) {
+      console.log('❌ Signup failed - Password too short');
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
     
     // Check if user already exists
     const existingUser = USERS.find(u => u.email === email || u.username === username);
     if (existingUser) {
+      console.log('❌ Signup failed - User already exists');
       return res.status(409).json({ error: 'User with this email or username already exists' });
     }
     
@@ -99,16 +106,20 @@ app.post('/api/signup', async (req, res) => {
     const passwordHash = bcrypt.hashSync(password, 10);
     const newUser = { email, passwordHash, username };
     USERS.push(newUser);
+    console.log('👤 New user created:', email);
     
     // Create JWT token
     const token = jwt.sign({ email, username }, JWT_SECRET, { expiresIn: '1d' });
+    console.log('🎫 Token created for new user');
+    
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production', // true for HTTPS in production
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000
     });
     
+    console.log('✅ Signup successful for user:', email);
     res.json({ success: true, user: { email, username } });
   } catch (error) {
     console.error('Signup error:', error);
@@ -118,25 +129,33 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   try {
+    console.log('🔑 Login attempt - Body:', req.body);
     const { email, password } = req.body;
     
     if (!email || !password) {
+      console.log('❌ Login failed - Missing email or password');
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
     const user = USERS.find(u => u.email === email);
+    console.log('🔍 User lookup result:', user ? 'User found' : 'User not found');
+    
     if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
+      console.log('❌ Login failed - Invalid credentials');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
     const token = jwt.sign({ email: user.email, username: user.username }, JWT_SECRET, { expiresIn: '1d' });
+    console.log('🎫 Token created successfully');
+    
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production', // true for HTTPS in production
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000
     });
     
+    console.log('✅ Login successful for user:', user.email);
     res.json({ success: true, user: { email: user.email, username: user.username } });
   } catch (error) {
     console.error('Login error:', error);
@@ -145,23 +164,60 @@ app.post('/api/login', async (req, res) => {
 });
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
+  console.log('🔐 Auth check - Cookies:', req.cookies);
+  console.log('🔐 Auth check - Cookie name:', COOKIE_NAME);
+  console.log('🔐 Auth check - JWT_SECRET exists:', !!process.env.JWT_SECRET);
+  console.log('🔐 Auth check - NODE_ENV:', process.env.NODE_ENV);
+  
   const token = req.cookies[COOKIE_NAME];
-  if (!token) return res.status(401).json({ error: 'No token' });
+  if (!token) {
+    console.log('❌ No token found in cookies');
+    return res.status(401).json({ error: 'No token' });
+  }
+  
   try {
     req.user = jwt.verify(token, JWT_SECRET);
+    console.log('✅ Token verified successfully for user:', req.user);
     next();
-  } catch {
+  } catch (error) {
+    console.log('❌ Token verification failed:', error);
     res.status(401).json({ error: 'Invalid token' });
   }
 }
 
 app.post('/api/logout', (req, res) => {
-  res.clearCookie(COOKIE_NAME, { httpOnly: true, secure: true, sameSite: 'lax' });
+  res.clearCookie(COOKIE_NAME, { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
   res.json({ success: true });
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
+  console.log('👤 /api/me called - User data:', req.user);
   res.json({ username: req.user.username, email: req.user.email });
+});
+
+// Debug endpoint to check current users (remove in production)
+app.get('/api/debug/users', (req, res) => {
+  console.log('🔍 Debug - Current users:', USERS.map(u => ({ email: u.email, username: u.username })));
+  res.json({ 
+    userCount: USERS.length, 
+    users: USERS.map(u => ({ email: u.email, username: u.username }))
+  });
+});
+
+// Debug endpoint to check environment and cookies
+app.get('/api/debug/auth', (req, res) => {
+  console.log('🔍 Debug - Auth environment check');
+  res.json({ 
+    hasJwtSecret: !!process.env.JWT_SECRET,
+    nodeEnv: process.env.NODE_ENV,
+    cookies: req.cookies,
+    cookieName: COOKIE_NAME,
+    hasToken: !!req.cookies[COOKIE_NAME]
+  });
 });
 
 
@@ -190,13 +246,17 @@ const s3Result = new AWS.S3({
 const FORECAST_RESULT_BUCKET = 'forecastai-file-upload';
 const FORECAST_RESULT_PREFIX = 'Forecast_Result/';
 
-const requiredEnvVars = ['VITE_DB_HOST', 'VITE_DB_NAME', 'VITE_DB_USER', 'VITE_DB_PASSWORD'];
+// Only require DB env vars if we're not in auth-only mode
+const isAuthOnlyMode = process.env.AUTH_ONLY_MODE === 'true';
+if (!isAuthOnlyMode) {
+  const requiredEnvVars = ['VITE_DB_HOST', 'VITE_DB_NAME', 'VITE_DB_USER', 'VITE_DB_PASSWORD'];
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       console.error(`Missing required environment variable: ${envVar}`);
       process.exit(1);
     }
   }
+}
 const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
   const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
   
@@ -276,19 +336,33 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 });
 
 
-const pool = new Pool({
-  host: process.env.VITE_DB_HOST,
-  database: process.env.VITE_DB_NAME,
-  user: process.env.VITE_DB_USER,
-  password: process.env.VITE_DB_PASSWORD,
-  port: 5432,
-  ssl: { rejectUnauthorized: false }
-});
-
+let pool: any = null;
 let isPoolEnding = false;
 
+if (!isAuthOnlyMode) {
+  pool = new Pool({
+    host: process.env.VITE_DB_HOST,
+    database: process.env.VITE_DB_NAME,
+    user: process.env.VITE_DB_USER,
+    password: process.env.VITE_DB_PASSWORD,
+    port: 5432,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  pool.connect((err: any, client: any, done: any) => {
+    if (err) {
+      console.error('Error connecting to the database:', err);
+    } else {
+      console.log('✅ Successfully connected to the database');
+      done();
+    }
+  });
+} else {
+  console.log('🔐 Running in auth-only mode - database connection disabled');
+}
+
 const gracefulShutdown = async () => {
-  if (isPoolEnding) return;
+  if (isPoolEnding || !pool) return;
   isPoolEnding = true;
   console.log('Closing database pool...');
   try {
@@ -298,15 +372,6 @@ const gracefulShutdown = async () => {
     console.error('Error closing database pool:', err);
   }
 };
-
-pool.connect((err, client, done) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-  } else {
-    console.log('✅ Successfully connected to the database');
-    done();
-  }
-});
 
 
 

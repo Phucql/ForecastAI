@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    
+    <div class="test-section">
+        <h3>Signup Test</h3>
+        <button onclick="testSignup()">Test Signup</button>
+        <div id="signup-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Login Test</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Me Test</h3>
+        <button onclick="testMe()">Test /api/me</button>
+        <div id="me-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Current Cookies</h3>
+        <button onclick="showCookies()">Show Cookies</button>
+        <div id="cookies-result"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://forecastai-ii8z.onrender.com';
+
+        function showResult(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.className = isSuccess ? 'success' : 'error';
+            element.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        async function testSignup() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'frontend-test@example.com',
+                        password: 'testpass123',
+                        username: 'frontendtest'
+                    }),
+                });
+
+                const data = await response.json();
+                showResult('signup-result', {
+                    status: response.status,
+                    data: data,
+                    headers: Object.fromEntries(response.headers.entries())
+                }, response.ok);
+            } catch (error) {
+                showResult('signup-result', { error: error.message }, false);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'frontend-test@example.com',
+                        password: 'testpass123'
+                    }),
+                });
+
+                const data = await response.json();
+                showResult('login-result', {
+                    status: response.status,
+                    data: data,
+                    headers: Object.fromEntries(response.headers.entries())
+                }, response.ok);
+            } catch (error) {
+                showResult('login-result', { error: error.message }, false);
+            }
+        }
+
+        async function testMe() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/me`, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                showResult('me-result', {
+                    status: response.status,
+                    data: data
+                }, response.ok);
+            } catch (error) {
+                showResult('me-result', { error: error.message }, false);
+            }
+        }
+
+        function showCookies() {
+            const cookies = document.cookie;
+            showResult('cookies-result', {
+                cookies: cookies,
+                cookieCount: cookies ? cookies.split(';').length : 0
+            }, true);
+        }
+    </script>
+</body>
+</html> 

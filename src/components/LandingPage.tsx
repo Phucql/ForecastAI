@@ -84,7 +84,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 <div className="flex items-center space-x-3">
                   <img src="/KLUGAI_logo.png" alt="KLUGAI Logo" className="h-10 w-auto" />
                   <h1 className="text-2xl font-bold text-orange-600">
-                    KLUGAI
                   </h1>
                 </div>
               </div>
