@@ -56,14 +56,7 @@ export default function DemoPopup({ isOpen, onClose }: DemoPopupProps) {
              </button>
            </div>
 
-          {/* Demo credentials */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600 mb-2">Demo Login Credentials:</p>
-            <div className="text-left">
-              <p className="text-sm"><span className="font-medium">Email:</span> admin@klug.com</p>
-              <p className="text-sm"><span className="font-medium">Password:</span> Klug2025</p>
-            </div>
-          </div>
+
 
           {/* Close button */}
           <button

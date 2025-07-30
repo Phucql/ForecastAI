@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import LandingPage from './LandingPage';
 import LoginForm from './LoginForm';
+import ContactForm from './ContactForm';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -12,9 +13,23 @@ interface LoginPageProps {
 
 export default function LoginPage({ onLogin, onSignup, isLoading = false, error }: LoginPageProps) {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
 
   const handleGetStarted = () => {
     setShowLoginModal(true);
+  };
+
+  const handleOpenContactForm = () => {
+    setShowContactForm(true);
+  };
+
+  const handleOpenLogin = () => {
+    setShowLoginModal(true);
+  };
+
+  const handleLogoClick = () => {
+    // Navigate to the main application
+    window.location.href = '/';
   };
 
   const handleCloseModal = () => {
@@ -31,7 +46,12 @@ export default function LoginPage({ onLogin, onSignup, isLoading = false, error 
 
   return (
     <>
-      <LandingPage onGetStarted={handleGetStarted} />
+      <LandingPage 
+        onGetStarted={handleGetStarted} 
+        onOpenContactForm={handleOpenContactForm}
+        onOpenLogin={handleOpenLogin}
+        onLogoClick={handleLogoClick}
+      />
       
       {/* Login Modal */}
       {showLoginModal && (
@@ -58,6 +78,12 @@ export default function LoginPage({ onLogin, onSignup, isLoading = false, error 
           </div>
         </div>
       )}
+      
+      {/* Contact Form */}
+      <ContactForm 
+        isOpen={showContactForm} 
+        onClose={() => setShowContactForm(false)} 
+      />
     </>
   );
 } 
