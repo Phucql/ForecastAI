@@ -939,8 +939,8 @@ export default function LandingPage({ onGetStarted, onOpenContactForm, onOpenLog
            {/* Trust indicators */}
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 pt-16 border-t border-gray-700">
              <div className="text-center">
-               <div className="text-3xl md:text-4xl font-bold text-white mb-2">50+</div>
-               <div className="text-gray-400">Fortune 1,000 customers</div>
+               <div className="text-3xl md:text-4xl font-bold text-white mb-2">500+</div>
+               <div className="text-gray-400">Happy Customers</div>
              </div>
              <div className="text-center">
                <div className="text-3xl md:text-4xl font-bold text-white mb-2">24/7</div>

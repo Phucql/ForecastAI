@@ -1237,25 +1237,53 @@ function App() {
       setRunReportMessage('❌ Please select a forecast result file.');
       return;
     }
-    // Extract original name from forecast result file name
-    const forecastResultName = selectedResultFile.split('/').pop() || '';
-    // Expected format: Klug Forecast AI_<Original Name>_<Date>.csv
-    const match = forecastResultName.match(/^Klug Forecast AI_(.+)_\d{4}-\d{2}-\d{2}\.csv$/);
-    if (!match) {
-      setRunReportMessage('❌ Could not determine original file from forecast result file name.');
-      return;
-    }
-    // Extract the original name from the match
-    const originalName = match[1] + '.csv';
-    // Find the original file in forecastFiles
-    const originalFile = forecastFiles.find(f => f.name === originalName);
-    if (!originalFile) {
-      setRunReportMessage(`❌ Original file '${originalName}' not found.`);
-      return;
-    }
+    
     setRunReportLoading(true);
-    setRunReportMessage('🔄 Processing data... This may take a few moments for large files.');
+    setRunReportMessage('');
+    
     try {
+      // Extract original name from forecast result file name
+      const forecastResultName = selectedResultFile.split('/').pop() || '';
+      
+      // Try multiple naming patterns to find the original file
+      let originalName = '';
+      let originalFile = null;
+      
+      // Pattern 1: Klug Forecast AI_<Original Name>_<Date>.csv
+      let match = forecastResultName.match(/^Klug Forecast AI_(.+)_\d{4}-\d{2}-\d{2}\.csv$/);
+      if (match) {
+        originalName = match[1] + '.csv';
+        originalFile = forecastFiles.find(f => f.name === originalName);
+      }
+      
+      // Pattern 2: If pattern 1 fails, try to find by removing "Klug Forecast AI_" prefix and date suffix
+      if (!originalFile) {
+        match = forecastResultName.match(/^Klug Forecast AI_(.+?)(_\d{4}-\d{2}-\d{2})?\.csv$/);
+        if (match) {
+          originalName = match[1] + '.csv';
+          originalFile = forecastFiles.find(f => f.name === originalName);
+        }
+      }
+      
+      // Pattern 3: If still not found, try partial matching
+      if (!originalFile) {
+        const baseName = forecastResultName.replace(/^Klug Forecast AI_/, '').replace(/_\d{4}-\d{2}-\d{2}\.csv$/, '');
+        originalFile = forecastFiles.find(f => f.name.includes(baseName) || baseName.includes(f.name.replace('.csv', '')));
+        if (originalFile) {
+          originalName = originalFile.name;
+        }
+      }
+      
+      if (!originalFile) {
+        setRunReportMessage(`❌ Could not find original file for forecast result: ${forecastResultName}. Please ensure the original file exists.`);
+        return;
+      }
+      
+      console.log('📦 Uploading files to PostgreSQL:', {
+        originalFile: originalFile.name,
+        forecastFile: forecastResultName
+      });
+      
       const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const res = await fetch(`${BASE_URL}/api/upload-to-forecast-tables`, {
         method: 'POST',
@@ -1265,21 +1293,23 @@ function App() {
           forecastKey: selectedResultFile
         })
       });
+      
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Unknown error');
       
-      // Show success message with performance metrics
-      const duration = result.duration || 'unknown';
-      const originalRows = result.originalRows || 0;
-      const forecastRows = result.forecastRows || 0;
-      setRunReportMessage(`✅ Report generated successfully in ${duration}s! Processed ${originalRows} original rows and ${forecastRows} forecast rows.`);
+      const uploadSummary = `✅ Successfully uploaded to PostgreSQL:
+• Original file: ${result.originalRows} rows, ${result.originalColumns} columns
+• Forecast file: ${result.forecastRows} rows, ${result.forecastColumns} columns`;
       
-      // Navigate to reports after a short delay to show the success message
+      setRunReportMessage(uploadSummary);
       setTimeout(() => {
         setActiveTab('reports-analytics');
-      }, 2000);
-    } catch (err) {
-      setRunReportMessage(`❌ Error: ${err.message}`);
+        setRunReportMessage('');
+      }, 3000);
+      
+    } catch (err: any) {
+      console.error('Run Report Error:', err);
+      setRunReportMessage(`❌ Error uploading to PostgreSQL: ${err.message}`);
     } finally {
       setRunReportLoading(false);
     }
