@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import pkg from 'pg';
 import chardet from 'chardet';
 import crypto from 'crypto';
-import * as copyFrom from 'pg-copy-streams';
 
 dotenv.config();
 
@@ -480,7 +479,6 @@ if (!isAuthOnlyMode) {
   }
 }
 const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
-  console.log(`📦 Downloading CSV from S3: ${key}`);
   const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
   
   // Use chardet to detect encoding instead of hardcoded utf-8
@@ -490,27 +488,20 @@ const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
 
   if (!csvContent) throw new Error('S3 CSV content is empty');
 
-  console.log(`📊 Parsing CSV with ${csvContent.length} characters`);
-  
-  // Optimize Papa Parse for large files
-  const parsed = Papa.parse(csvContent, { 
-    header: true, 
-    skipEmptyLines: true,
-    dynamicTyping: false, // Keep everything as strings for better performance
-    fastMode: true // Use fast mode for better performance
-  });
+  const parsed = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
 
   if (parsed.errors.length) {
     console.error('[CSV PARSE ERRORS]', parsed.errors);
     throw new Error('Failed to parse CSV data');
   }
 
-  console.log(`✅ Successfully parsed ${parsed.data.length} rows from CSV`);
   return parsed.data;
 };
 
 const insertRows = async (table: string, rows: any[]) => {
   if (rows.length === 0) return;
+  const columns = Object.keys(rows[0]);
+  const quotedColumns = columns.map(col => `"${col}"`).join(',');
   
   const client = await pool.connect();
   try {
@@ -527,69 +518,36 @@ const insertRows = async (table: string, rows: any[]) => {
       throw new Error(`Table '${table}' does not exist`);
     }
     
-    const columns = Object.keys(rows[0]);
-    const quotedColumns = columns.map(col => `"${col}"`).join(',');
+    // Log the columns being inserted for debugging
+    console.log(`📊 Inserting ${rows.length} rows into ${table} with columns:`, columns);
     
-    console.log(`📊 Starting optimized insert of ${rows.length} rows into ${table} with columns:`, columns);
+    // Use batch insert for better performance
+    const batchSize = 1000; // Optimal batch size for PostgreSQL
+    const totalBatches = Math.ceil(rows.length / batchSize);
     
-    try {
-      // Use COPY command for bulk insert (much faster than individual INSERTs)
-      const copyQuery = `COPY "${table}" (${quotedColumns}) FROM STDIN`;
+    console.log(`🚀 Using batch insert: ${totalBatches} batches of ${batchSize} rows each`);
+    
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batch = rows.slice(i, i + batchSize);
+      const batchNumber = Math.floor(i / batchSize) + 1;
       
-      // Start the COPY operation
-      const copyStream = client.query(copyFrom.from(copyQuery) as any);
+      // Build batch insert query
+      const valuesList = batch.map((row, rowIndex) => {
+        const startParam = rowIndex * columns.length + 1;
+        const placeholders = columns.map((_, colIndex) => `$${startParam + colIndex}`).join(',');
+        return `(${placeholders})`;
+      }).join(',');
       
-      // Prepare data for COPY
-      const dataRows = rows.map((row: any) => {
-        return columns.map((col: string) => {
-          const value = row[col];
-          // Handle null values and escape special characters
-          if (value === null || value === undefined) return '\\N';
-          const stringValue = String(value);
-          // Escape backslashes and newlines for COPY format
-          return stringValue.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-        }).join('\t');
-      });
+      // Flatten all values for the batch
+      const allValues = batch.flatMap(row => columns.map(col => row[col]));
       
-      // Send data to COPY stream
-      for (const dataRow of dataRows) {
-        copyStream.write(dataRow + '\n');
-      }
+      const batchQuery = `INSERT INTO "${table}" (${quotedColumns}) VALUES ${valuesList}`;
       
-      // End the COPY operation
-      copyStream.end();
-      
-      // Wait for completion
-      await copyStream;
-      
-      console.log(`✅ Successfully inserted ${rows.length} rows into ${table} using COPY`);
-    } catch (copyError) {
-      console.warn(`⚠️ COPY command failed, falling back to batch INSERT:`, copyError);
-      
-      // Fallback to batch INSERT (still much faster than individual INSERTs)
-      const batchSize = 1000; // Process 1000 rows at a time
-      const placeholders = columns.map((_, i) => `$${i + 1}`).join(',');
-      
-      for (let i = 0; i < rows.length; i += batchSize) {
-        const batch = rows.slice(i, i + batchSize);
-        const values = batch.map(row => columns.map(col => row[col]));
-        
-        // Create batch INSERT query
-        const batchPlaceholders = batch.map((_, batchIndex) => {
-          const offset = batchIndex * columns.length;
-          return `(${columns.map((_, colIndex) => `$${offset + colIndex + 1}`).join(',')})`;
-        }).join(',');
-        
-        const batchQuery = `INSERT INTO "${table}" (${quotedColumns}) VALUES ${batchPlaceholders}`;
-        const flatValues = values.flat();
-        
-        await client.query(batchQuery, flatValues);
-        
-        console.log(`📊 Processed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(rows.length / batchSize)}`);
-      }
-      
-      console.log(`✅ Successfully inserted ${rows.length} rows into ${table} using batch INSERT`);
+      console.log(`📦 Inserting batch ${batchNumber}/${totalBatches} (${batch.length} rows)`);
+      await client.query(batchQuery, allValues);
     }
+    
+    console.log(`✅ Successfully inserted ${rows.length} rows into ${table} in ${totalBatches} batches`);
   } catch (error) {
     console.error(`❌ Error inserting into ${table}:`, error);
     throw error;
@@ -612,31 +570,8 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
   }
 
   try {
-    // Check if required tables exist
-    const client = await pool.connect();
-    try {
-      const tableCheck = await client.query(`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name IN ('forecast_original', 'forecast_result')
-      `);
-      
-      const existingTables = tableCheck.rows.map((row: any) => row.table_name);
-      const missingTables = ['forecast_original', 'forecast_result'].filter(table => !existingTables.includes(table));
-      
-      if (missingTables.length > 0) {
-        throw new Error(`Missing required database tables: ${missingTables.join(', ')}`);
-      }
-      
-      console.log('✅ Required database tables exist:', existingTables);
-    } finally {
-      client.release();
-    }
-
     const parseDateField = (rows: any[]) => {
-      console.log(`📅 Processing date fields for ${rows.length} rows`);
-      return rows.map((row: any) => {
+      return rows.map(row => {
         if (row.TIM_LVL_MEMBER_VALUE) {
           const d = new Date(row.TIM_LVL_MEMBER_VALUE);
           if (!isNaN(d.getTime())) {
@@ -647,20 +582,8 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       });
     };
 
-    // Column mapping for original data (from renamed columns back to database expected names)
-    const originalColumnMapping: Record<string, string> = {
-      'Region / Store Cluster': 'Region / Store Cluster',
-      'Food Department': 'Food Department', 
-      'Food Category': 'Food Category',
-      'Sub-Category': 'Sub-Category',
-      'Brand': 'Brand',
-      'Promotion Types': 'Promotion Types',
-      'Customer Name': 'Customer Name',
-      'PRD_LVL_MEMBER_NAME': 'PRD_LVL_MEMBER_NAME',
-      'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE',
-      'VALUE_NUMBER': 'VALUE_NUMBER',
-      'SR_INSTANCE_CODE': 'SR_INSTANCE_CODE'
-    };
+    // Column mapping for original data (no mapping needed since columns already match)
+    const originalColumnMapping: Record<string, string> = {};
 
     // Column mapping for forecast data (ensure TimeGPT is renamed to Klug Forecast AI)
     const forecastColumnMapping: Record<string, string> = {
@@ -674,10 +597,9 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
     };
 
     const mapColumns = (rows: any[], mapping: Record<string, string>) => {
-      console.log(`🔄 Mapping columns for ${rows.length} rows`);
-      return rows.map((row: any) => {
+      return rows.map(row => {
         const mappedRow: any = {};
-        Object.keys(row).forEach((key: string) => {
+        Object.keys(row).forEach(key => {
           const newKey = mapping[key] || key;
           mappedRow[newKey] = row[key];
         });
@@ -685,79 +607,20 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       });
     };
 
-    const validateColumns = (rows: any[], requiredColumns: string[], tableName: string) => {
-      if (rows.length === 0) {
-        throw new Error(`${tableName}: No data rows found`);
-      }
-      
-      const actualColumns = Object.keys(rows[0]);
-      const missingColumns = requiredColumns.filter(col => !actualColumns.includes(col));
-      
-      if (missingColumns.length > 0) {
-        throw new Error(`${tableName}: Missing required columns: ${missingColumns.join(', ')}. Found columns: ${actualColumns.join(', ')}`);
-      }
-      
-      console.log(`✅ ${tableName}: All required columns present`);
-    };
-
-    // Process files in parallel for better performance
-    const processFile = async (fileKey: string, isOriginal: boolean) => {
-      if (!fileKey) {
-        console.log(`⚠️ No ${isOriginal ? 'original' : 'forecast'} file provided, skipping`);
-        return { rows: 0, columns: [] };
-      }
-      
-      console.log(`📦 Processing ${isOriginal ? 'original' : 'forecast'} file:`, fileKey);
-      const rows = parseDateField(await parseS3Csv(bucket, fileKey));
-      console.log(`📊 ${isOriginal ? 'Original' : 'Forecast'} file columns:`, Object.keys(rows[0] || {}));
-      
-      const mapping = isOriginal ? originalColumnMapping : forecastColumnMapping;
-      const mappedRows = mapColumns(rows, mapping);
-      console.log(`📊 ${isOriginal ? 'Original' : 'Forecast'} rows mapped:`, mappedRows.length);
-      console.log(`📊 Mapped ${isOriginal ? 'original' : 'forecast'} columns:`, Object.keys(mappedRows[0] || {}));
-      
-      // Validate required columns
-      const requiredColumns = isOriginal ? [
-        'SR_INSTANCE_CODE',
-        'PRD_LVL_MEMBER_NAME', 
-        'TIM_LVL_MEMBER_VALUE',
-        'VALUE_NUMBER',
-        'Customer Name',
-        'Promotion Types',
-        'Brand',
-        'Sub-Category',
-        'Food Category',
-        'Food Department',
-        'Region / Store Cluster'
-      ] : [
-        'PRD_LVL_MEMBER_NAME',
-        'TIM_LVL_MEMBER_VALUE',
-        'Klug Forecast AI'
-      ];
-      
-      const tableName = isOriginal ? 'forecast_original' : 'forecast_result';
-      validateColumns(mappedRows, requiredColumns, tableName);
-      
-      await insertRows(tableName, mappedRows);
-      console.log(`✅ ${isOriginal ? 'Original' : 'Forecast'} data uploaded to ${tableName} table`);
-      
-      return { rows: mappedRows.length, columns: Object.keys(mappedRows[0] || {}) };
-    };
+    if (originalKey) {
+      const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+      const mappedOriginalRows = mapColumns(originalRows, originalColumnMapping);
+      console.log('📊 Original rows mapped:', mappedOriginalRows.length);
+      await insertRows('forecast_original', mappedOriginalRows);
+    }
     
-    // Process both files in parallel
-    const [originalResult, forecastResult] = await Promise.all([
-      processFile(originalKey, true),
-      processFile(forecastKey, false)
-    ]);
+    const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
+    const mappedForecastRows = mapColumns(forecastRows, forecastColumnMapping);
+    console.log('📊 Forecast rows mapped:', mappedForecastRows.length);
+    await insertRows('forecast_result', mappedForecastRows);
 
-    console.log('✅ Both files successfully uploaded to forecast tables');
-    res.status(200).json({ 
-      message: 'Data uploaded to forecast tables',
-      originalRows: originalResult.rows,
-      forecastRows: forecastResult.rows,
-      originalColumns: originalResult.columns.length,
-      forecastColumns: forecastResult.columns.length
-    });
+    console.log('✅ Data uploaded to forecast tables');
+    res.status(200).json({ message: 'Data uploaded to forecast tables' });
   } catch (err: any) {
     console.error('[Upload Tables Error]', err);
     res.status(500).json({ error: err.message || 'Upload failed' });
@@ -775,15 +638,7 @@ if (!isAuthOnlyMode) {
     user: process.env.VITE_DB_USER,
     password: process.env.VITE_DB_PASSWORD,
     port: 5432,
-    ssl: { rejectUnauthorized: false },
-    // Optimize connection pool for large file uploads
-    max: 20, // Maximum number of clients in the pool
-    min: 5,  // Minimum number of clients in the pool
-    connectionTimeoutMillis: 30000, // How long to wait for a connection
-    idleTimeoutMillis: 30000, // How long a connection can be idle before being closed
-    // Optimize for bulk operations
-    statement_timeout: 300000, // 5 minutes timeout for statements
-    query_timeout: 300000 // 5 minutes timeout for queries
+    ssl: { rejectUnauthorized: false }
   });
 
   pool.connect((err: any, client: any, done: any) => {

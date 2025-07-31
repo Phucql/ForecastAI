@@ -148,10 +148,31 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
         return;
       }
   
-      // The CSV now comes with the correct column names from the backend
-      // No need for column mapping since backend returns forecast_original format
-      const renamedCSV = csv;
-  
+            // Parse CSV and rename columns to match forecast_original structure
+      const lines = csv.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      
+      // Create column mapping to match forecast_original table structure
+      const columnMapping: Record<string, string> = {
+        'Customer Class Code': 'Promotion Types',
+        'Color': 'Brand',
+        'Subfamily': 'Sub-Category',
+        'Family': 'Food Category',
+        'Business Unit': 'Food Department',
+        'Planning Unit': 'Region / Store Cluster'
+      };
+      
+      // Rename headers to match forecast_original table
+      const renamedHeaders = headers.map(header => {
+        return columnMapping[header] || header;
+      });
+      
+      // Reconstruct CSV with renamed headers
+      const renamedCSV = [
+        renamedHeaders.join(','),
+        ...lines.slice(1) // Keep all data rows unchanged
+      ].join('\n');
+
       // Upload the renamed file
       const blob = new Blob([renamedCSV], { type: 'text/csv' });
       const originalFile = new File([blob], `${name}.csv`, { type: 'text/csv' });
