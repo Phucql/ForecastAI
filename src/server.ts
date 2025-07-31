@@ -506,10 +506,31 @@ const insertRows = async (table: string, rows: any[]) => {
 
   const client = await pool.connect();
   try {
+    // Validate table exists and has required columns
+    const tableExists = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = $1
+      );
+    `, [table]);
+    
+    if (!tableExists.rows[0].exists) {
+      throw new Error(`Table '${table}' does not exist`);
+    }
+    
+    // Log the columns being inserted for debugging
+    console.log(`📊 Inserting ${rows.length} rows into ${table} with columns:`, columns);
+    
     for (const row of rows) {
       const values = columns.map(c => row[c]);
       await client.query(`INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders})`, values);
     }
+    
+    console.log(`✅ Successfully inserted ${rows.length} rows into ${table}`);
+  } catch (error) {
+    console.error(`❌ Error inserting into ${table}:`, error);
+    throw error;
   } finally {
     client.release();
   }
@@ -541,12 +562,50 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       });
     };
 
+    // Column mapping for original data (from renamed columns back to database expected names)
+    const originalColumnMapping: Record<string, string> = {
+      'Region / Store Cluster': 'Region / Store Cluster',
+      'Food Department': 'Food Department', 
+      'Food Category': 'Food Category',
+      'Sub-Category': 'Sub-Category',
+      'Brand': 'Brand',
+      'Promotion Types': 'Promotion Types',
+      'Customer Name': 'Customer Name',
+      'PRD_LVL_MEMBER_NAME': 'PRD_LVL_MEMBER_NAME',
+      'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE',
+      'VALUE_NUMBER': 'VALUE_NUMBER',
+      'SR_INSTANCE_CODE': 'SR_INSTANCE_CODE'
+    };
+
+    // Column mapping for forecast data (ensure TimeGPT is renamed to Klug Forecast AI)
+    const forecastColumnMapping: Record<string, string> = {
+      'TimeGPT': 'Klug Forecast AI',
+      'PRD_LVL_MEMBER_NAME': 'PRD_LVL_MEMBER_NAME',
+      'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE'
+    };
+
+    const mapColumns = (rows: any[], mapping: Record<string, string>) => {
+      return rows.map(row => {
+        const mappedRow: any = {};
+        Object.keys(row).forEach(key => {
+          const newKey = mapping[key] || key;
+          mappedRow[newKey] = row[key];
+        });
+        return mappedRow;
+      });
+    };
+
     if (originalKey) {
       const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
-      await insertRows('forecast_original', originalRows);
+      const mappedOriginalRows = mapColumns(originalRows, originalColumnMapping);
+      console.log('📊 Original rows mapped:', mappedOriginalRows.length);
+      await insertRows('forecast_original', mappedOriginalRows);
     }
+    
     const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
-    await insertRows('forecast_result', forecastRows);
+    const mappedForecastRows = mapColumns(forecastRows, forecastColumnMapping);
+    console.log('📊 Forecast rows mapped:', mappedForecastRows.length);
+    await insertRows('forecast_result', mappedForecastRows);
 
     console.log('✅ Data uploaded to forecast tables');
     res.status(200).json({ message: 'Data uploaded to forecast tables' });
