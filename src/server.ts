@@ -582,18 +582,26 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 
     // Column mapping for original data (from renamed columns back to database expected names)
     const originalColumnMapping: Record<string, string> = {
-      'Region / Store Cluster': 'Region / Store Cluster',
-      'Food Department': 'Food Department', 
-      'Food Category': 'Food Category',
-      'Sub-Category': 'Sub-Category',
-      'Brand': 'Brand',
-      'Promotion Types': 'Promotion Types',
+      // Original column names from inital_db
+      'Planning Unit': 'Region / Store Cluster',
+      'Business Unit': 'Food Department', 
+      'Family': 'Food Category',
+      'Subfamily': 'Sub-Category',
+      'Color': 'Brand',
       'Customer Class Code': 'Promotion Types',
       'Customer Name': 'Customer Name',
       'PRD_LVL_MEMBER_NAME': 'PRD_LVL_MEMBER_NAME',
       'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE',
       'VALUE_NUMBER': 'VALUE_NUMBER',
-      'SR_INSTANCE_CODE': 'SR_INSTANCE_CODE'
+      'SR_INSTANCE_CODE': 'SR_INSTANCE_CODE',
+      
+      // Renamed column names from frontend
+      'Region / Store Cluster': 'Region / Store Cluster',
+      'Food Department': 'Food Department', 
+      'Food Category': 'Food Category',
+      'Sub-Category': 'Sub-Category',
+      'Brand': 'Brand',
+      'Promotion Types': 'Promotion Types'
     };
 
     // Column mapping for forecast data (ensure TimeGPT is renamed to Klug Forecast AI)
