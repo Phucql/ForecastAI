@@ -522,6 +522,24 @@ const insertRows = async (table: string, rows: any[]) => {
     // Log the columns being inserted for debugging
     console.log(`📊 Inserting ${rows.length} rows into ${table} with columns:`, columns);
     
+    // Check if table has the expected columns
+    const tableColumnsQuery = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = $1 
+      AND table_schema = 'public'
+      ORDER BY ordinal_position
+    `, [table]);
+    
+    const tableColumns = tableColumnsQuery.rows.map((r: any) => r.column_name);
+    console.log(`📊 Table ${table} has columns:`, tableColumns);
+    
+    // Check for missing columns
+    const missingColumns = columns.filter(col => !tableColumns.includes(col));
+    if (missingColumns.length > 0) {
+      console.error(`❌ Missing columns in table ${table}:`, missingColumns);
+    }
+    
     for (const row of rows) {
       const values = columns.map(c => row[c]);
       await client.query(`INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders})`, values);
@@ -570,6 +588,7 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       'Sub-Category': 'Sub-Category',
       'Brand': 'Brand',
       'Promotion Types': 'Promotion Types',
+      'Customer Class Code': 'Promotion Types',
       'Customer Name': 'Customer Name',
       'PRD_LVL_MEMBER_NAME': 'PRD_LVL_MEMBER_NAME',
       'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE',
@@ -597,8 +616,15 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 
     if (originalKey) {
       const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+      console.log('📊 Original rows before mapping:', originalRows.length);
+      if (originalRows.length > 0) {
+        console.log('📊 Original row columns:', Object.keys(originalRows[0]));
+      }
       const mappedOriginalRows = mapColumns(originalRows, originalColumnMapping);
       console.log('📊 Original rows mapped:', mappedOriginalRows.length);
+      if (mappedOriginalRows.length > 0) {
+        console.log('📊 Mapped row columns:', Object.keys(mappedOriginalRows[0]));
+      }
       await insertRows('forecast_original', mappedOriginalRows);
     }
     

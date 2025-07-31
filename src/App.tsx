@@ -1237,52 +1237,26 @@ function App() {
       setRunReportMessage('❌ Please select a forecast result file.');
       return;
     }
-    
     // Extract original name from forecast result file name
     const forecastResultName = selectedResultFile.split('/').pop() || '';
-    console.log('🔍 Processing forecast result file:', forecastResultName);
-    
-    // More flexible regex to handle various naming patterns
-    // Expected formats: 
-    // - Klug Forecast AI_<Original Name>_<Date>.csv
-    // - Klug Forecast AI_<Original Name>.csv
-    // - <Original Name>_<Date>.csv
-    let originalName = '';
-    let match = forecastResultName.match(/^Klug Forecast AI_(.+?)(?:_\d{4}-\d{2}-\d{2})?\.csv$/);
-    
-    if (match) {
-      originalName = match[1] + '.csv';
-    } else {
-      // Try alternative pattern without "Klug Forecast AI" prefix
-      match = forecastResultName.match(/^(.+?)(?:_\d{4}-\d{2}-\d{2})?\.csv$/);
-      if (match) {
-        originalName = match[1] + '.csv';
-      }
-    }
-    
-    if (!originalName) {
-      setRunReportMessage(`❌ Could not determine original file from forecast result file name: ${forecastResultName}`);
+    // Expected format: Klug Forecast AI_<Original Name>_<Date>.csv
+    const match = forecastResultName.match(/^Klug Forecast AI_(.+)_\d{4}-\d{2}-\d{2}\.csv$/);
+    if (!match) {
+      setRunReportMessage('❌ Could not determine original file from forecast result file name.');
       return;
     }
-    
-    console.log('🔍 Looking for original file:', originalName);
-    
+    // Extract the original name from the match
+    const originalName = match[1] + '.csv';
     // Find the original file in forecastFiles
     const originalFile = forecastFiles.find(f => f.name === originalName);
     if (!originalFile) {
-      setRunReportMessage(`❌ Original file '${originalName}' not found in available files.`);
-      console.log('📋 Available files:', forecastFiles.map(f => f.name));
+      setRunReportMessage(`❌ Original file '${originalName}' not found.`);
       return;
     }
     setRunReportLoading(true);
-    setRunReportMessage('🔄 Uploading data to database tables...');
+    setRunReportMessage('');
     try {
       const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      console.log('📤 Sending request with:', {
-        originalKey: originalFile.key,
-        forecastKey: selectedResultFile
-      });
-      
       const res = await fetch(`${BASE_URL}/api/upload-to-forecast-tables`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1291,21 +1265,10 @@ function App() {
           forecastKey: selectedResultFile
         })
       });
-      
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Unknown error');
-      
-      console.log('✅ Upload successful:', result);
-      setRunReportMessage('✅ Data successfully uploaded to database tables!');
-      
-      // Navigate to reports tab after a short delay to show success message
-      setTimeout(() => {
-        setActiveTab('reports-analytics');
-        setRunReportMessage('');
-      }, 2000);
-      
+      setActiveTab('reports-analytics');
     } catch (err) {
-      console.error('❌ Upload failed:', err);
       setRunReportMessage(`❌ Error: ${err.message}`);
     } finally {
       setRunReportLoading(false);
