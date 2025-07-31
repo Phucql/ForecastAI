@@ -590,7 +590,8 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
         console.log('✅ Original data inserted successfully');
       } catch (error) {
         console.error('❌ Error processing original data:', error);
-        throw new Error(`Failed to process original data: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to process original data: ${errorMessage}`);
       }
     }
     
@@ -608,7 +609,8 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       }
     } catch (error) {
       console.error('❌ Error processing forecast data:', error);
-      throw new Error(`Failed to process forecast data: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to process forecast data: ${errorMessage}`);
     }
     
     console.log(`📊 Inserting ${forecastRows.length} rows into forecast_result`);
@@ -617,9 +619,10 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 
     console.log('✅ Data uploaded to forecast tables');
     res.status(200).json({ message: 'Data uploaded to forecast tables' });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[Upload Tables Error]', err);
-    res.status(500).json({ error: err.message || 'Upload failed' });
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: errorMessage || 'Upload failed' });
   }
 });
 
@@ -685,28 +688,38 @@ app.get('/api/list-forecasts', async (_req, res) => {
       };
     });
     res.json(files);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[List Forecasts Error]', err);
     
     // Provide more specific error messages based on the error type
-    if (err.code === 'AccessDenied') {
-      res.status(403).json({ 
-        error: 'AWS S3 Access Denied', 
-        details: 'Your IAM user does not have permission to list files in the S3 bucket. Please check AWS IAM permissions.',
-        code: 'S3_ACCESS_DENIED',
-        bucket: bucket
-      });
-    } else if (err.code === 'NoSuchBucket') {
-      res.status(404).json({ 
-        error: 'S3 Bucket Not Found', 
-        details: 'The specified S3 bucket does not exist.',
-        code: 'S3_BUCKET_NOT_FOUND',
-        bucket: bucket
-      });
+    if (err && typeof err === 'object' && 'code' in err) {
+      if (err.code === 'AccessDenied') {
+        res.status(403).json({ 
+          error: 'AWS S3 Access Denied', 
+          details: 'Your IAM user does not have permission to list files in the S3 bucket. Please check AWS IAM permissions.',
+          code: 'S3_ACCESS_DENIED',
+          bucket: bucket
+        });
+      } else if (err.code === 'NoSuchBucket') {
+        res.status(404).json({ 
+          error: 'S3 Bucket Not Found', 
+          details: 'The specified S3 bucket does not exist.',
+          code: 'S3_BUCKET_NOT_FOUND',
+          bucket: bucket
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        res.status(500).json({ 
+          error: 'Failed to list forecast files',
+          details: errorMessage || 'Unknown S3 error',
+          code: 'S3_ERROR'
+        });
+      }
     } else {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       res.status(500).json({ 
         error: 'Failed to list forecast files',
-        details: err.message || 'Unknown S3 error',
+        details: errorMessage || 'Unknown S3 error',
         code: 'S3_ERROR'
       });
     }
@@ -1140,9 +1153,10 @@ app.get('/api/fetch-csv', async (req, res) => {
 
     res.header('Content-Type', 'text/csv');
     res.send(data.Body);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[FETCH CSV ERROR]', error);
-    res.status(500).json({ error: 'Failed to fetch CSV file from S3', message: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    res.status(500).json({ error: 'Failed to fetch CSV file from S3', message: errorMessage });
   }
 });
 
@@ -1224,8 +1238,8 @@ const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<AWS
   for (let i = 0; i < retries; i++) {
     try {
       return await s3.getObject({ Bucket: process.env.VITE_S3_BUCKET_NAME!, Key }).promise();
-    } catch (err: any) {
-      if (err.code === 'NoSuchKey') {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'NoSuchKey') {
         console.warn(`[WAIT RETRY] ${Key} not ready yet... retry ${i + 1}`);
         await new Promise(res => setTimeout(res, delay));
       } else {
@@ -1286,8 +1300,9 @@ except ImportError as e:
     py.on('error', (err) => {
       res.status(500).json({ error: 'Failed to spawn Python', details: err.message });
     });
-  } catch (err: any) {
-    res.status(500).json({ error: 'Test failed', details: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: 'Test failed', details: errorMessage });
   }
 });
 
@@ -1348,9 +1363,10 @@ app.get('/api/test-python-env', async (req, res) => {
       console.error(`[TEST ENV] Spawn error: ${err.message}`);
       res.status(500).json({ error: 'Failed to spawn Python', details: err.message });
     });
-  } catch (err: any) {
-    console.error(`[TEST ENV] Exception: ${err.message}`);
-    res.status(500).json({ error: 'Test failed', details: err.message });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error(`[TEST ENV] Exception: ${errorMessage}`);
+    res.status(500).json({ error: 'Test failed', details: errorMessage });
   }
 });
 
