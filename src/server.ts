@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import pkg from 'pg';
 import chardet from 'chardet';
 import crypto from 'crypto';
-import copyFrom from 'pg-copy-streams';
+import * as copyFrom from 'pg-copy-streams';
 
 dotenv.config();
 
@@ -497,11 +497,7 @@ const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
     header: true, 
     skipEmptyLines: true,
     dynamicTyping: false, // Keep everything as strings for better performance
-    fastMode: true, // Use fast mode for better performance
-    chunk: (results, parser) => {
-      // Optional: Add chunk processing for very large files
-      console.log(`📊 Processed chunk: ${results.data.length} rows`);
-    }
+    fastMode: true // Use fast mode for better performance
   });
 
   if (parsed.errors.length) {
@@ -541,11 +537,11 @@ const insertRows = async (table: string, rows: any[]) => {
       const copyQuery = `COPY "${table}" (${quotedColumns}) FROM STDIN`;
       
       // Start the COPY operation
-      const copyStream = client.query(copyFrom(copyQuery));
+      const copyStream = client.query(copyFrom.from(copyQuery) as any);
       
       // Prepare data for COPY
-      const dataRows = rows.map(row => {
-        return columns.map(col => {
+      const dataRows = rows.map((row: any) => {
+        return columns.map((col: string) => {
           const value = row[col];
           // Handle null values and escape special characters
           if (value === null || value === undefined) return '\\N';
@@ -626,7 +622,7 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
         AND table_name IN ('forecast_original', 'forecast_result')
       `);
       
-      const existingTables = tableCheck.rows.map(row => row.table_name);
+      const existingTables = tableCheck.rows.map((row: any) => row.table_name);
       const missingTables = ['forecast_original', 'forecast_result'].filter(table => !existingTables.includes(table));
       
       if (missingTables.length > 0) {
@@ -640,7 +636,7 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 
     const parseDateField = (rows: any[]) => {
       console.log(`📅 Processing date fields for ${rows.length} rows`);
-      return rows.map(row => {
+      return rows.map((row: any) => {
         if (row.TIM_LVL_MEMBER_VALUE) {
           const d = new Date(row.TIM_LVL_MEMBER_VALUE);
           if (!isNaN(d.getTime())) {
@@ -679,9 +675,9 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
 
     const mapColumns = (rows: any[], mapping: Record<string, string>) => {
       console.log(`🔄 Mapping columns for ${rows.length} rows`);
-      return rows.map(row => {
+      return rows.map((row: any) => {
         const mappedRow: any = {};
-        Object.keys(row).forEach(key => {
+        Object.keys(row).forEach((key: string) => {
           const newKey = mapping[key] || key;
           mappedRow[newKey] = row[key];
         });
@@ -783,12 +779,11 @@ if (!isAuthOnlyMode) {
     // Optimize connection pool for large file uploads
     max: 20, // Maximum number of clients in the pool
     min: 5,  // Minimum number of clients in the pool
-    idle: 10000, // How long a client is allowed to remain idle before being closed
     connectionTimeoutMillis: 30000, // How long to wait for a connection
     idleTimeoutMillis: 30000, // How long a connection can be idle before being closed
     // Optimize for bulk operations
     statement_timeout: 300000, // 5 minutes timeout for statements
-    query_timeout: 300000, // 5 minutes timeout for queries
+    query_timeout: 300000 // 5 minutes timeout for queries
   });
 
   pool.connect((err: any, client: any, done: any) => {
