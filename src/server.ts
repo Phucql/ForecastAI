@@ -1061,7 +1061,18 @@ app.post('/api/forecast-export', async (req, res) => {
   try {
     const values = [planningUnit, businessUnit, family, subfamily, color];
     let query = `
-      SELECT *
+      SELECT 
+        "Planning Unit",
+        "Business Unit", 
+        "Family",
+        "Subfamily",
+        "Color",
+        "Customer Class Code",
+        "Customer Name",
+        "PRD_LVL_MEMBER_NAME",
+        "TIM_LVL_MEMBER_VALUE",
+        "VALUE_NUMBER",
+        "SR_INSTANCE_CODE"
       FROM "inital_db"
       WHERE "Planning Unit" ILIKE $1
         AND "Business Unit" ILIKE $2
@@ -1081,6 +1092,11 @@ app.post('/api/forecast-export', async (req, res) => {
     const result = await pool.query(query, values);
     if (result.rows.length === 0) {
       return res.status(404).send('No matching forecast data found');
+    }
+
+    // Log the columns being returned for debugging
+    if (result.rows.length > 0) {
+      console.log('📊 Columns from inital_db:', Object.keys(result.rows[0]));
     }
 
     const csv = Papa.unparse(result.rows, { quotes: true, header: true });
