@@ -479,6 +479,7 @@ if (!isAuthOnlyMode) {
   }
 }
 const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
+  console.log(`📥 Downloading CSV from S3: ${key}`);
   const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
   
   // Use chardet to detect encoding instead of hardcoded utf-8
@@ -488,25 +489,54 @@ const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
 
   if (!csvContent) throw new Error('S3 CSV content is empty');
 
-  const parsed = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
+  console.log(`📊 Parsing CSV with ${csvContent.length} characters...`);
+  
+  // Optimize Papa Parse configuration for better performance
+  const parsed = Papa.parse(csvContent, { 
+    header: true, 
+    skipEmptyLines: true,
+    dynamicTyping: false, // Disable for better performance
+    fastMode: true, // Enable fast mode for better performance
+    transformHeader: (header: string) => header.trim(), // Trim headers
+    transform: (value: string) => value.trim() // Trim values
+  });
 
   if (parsed.errors.length) {
     console.error('[CSV PARSE ERRORS]', parsed.errors);
     throw new Error('Failed to parse CSV data');
   }
 
+  console.log(`✅ Parsed ${parsed.data.length} rows from CSV`);
   return parsed.data;
+};
+
+// Cache for table schemas to avoid repeated queries
+const tableSchemaCache = new Map<string, string[]>();
+
+const getTableSchema = async (client: any, table: string): Promise<string[]> => {
+  if (tableSchemaCache.has(table)) {
+    return tableSchemaCache.get(table)!;
+  }
+  
+  const tableColumnsQuery = await client.query(`
+    SELECT column_name 
+    FROM information_schema.columns 
+    WHERE table_name = $1 
+    AND table_schema = 'public'
+    ORDER BY ordinal_position
+  `, [table]);
+  
+  const columns = tableColumnsQuery.rows.map((r: any) => r.column_name);
+  tableSchemaCache.set(table, columns);
+  return columns;
 };
 
 const insertRows = async (table: string, rows: any[]) => {
   if (rows.length === 0) return;
-  const columns = Object.keys(rows[0]);
-  const quotedColumns = columns.map(col => `"${col}"`).join(',');
-  const placeholders = columns.map((_, i) => `$${i + 1}`).join(',');
-
+  
   const client = await pool.connect();
   try {
-    // Validate table exists and has required columns
+    // Validate table exists
     const tableExists = await client.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -519,30 +549,38 @@ const insertRows = async (table: string, rows: any[]) => {
       throw new Error(`Table '${table}' does not exist`);
     }
     
-    // Log the columns being inserted for debugging
-    console.log(`📊 Inserting ${rows.length} rows into ${table} with columns:`, columns);
-    
-    // Check if table has the expected columns
-    const tableColumnsQuery = await client.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = $1 
-      AND table_schema = 'public'
-      ORDER BY ordinal_position
-    `, [table]);
-    
-    const tableColumns = tableColumnsQuery.rows.map((r: any) => r.column_name);
-    console.log(`📊 Table ${table} has columns:`, tableColumns);
+    const columns = Object.keys(rows[0]);
+    const tableColumns = await getTableSchema(client, table);
     
     // Check for missing columns
     const missingColumns = columns.filter(col => !tableColumns.includes(col));
     if (missingColumns.length > 0) {
       console.error(`❌ Missing columns in table ${table}:`, missingColumns);
+      throw new Error(`Missing columns in table ${table}: ${missingColumns.join(', ')}`);
     }
     
-    for (const row of rows) {
-      const values = columns.map(c => row[c]);
-      await client.query(`INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders})`, values);
+    console.log(`📊 Inserting ${rows.length} rows into ${table} with columns:`, columns);
+    
+    // Use batch INSERT for better performance
+    const batchSize = 1000; // Optimal batch size for PostgreSQL
+    const quotedColumns = columns.map(col => `"${col}"`).join(',');
+    
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batch = rows.slice(i, i + batchSize);
+      const values = batch.map(row => 
+        `(${columns.map(col => {
+          const val = row[col];
+          return val === null || val === undefined ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
+        }).join(',')})`
+      ).join(',');
+      
+      const insertQuery = `INSERT INTO "${table}" (${quotedColumns}) VALUES ${values}`;
+      await client.query(insertQuery);
+      
+      // Log progress for large datasets
+      if (rows.length > 10000 && i % 10000 === 0) {
+        console.log(`📊 Progress: ${Math.min(i + batchSize, rows.length)}/${rows.length} rows inserted into ${table}`);
+      }
     }
     
     console.log(`✅ Successfully inserted ${rows.length} rows into ${table}`);
@@ -567,7 +605,10 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
     return res.status(400).json({ error: 'Missing forecastKey' });
   }
 
+  const startTime = Date.now();
+
   try {
+    // Optimized date parsing function
     const parseDateField = (rows: any[]) => {
       return rows.map(row => {
         if (row.TIM_LVL_MEMBER_VALUE) {
@@ -604,41 +645,80 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
       'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE'
     };
 
+    // Optimized column mapping function
     const mapColumns = (rows: any[], mapping: Record<string, string>) => {
       return rows.map(row => {
         const mappedRow: any = {};
-        Object.keys(row).forEach(key => {
+        for (const [key, value] of Object.entries(row)) {
           const newKey = mapping[key] || key;
-          mappedRow[newKey] = row[key];
-        });
+          mappedRow[newKey] = value;
+        }
         return mappedRow;
       });
     };
 
+    // Process original and forecast data in parallel for better performance
+    const processingPromises = [];
+
     if (originalKey) {
-      const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
-      console.log('📊 Original rows before mapping:', originalRows.length);
-      if (originalRows.length > 0) {
-        console.log('📊 Original row columns:', Object.keys(originalRows[0]));
-      }
-      const mappedOriginalRows = mapColumns(originalRows, originalColumnMapping);
-      console.log('📊 Original rows mapped:', mappedOriginalRows.length);
-      if (mappedOriginalRows.length > 0) {
-        console.log('📊 Mapped row columns:', Object.keys(mappedOriginalRows[0]));
-      }
-      await insertRows('forecast_original', mappedOriginalRows);
+      processingPromises.push(
+        (async () => {
+          console.log('🔄 Processing original data...');
+          const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+          console.log('📊 Original rows before mapping:', originalRows.length);
+          if (originalRows.length > 0) {
+            console.log('📊 Original row columns:', Object.keys(originalRows[0]));
+          }
+          const mappedOriginalRows = mapColumns(originalRows, originalColumnMapping);
+          console.log('📊 Original rows mapped:', mappedOriginalRows.length);
+          if (mappedOriginalRows.length > 0) {
+            console.log('📊 Mapped row columns:', Object.keys(mappedOriginalRows[0]));
+          }
+          return { type: 'original', data: mappedOriginalRows };
+        })()
+      );
     }
     
-    const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
-    const mappedForecastRows = mapColumns(forecastRows, forecastColumnMapping);
-    console.log('📊 Forecast rows mapped:', mappedForecastRows.length);
-    await insertRows('forecast_result', mappedForecastRows);
+    processingPromises.push(
+      (async () => {
+        console.log('🔄 Processing forecast data...');
+        const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
+        const mappedForecastRows = mapColumns(forecastRows, forecastColumnMapping);
+        console.log('📊 Forecast rows mapped:', mappedForecastRows.length);
+        return { type: 'forecast', data: mappedForecastRows };
+      })()
+    );
 
-    console.log('✅ Data uploaded to forecast tables');
-    res.status(200).json({ message: 'Data uploaded to forecast tables' });
+    // Wait for all data processing to complete
+    const processedData = await Promise.all(processingPromises);
+    console.log('✅ Data processing completed');
+
+    // Insert data into database
+    const insertPromises = processedData.map(({ type, data }) => {
+      const table = type === 'original' ? 'forecast_original' : 'forecast_result';
+      return insertRows(table, data);
+    });
+
+    await Promise.all(insertPromises);
+
+    const endTime = Date.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    
+    console.log(`✅ Data uploaded to forecast tables in ${duration}s`);
+    res.status(200).json({ 
+      message: 'Data uploaded to forecast tables',
+      duration: `${duration}s`,
+      originalRows: processedData.find(d => d.type === 'original')?.data.length || 0,
+      forecastRows: processedData.find(d => d.type === 'forecast')?.data.length || 0
+    });
   } catch (err: any) {
-    console.error('[Upload Tables Error]', err);
-    res.status(500).json({ error: err.message || 'Upload failed' });
+    const endTime = Date.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    console.error(`[Upload Tables Error] Failed after ${duration}s:`, err);
+    res.status(500).json({ 
+      error: err.message || 'Upload failed',
+      duration: `${duration}s`
+    });
   }
 });
 

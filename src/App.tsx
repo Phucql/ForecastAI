@@ -1254,7 +1254,7 @@ function App() {
       return;
     }
     setRunReportLoading(true);
-    setRunReportMessage('');
+    setRunReportMessage('🔄 Processing data... This may take a few moments for large files.');
     try {
       const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const res = await fetch(`${BASE_URL}/api/upload-to-forecast-tables`, {
@@ -1267,7 +1267,17 @@ function App() {
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Unknown error');
-      setActiveTab('reports-analytics');
+      
+      // Show success message with performance metrics
+      const duration = result.duration || 'unknown';
+      const originalRows = result.originalRows || 0;
+      const forecastRows = result.forecastRows || 0;
+      setRunReportMessage(`✅ Report generated successfully in ${duration}s! Processed ${originalRows} original rows and ${forecastRows} forecast rows.`);
+      
+      // Navigate to reports after a short delay to show the success message
+      setTimeout(() => {
+        setActiveTab('reports-analytics');
+      }, 2000);
     } catch (err) {
       setRunReportMessage(`❌ Error: ${err.message}`);
     } finally {
