@@ -152,9 +152,6 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
       const lines = csv.trim().split('\n');
       const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
       
-      // Debug: Log original headers to see what we're working with
-      console.log('🔍 Original CSV headers:', headers);
-      
       // Create column mapping
       const columnMapping: Record<string, string> = {
         'Planning Unit': 'Region / Store Cluster',
@@ -162,41 +159,18 @@ const NewForecastForm: React.FC<{ setActiveTab: (tab: string) => void; onComplet
         'Family': 'Food Category',
         'Subfamily': 'Sub-Category',
         'Color': 'Brand',
-        'Customer Class Code': 'Promotion Types',
-        // Add any additional mappings that might be needed
-        'VALUE': 'VALUE',
-        'VALUE_NUMBER': 'VALUE_NUMBER',
-        'Customer Name': 'Customer Name',
-        'TIM_LVL_MEMBER_VALUE': 'TIM_LVL_MEMBER_VALUE',
-        'PRD_LVL_MEMBER_NAME': 'PRD_LVL_MEMBER_NAME'
+        'Customer Class Code': 'Promotion Types'
       };
       
-      // Rename headers and filter out any undefined/empty headers
-      const renamedHeaders = headers
-        .map(header => {
-          const mappedHeader = columnMapping[header] || header;
-          console.log(`📝 Mapping: "${header}" → "${mappedHeader}"`);
-          return mappedHeader;
-        })
-        .filter(header => header && header !== 'undefined' && header.trim() !== '');
-      
-      console.log('🔍 Final renamed headers:', renamedHeaders);
-      
-      // Reconstruct CSV with renamed headers and filtered data rows
-      const dataRows = lines.slice(1).map(line => {
-        const values = line.split(',');
-        // Filter out values that correspond to undefined/empty headers
-        const filteredValues = values.filter((_, index) => {
-          const originalHeader = headers[index];
-          const mappedHeader = columnMapping[originalHeader] || originalHeader;
-          return mappedHeader && mappedHeader !== 'undefined' && mappedHeader.trim() !== '';
-        });
-        return filteredValues.join(',');
+      // Rename headers
+      const renamedHeaders = headers.map(header => {
+        return columnMapping[header] || header;
       });
       
+      // Reconstruct CSV with renamed headers
       const renamedCSV = [
         renamedHeaders.join(','),
-        ...dataRows
+        ...lines.slice(1) // Keep all data rows unchanged
       ].join('\n');
   
       // Upload the renamed file

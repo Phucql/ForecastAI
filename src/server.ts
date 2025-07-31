@@ -479,10 +479,7 @@ if (!isAuthOnlyMode) {
   }
 }
 const parseS3Csv = async (bucket: string, key: string): Promise<any[]> => {
-  // Use the appropriate S3 client based on the bucket
-  const s3Client = bucket === 'forecastai-file-upload' ? s3Result : s3;
-  
-  const data = await s3Client.getObject({ Bucket: bucket, Key: key }).promise();
+  const data = await s3.getObject({ Bucket: bucket, Key: key }).promise();
   
   // Use chardet to detect encoding instead of hardcoded utf-8
   const csvBuffer = data.Body as Buffer;
@@ -509,46 +506,10 @@ const insertRows = async (table: string, rows: any[]) => {
 
   const client = await pool.connect();
   try {
-    console.log(`🔄 Starting insertion of ${rows.length} rows into ${table}`);
-    console.log(`📋 Columns: ${columns.join(', ')}`);
-    
-    let insertedCount = 0;
-    let updatedCount = 0;
-    
     for (const row of rows) {
       const values = columns.map(c => row[c]);
-      
-      // Use UPSERT (INSERT ... ON CONFLICT DO UPDATE) to handle duplicates
-      // This will insert new records or update existing ones based on the primary key
-      const updateClause = columns
-        .filter(col => col !== 'PRD_LVL_MEMBER_NAME' && col !== 'TIM_LVL_MEMBER_VALUE') // Don't update the key columns
-        .map(col => `"${col}" = EXCLUDED."${col}"`)
-        .join(', ');
-      
-      const upsertQuery = `
-        INSERT INTO "${table}" (${quotedColumns}) 
-        VALUES (${placeholders})
-        ON CONFLICT ("PRD_LVL_MEMBER_NAME", "TIM_LVL_MEMBER_VALUE") 
-        DO UPDATE SET ${updateClause}
-      `;
-      
-      try {
-        const result = await client.query(upsertQuery, values);
-        // PostgreSQL doesn't directly tell us if it was INSERT or UPDATE
-        // But we can infer from the row count
-        if (result.rowCount === 1) {
-          insertedCount++;
-        }
-      } catch (error) {
-        console.error(`❌ Error inserting row into ${table}:`, error);
-        console.error(`Row data:`, row);
-        throw error;
-      }
+      await client.query(`INSERT INTO "${table}" (${quotedColumns}) VALUES (${placeholders})`, values);
     }
-    
-    console.log(`✅ Successfully processed ${rows.length} rows in ${table}`);
-    console.log(`📊 Inserted: ~${insertedCount}, Updated: ~${rows.length - insertedCount}`);
-    
   } finally {
     client.release();
   }
@@ -562,7 +523,6 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
   console.log('📦 Upload forecastKey:', forecastKey);
 
   const bucket = process.env.VITE_S3_BUCKET_NAME!;
-  const FORECAST_RESULT_BUCKET = 'forecastai-file-upload';
 
   if (!forecastKey) {
     return res.status(400).json({ error: 'Missing forecastKey' });
@@ -582,47 +542,17 @@ app.post('/api/upload-to-forecast-tables', async (req, res) => {
     };
 
     if (originalKey) {
-      try {
-        console.log(`📊 Reading original data from bucket: ${bucket}, key: ${originalKey}`);
-        const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
-        console.log(`📊 Inserting ${originalRows.length} rows into forecast_original`);
-        await insertRows('forecast_original', originalRows);
-        console.log('✅ Original data inserted successfully');
-      } catch (error) {
-        console.error('❌ Error processing original data:', error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(`Failed to process original data: ${errorMessage}`);
-      }
+      const originalRows = parseDateField(await parseS3Csv(bucket, originalKey));
+      await insertRows('forecast_original', originalRows);
     }
-    
-    // Determine which bucket to use for forecast data
-    let forecastRows;
-    try {
-      if (forecastKey.startsWith('Forecast_Result/')) {
-        // Forecast result is in the forecast result bucket
-        console.log(`📊 Reading forecast from forecast result bucket: ${FORECAST_RESULT_BUCKET}, key: ${forecastKey}`);
-        forecastRows = parseDateField(await parseS3Csv(FORECAST_RESULT_BUCKET, forecastKey));
-      } else {
-        // Forecast result is in the main bucket
-        console.log(`📊 Reading forecast from main bucket: ${bucket}, key: ${forecastKey}`);
-        forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
-      }
-    } catch (error) {
-      console.error('❌ Error processing forecast data:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to process forecast data: ${errorMessage}`);
-    }
-    
-    console.log(`📊 Inserting ${forecastRows.length} rows into forecast_result`);
+    const forecastRows = parseDateField(await parseS3Csv(bucket, forecastKey));
     await insertRows('forecast_result', forecastRows);
-    console.log('✅ Forecast data inserted successfully');
 
     console.log('✅ Data uploaded to forecast tables');
     res.status(200).json({ message: 'Data uploaded to forecast tables' });
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error('[Upload Tables Error]', err);
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: errorMessage || 'Upload failed' });
+    res.status(500).json({ error: err.message || 'Upload failed' });
   }
 });
 
@@ -688,38 +618,28 @@ app.get('/api/list-forecasts', async (_req, res) => {
       };
     });
     res.json(files);
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error('[List Forecasts Error]', err);
     
     // Provide more specific error messages based on the error type
-    if (err && typeof err === 'object' && 'code' in err) {
-      if (err.code === 'AccessDenied') {
-        res.status(403).json({ 
-          error: 'AWS S3 Access Denied', 
-          details: 'Your IAM user does not have permission to list files in the S3 bucket. Please check AWS IAM permissions.',
-          code: 'S3_ACCESS_DENIED',
-          bucket: bucket
-        });
-      } else if (err.code === 'NoSuchBucket') {
-        res.status(404).json({ 
-          error: 'S3 Bucket Not Found', 
-          details: 'The specified S3 bucket does not exist.',
-          code: 'S3_BUCKET_NOT_FOUND',
-          bucket: bucket
-        });
-      } else {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        res.status(500).json({ 
-          error: 'Failed to list forecast files',
-          details: errorMessage || 'Unknown S3 error',
-          code: 'S3_ERROR'
-        });
-      }
+    if (err.code === 'AccessDenied') {
+      res.status(403).json({ 
+        error: 'AWS S3 Access Denied', 
+        details: 'Your IAM user does not have permission to list files in the S3 bucket. Please check AWS IAM permissions.',
+        code: 'S3_ACCESS_DENIED',
+        bucket: bucket
+      });
+    } else if (err.code === 'NoSuchBucket') {
+      res.status(404).json({ 
+        error: 'S3 Bucket Not Found', 
+        details: 'The specified S3 bucket does not exist.',
+        code: 'S3_BUCKET_NOT_FOUND',
+        bucket: bucket
+      });
     } else {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       res.status(500).json({ 
         error: 'Failed to list forecast files',
-        details: errorMessage || 'Unknown S3 error',
+        details: err.message || 'Unknown S3 error',
         code: 'S3_ERROR'
       });
     }
@@ -1153,10 +1073,9 @@ app.get('/api/fetch-csv', async (req, res) => {
 
     res.header('Content-Type', 'text/csv');
     res.send(data.Body);
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('[FETCH CSV ERROR]', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    res.status(500).json({ error: 'Failed to fetch CSV file from S3', message: errorMessage });
+    res.status(500).json({ error: 'Failed to fetch CSV file from S3', message: error.message });
   }
 });
 
@@ -1238,8 +1157,8 @@ const waitForObject = async (Key: string, retries = 1, delay = 100): Promise<AWS
   for (let i = 0; i < retries; i++) {
     try {
       return await s3.getObject({ Bucket: process.env.VITE_S3_BUCKET_NAME!, Key }).promise();
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'code' in err && err.code === 'NoSuchKey') {
+    } catch (err: any) {
+      if (err.code === 'NoSuchKey') {
         console.warn(`[WAIT RETRY] ${Key} not ready yet... retry ${i + 1}`);
         await new Promise(res => setTimeout(res, delay));
       } else {
@@ -1300,9 +1219,8 @@ except ImportError as e:
     py.on('error', (err) => {
       res.status(500).json({ error: 'Failed to spawn Python', details: err.message });
     });
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: 'Test failed', details: errorMessage });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Test failed', details: err.message });
   }
 });
 
@@ -1363,10 +1281,9 @@ app.get('/api/test-python-env', async (req, res) => {
       console.error(`[TEST ENV] Spawn error: ${err.message}`);
       res.status(500).json({ error: 'Failed to spawn Python', details: err.message });
     });
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error(`[TEST ENV] Exception: ${errorMessage}`);
-    res.status(500).json({ error: 'Test failed', details: errorMessage });
+  } catch (err: any) {
+    console.error(`[TEST ENV] Exception: ${err.message}`);
+    res.status(500).json({ error: 'Test failed', details: err.message });
   }
 });
 
@@ -2351,35 +2268,6 @@ app.post('/api/clear-forecast-tables', async (_req, res) => {
     res.status(200).json({ message: 'Forecast tables cleared' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to clear forecast tables' });
-  } finally {
-    client.release();
-  }
-});
-
-// Add endpoint to check forecast table counts
-app.get('/api/forecast-table-counts', async (_req, res) => {
-  const client = await pool.connect();
-  try {
-    const originalCount = await client.query('SELECT COUNT(*) FROM "forecast_original"');
-    const resultCount = await client.query('SELECT COUNT(*) FROM "forecast_result"');
-    
-    // Also get a sample of data to verify structure
-    const sampleOriginal = await client.query('SELECT * FROM "forecast_original" LIMIT 1');
-    const sampleResult = await client.query('SELECT * FROM "forecast_result" LIMIT 1');
-    
-    res.status(200).json({ 
-      forecast_original: {
-        count: parseInt(originalCount.rows[0].count),
-        sample: sampleOriginal.rows[0] || null
-      },
-      forecast_result: {
-        count: parseInt(resultCount.rows[0].count),
-        sample: sampleResult.rows[0] || null
-      }
-    });
-  } catch (err) {
-    console.error('Error getting table counts:', err);
-    res.status(500).json({ error: 'Failed to get table counts' });
   } finally {
     client.release();
   }

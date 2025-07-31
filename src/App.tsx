@@ -1214,35 +1214,7 @@ function App() {
         }
         
         console.log("✅ S3 Upload Successful");
-        
-        // Also upload to database tables for the main forecast report
-        try {
-          // Find the original file that was used for this forecast
-          const originalFile = forecastFiles.find(f => f.name === `${fileBase}.csv`);
-          if (originalFile) {
-            console.log("📊 Uploading to database tables...");
-            const dbUploadRes = await fetch(`${BASE_URL}/api/upload-to-forecast-tables`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                originalKey: originalFile.key,
-                forecastKey: fileKey
-              })
-            });
-            
-            if (dbUploadRes.ok) {
-              console.log("✅ Database tables updated successfully");
-            } else {
-              console.warn("⚠️ Database upload failed, but S3 upload succeeded");
-            }
-          } else {
-            console.warn("⚠️ Original file not found for database upload");
-          }
-        } catch (dbError) {
-          console.warn("⚠️ Database upload error:", dbError);
-        }
-        
-        alert("✅ Forecast uploaded to S3 and database! View it in Reports & Analytics → Manage Tables.");
+        alert("✅ Forecast uploaded to S3! View it in Reports & Analytics → Manage Tables.");
       } catch (uploadError) {
         console.error("❌ S3 Upload Failed:", uploadError);
         alert("Forecast complete but failed to upload to S3.");
